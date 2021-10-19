@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rlTitleBarRoot"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/dp_44"
+    android:background="@color/white">
+
+    <ImageView
+        android:id="@+id/ivTitleBarLeft"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:src="@mipmap/m_back"
+        android:paddingStart="@dimen/dp_16"
+        android:paddingEnd="@dimen/dp_8"/>
+
+    <TextView
+        android:id="@+id/tvTitleBarLeftText"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:paddingStart="@dimen/dp_16"
+        android:gravity="center"
+        android:textColor="@color/appBlack"
+        android:textSize="@dimen/textSize16"
+        android:paddingEnd="@dimen/dp_8"/>
+
+    <TextView
+        android:id="@+id/tvTitleBarText"
+        android:layout_width="@dimen/dp_200"
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true"
+        android:singleLine="true"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:textColor="@color/color_3F466"
+        android:textSize="@dimen/textSize18"
+        tools:text="Center"
+        android:textStyle="bold"/>
+
+    <ImageView
+        android:id="@+id/ivTitleBarMore"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentEnd="true"
+        android:paddingStart="@dimen/dp_6"
+        android:paddingEnd="@dimen/dp_20"
+        android:src="@mipmap/m_more"
+        android:visibility="gone"/>
+
+    <TextView
+        android:id="@+id/tvTitleBarMoreText"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical"
+        android:textSize="@dimen/textSize16"
+        android:enabled="true"
+        android:text="@string/title_save"
+        android:textColor="@color/color_red_gray_right"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="@dimen/dp_20"
+        android:textStyle="bold"
+        android:visibility="gone"
+        tools:visibility="visible"/>
+
+</RelativeLayout>

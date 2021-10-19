@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:paddingLeft="@dimen/dp_15"
+    android:paddingRight="@dimen/dp_15"
+    tools:context=".activity.ScanDeviceActivity">
+
+    <TextView
+        android:id="@+id/tvTipName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_30"
+        android:text="@string/home_device_name"
+        android:textColor="@color/color_94a5be"
+        android:textSize="@dimen/textSize14"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/etDeviceName"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_50"
+        android:layout_marginTop="@dimen/dp_15"
+        android:background="@drawable/shape_f6f8fd_c10"
+        android:hint="@string/home_input_device_name_tip"
+        android:paddingLeft="@dimen/dp_13"
+        android:paddingRight="@dimen/dp_15"
+        android:textColor="@color/color_ff555b73"
+        android:textSize="@dimen/textSize14"
+        android:textStyle="bold"
+        app:layout_constraintTop_toBottomOf="@id/tvTipName" />
+
+    <TextView
+        android:id="@+id/tvPosition"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_25"
+        android:text="@string/home_device_location"
+        android:textColor="@color/color_94a5be"
+        android:textSize="@dimen/textSize14"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/etDeviceName" />
+
+    <TextView
+        android:id="@+id/tvAddArea"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingTop="@dimen/dp_5"
+        android:paddingBottom="@dimen/dp_5"
+        android:text="@string/home_add_area"
+        android:textColor="@color/color_ff2da3f6"
+        android:textSize="@dimen/textSize14"
+        app:layout_constraintBottom_toBottomOf="@id/tvPosition"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tvPosition" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="@dimen/dp_16"
+        android:layout_marginBottom="@dimen/dp_15"
+        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+        app:layout_constraintBottom_toTopOf="@id/tvComplete"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvAddArea"
+        app:spanCount="3"
+        tools:listitem="@layout/item_position" />
+
+    <TextView
+        android:id="@+id/tvComplete"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_50"
+        android:layout_marginBottom="@dimen/dp_15"
+        android:background="@drawable/selector_blue_2da3f6_c10"
+        android:gravity="center"
+        android:text="@string/home_complete"
+        android:textColor="@color/white"
+        android:textSize="@dimen/textSize14"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

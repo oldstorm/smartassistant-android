@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="RadarScanView">
+        <!--圆圈和交叉线的颜色-->
+        <attr name="circleColor" format="color" />
+        <!--圆圈的数量-->
+        <attr name="circleNum" format="integer" />
+        <!--扫描的颜色 RadarView会对这个颜色做渐变透明处理-->
+        <attr name="sweepColor" format="color" />
+        <!--小圆圈的颜色-->
+        <attr name="dotColor" format="color" />
+        <!--小圆圈的数量 这里表示的是小圆圈最多能同时出现的数量。因为小圆圈是随机产生的，数量是不确定的-->
+        <attr name="dotNum" format="integer" />
+        <!--中心圆点半径-->
+        <attr name="cntDotR" format="integer" />
+        <!--是否显示中心-->
+        <attr name="showCntDot" format="boolean" />
+        <!--是否显示交叉线-->
+        <attr name="showCross" format="boolean" />
+        <!--是否显示直线-->
+        <attr name="showLine" format="boolean" />
+        <!--是否显示水滴-->
+        <attr name="showRaindrop" format="boolean" />
+        <!--扫描的转速，表示几秒转一圈-->
+        <attr name="speed" format="float" />
+        <!--水滴显示和消失的速度-->
+        <attr name="flicker" format="float" />
+
+    </declare-styleable>
+
+
+
+    <declare-styleable name="ConnectView">
+        <attr name="dashStartColor" format="color"/>
+        <attr name="dashCntColor" format="color" />
+        <attr name="dashStopColor" format="color" />
+        <attr name="dashRingWidth" format="dimension" />
+        <attr name="dashRingHeight" format="dimension" />
+        <attr name="dashCircleRadius" format="dimension" />
+        <attr name="textSize" format="dimension" />
+        <attr name="textColor" format="color" />
+        <attr name="progressColor" format="color" />
+        <attr name="outDashColor" format="color" />
+        <attr name="inDashColor" format="color" />
+    </declare-styleable>
+
+    <declare-styleable name="MediumTextView">
+        <attr name="strokeWidth" format="dimension" />
+    </declare-styleable>
+</resources>

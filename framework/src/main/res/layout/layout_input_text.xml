@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/tvTitleText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/dp_3"
+        android:textColor="@color/appDarkGray"
+        android:textSize="@dimen/textSize12"
+        android:visibility="visible" />
+
+    <RelativeLayout
+        android:id="@+id/llInputLayout"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_40"
+        android:layout_below="@id/tvTitleText"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tvMobilePrefix"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:layout_marginStart="@dimen/dp_3"
+            android:text="@string/default_mobile_prefix"
+            android:textColor="@color/appBlack"
+            android:textSize="@dimen/textSize18"
+            android:textStyle="bold"
+            android:visibility="gone"/>
+
+        <EditText
+            android:id="@+id/etInputText"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:lines="1"
+            android:textColor="@color/appBlack"
+            android:textSize="@dimen/textSize18"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/llInputLayout"
+        android:layout_alignEnd="@id/llInputLayout"
+        android:layout_alignBottom="@id/llInputLayout"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/ivClearInputText"
+            android:layout_width="@dimen/dp_40"
+            android:layout_height="@dimen/dp_40"
+            android:paddingStart="@dimen/dp_13"
+            android:paddingTop="@dimen/dp_10"
+            android:paddingEnd="@dimen/dp_13"
+            android:paddingBottom="@dimen/dp_13"
+            android:src="@mipmap/s_del"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+        <ImageView
+            android:id="@+id/ivPasswordToggle"
+            android:layout_width="@dimen/dp_40"
+            android:layout_height="@dimen/dp_40"
+            android:paddingStart="@dimen/dp_8"
+            android:paddingTop="@dimen/dp_5"
+            android:paddingEnd="@dimen/dp_8"
+            android:paddingBottom="@dimen/dp_8"
+            android:src="@mipmap/m_eye_close"
+            android:visibility="gone"
+            tools:visibility="visible" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvErrorText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/llInputLayout"
+        android:layout_marginStart="@dimen/dp_3"
+        android:textColor="@color/appOrange"
+        android:textSize="@dimen/textSize12"
+        android:visibility="gone"
+        tools:visibility="visible" />
+</RelativeLayout>

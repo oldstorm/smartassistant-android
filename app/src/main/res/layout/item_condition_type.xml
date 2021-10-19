@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/clParent"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingLeft="@dimen/dp_20"
+    android:paddingTop="@dimen/dp_15"
+    android:paddingRight="@dimen/dp_15">
+    <ImageView
+        android:id="@+id/ivCover"
+        android:layout_width="@dimen/dp_40"
+        android:layout_height="@dimen/dp_40"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:src="@drawable/icon_scene_manual" />
+
+    <LinearLayout
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="@dimen/dp_0"
+        app:layout_constraintTop_toTopOf="@+id/ivCover"
+        app:layout_constraintBottom_toBottomOf="@+id/ivCover"
+        app:layout_constraintLeft_toRightOf="@+id/ivCover"
+        app:layout_constraintRight_toLeftOf="@+id/ivGo"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="left"
+            android:layout_marginRight="@dimen/dp_10"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:layout_marginTop="@dimen/dp_2"
+            android:layout_marginLeft="@dimen/dp_15"
+            android:text="手动执行"
+            android:textSize="@dimen/textSize14"
+            android:textColor="@color/color_575C75"
+            android:textStyle="bold"/>
+        <TextView
+            android:id="@+id/tvSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/dp_15"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="点击即可执行"
+            android:textSize="@dimen/textSize11"
+            android:textColor="@color/color_94A5BE"/>
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/ivGo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="@+id/ivCover"
+        app:layout_constraintBottom_toBottomOf="@+id/ivCover"
+        app:layout_constraintRight_toRightOf="parent"
+        android:src="@drawable/icon_gray_right_arrow"/>
+    <View
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="0.5dp"
+        android:background="@color/color_EEEEEE"
+        app:layout_constraintTop_toBottomOf="@+id/ivCover"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginTop="@dimen/dp_15" />
+</androidx.constraintlayout.widget.ConstraintLayout>

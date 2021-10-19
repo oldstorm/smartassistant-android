@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.yctc.zhiting">
+
+    <uses-permission android:name="android.permission.INTERNET" /> <!-- 请求网络权限 -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- 获取WIFI信息状态的权限 -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission
+        android:name="android.permission.READ_LOGS"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission
+        android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission
+        android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS"
+        tools:ignore="ProtectedPermissions" />
+
+    <application
+        android:name=".application.Application"
+        android:allowBackup="true"
+        android:icon="@mipmap/icon_app"
+        android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:requestLegacyExternalStorage="true"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="true">
+        <activity android:name=".activity.TransferOwnerActivity"></activity>
+        <activity android:name=".activity.SceneDeviceTaskAttrActivity" />
+        <activity android:name=".activity.SceneListNewActivity" />
+        <activity android:name=".activity.SceneDeviceConditionAttrActivity" />
+        <activity android:name=".activity.SceneDetailDeviceActivity" />
+        <activity
+            android:name=".activity.SceneDetailActivity"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustPan"></activity>
+        <activity android:name=".activity.BindCloudActivity" />
+        <activity android:name=".activity.LoginActivity" />
+        <activity android:name=".activity.SetUPActivity" />
+        <activity android:name=".activity.SettingActivity" />
+        <activity android:name=".activity.EffectTimePeriodActivity" />
+        <activity android:name=".activity.LogActivity" />
+        <activity android:name=".activity.SceneListActivity" />
+        <activity android:name=".activity.TaskDeviceControlActivity" />
+        <activity android:name=".activity.SceneDeviceStatusControlActivity" />
+        <activity android:name=".activity.SceneDeviceActivity" />
+        <activity android:name=".activity.HowCreateSceneActivity" />
+        <activity
+            android:name=".activity.CreateSceneActivity"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustPan" />
+        <activity android:name=".activity.UpdateDeviceLocationActivity" />
+        <activity android:name=".activity.DeviceSettingActivity" />
+        <activity android:name=".activity.DeviceDetailActivity" /> <!-- 头条适配 -->
+        <meta-data
+            android:name="design_width_in_dp"
+            android:value="375" />
+        <meta-data
+            android:name="design_height_in_dp"
+            android:value="667" />
+
+        <activity android:name=".activity.SplashActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <data
+                    android:host="com.yctc.zhiting"
+                    android:path="/sign"
+                    android:scheme="zt" />
+
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".activity.PluginDetailActivity" />
+        <activity android:name=".activity.BrandDetailActivity" />
+        <activity android:name=".activity.SupportBrandActivity" />
+        <activity android:name=".activity.DeviceConnectActivity" />
+        <activity android:name=".activity.ScanDeviceActivity" />
+        <activity android:name=".activity.MemberDetailActivity" />
+        <activity android:name=".activity.RADetailActivity" />
+        <activity android:name=".activity.RoomAreaActivity" />
+        <activity
+            android:name=".activity.MainActivity"
+            android:launchMode="singleTask"
+            android:screenOrientation="portrait" />
+        <activity android:name=".activity.AddHCActivity" />
+        <activity android:name=".activity.HomeCompanyActivity" />
+        <activity android:name=".activity.UserInfoActivity" />
+        <activity android:name=".activity.HCDetailActivity" />
+        <activity android:name=".activity.DevicesActivity" />
+        <activity
+            android:name=".activity.SetDevicePositionActivity"
+            android:windowSoftInputMode="adjustNothing|stateHidden" /> <!-- <activity android:name=".activity.ScanActivity" /> -->
+        <activity android:name=".activity.CommonWebActivity" />
+        <activity android:name=".activity.ErrorActivity" />
+        <activity android:name=".activity.AuthorizeActivity" />
+    </application>
+
+</manifest>

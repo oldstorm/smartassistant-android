@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <LinearLayout
+        android:id="@+id/llTextInput"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_46"
+        android:orientation="horizontal">
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/llIndictor"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_46"
+        android:gravity="bottom"
+        android:layout_marginTop="@dimen/dp_3"
+        android:orientation="horizontal">
+    </LinearLayout>
+
+    <com.app.main.framework.widget.MyEditText
+        android:id="@+id/edit_text_view"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_40"
+        android:maxLength="4"
+        android:background="@android:color/transparent"
+        android:textColor="@android:color/transparent"
+        android:longClickable="false"
+        android:inputType="number" />
+</RelativeLayout>

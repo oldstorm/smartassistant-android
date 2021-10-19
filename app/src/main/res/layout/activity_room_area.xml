@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/color_f6f8fd"
+    tools:context=".activity.RoomAreaActivity">
+
+    <View
+        android:id="@+id/viewLine"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@color/color_EEEEEE" />
+
+    <com.scwang.smart.refresh.layout.SmartRefreshLayout
+        android:id="@+id/refreshLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/llAdd"
+        android:layout_below="@id/viewLine"
+        android:background="@color/color_f6f8fd"
+        app:srlAccentColor="@color/gray_898989"
+        app:srlEnableLoadMore="false"
+        app:srlPrimaryColor="@color/white">
+
+        <com.yctc.zhiting.widget.ZhiTingRefreshHeader
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvRA"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:overScrollMode="never"
+                android:visibility="gone"
+                tools:listitem="@layout/item_home_company" />
+
+            <include
+                android:id="@+id/layout_null"
+                layout="@layout/layout_empty"
+                android:visibility="visible" />
+        </LinearLayout>
+
+    </com.scwang.smart.refresh.layout.SmartRefreshLayout>
+
+    <LinearLayout
+        android:id="@+id/llAdd"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_margin="@dimen/dp_15"
+        android:background="@drawable/shape_white_c10"
+        android:gravity="center"
+        android:paddingTop="@dimen/dp_15"
+        android:paddingBottom="@dimen/dp_15"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawableLeft="@drawable/icon_blue_add"
+            android:drawablePadding="@dimen/dp_10"
+            android:text="@string/mine_room_area_add"
+            android:textColor="@color/color_2da3f6"
+            android:textSize="@dimen/sp_14" />
+    </LinearLayout>
+</RelativeLayout>

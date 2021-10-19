@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".activity.ScanDeviceActivity">
+
+    <com.yctc.zhiting.widget.RadarScanView
+        android:id="@+id/radarScanView"
+        android:layout_width="175dp"
+        android:layout_height="175dp"
+        android:layout_marginTop="@dimen/dp_32"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:dotNum="3"/>
+
+    <ImageView
+        android:id="@+id/ivReport"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/icon_home_report"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/radarScanView"
+        app:layout_constraintLeft_toLeftOf="@+id/radarScanView"
+        app:layout_constraintRight_toRightOf="@+id/radarScanView"
+        app:layout_constraintTop_toTopOf="@+id/radarScanView" />
+
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_23"
+        android:text="@string/mine_home_scanning"
+        android:textColor="@color/color_94A5BE"
+        android:textSize="@dimen/textSize16"
+        android:textStyle="bold"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/radarScanView" />
+
+    <TextView
+        android:id="@+id/tvTips"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_23"
+        android:lineSpacingExtra="@dimen/dp_2"
+        android:paddingLeft="@dimen/dp_15"
+        android:paddingRight="@dimen/dp_15"
+        android:text="@string/mine_home_scan_tip"
+        android:textColor="@color/color_94A5BE"
+        android:textSize="@dimen/textSize12"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvStatus"
+        app:layout_goneMarginTop="@dimen/dp_12" />
+
+    <TextView
+        android:id="@+id/tvAgain"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_30"
+        android:background="@drawable/shape_2da3f6_c4"
+        android:minWidth="@dimen/dp_150"
+        android:paddingLeft="@dimen/dp_48"
+        android:paddingTop="@dimen/dp_18"
+        android:paddingRight="@dimen/dp_48"
+        android:paddingBottom="@dimen/dp_18"
+        android:text="@string/mine_home_scan_again"
+        android:textColor="@color/white"
+        android:textSize="@dimen/textSize14"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvTips" />
+
+    <View
+        android:id="@+id/viewLine"
+        style="@style/line_eee"
+        android:layout_marginLeft="@dimen/dp_15"
+        android:layout_marginTop="@dimen/dp_30"
+        android:layout_marginRight="@dimen/dp_15"
+        android:visibility="gone"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvTips"
+        tools:visibility="visible"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvDevice"
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="@dimen/dp_0"
+        android:paddingBottom="@dimen/dp_15"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/viewLine"
+        app:layout_constraintVertical_bias="0.0"
+        tools:listitem="@layout/item_add_device"
+        tools:visibility="visible" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

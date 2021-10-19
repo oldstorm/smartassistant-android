@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingLeft="@dimen/dp_15"
+    android:paddingRight="@dimen/dp_15"
+    android:paddingTop="@dimen/dp_10"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <ImageView
+        android:id="@+id/ivCover"
+        android:layout_width="@dimen/dp_50"
+        android:layout_height="@dimen/dp_50"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:src="@drawable/default_bg" />
+
+    <TextView
+        android:id="@+id/tvName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="@+id/ivCover"
+        app:layout_constraintBottom_toBottomOf="@+id/ivCover"
+        app:layout_constraintLeft_toRightOf="@+id/ivCover"
+        app:layout_constraintRight_toRightOf="parent"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:layout_marginTop="@dimen/dp_2"
+        android:layout_marginLeft="@dimen/dp_16"
+        android:text="米家台灯1S"
+        android:textSize="@dimen/textSize14"
+        android:textColor="@color/color_3f4663"/>
+
+    <View
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="0.5dp"
+        android:background="@color/color_EEEEEE"
+        app:layout_constraintTop_toBottomOf="@+id/ivCover"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginTop="@dimen/dp_10" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

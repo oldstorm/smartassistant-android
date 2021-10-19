@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="@dimen/dp_150"
+    android:layout_height="wrap_content">
+    <com.lihang.ShadowLayout
+        android:id="@+id/mShadowLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        app:hl_cornerRadius="10dp"
+        app:hl_shadowColor="@color/color_1a151515"
+        app:hl_shadowLimit="@dimen/dp_5">
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvLocation"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/shape_white_top_c10" />
+    </com.lihang.ShadowLayout>
+</LinearLayout>

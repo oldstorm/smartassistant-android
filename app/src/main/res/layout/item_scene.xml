@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/clParent"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/dp_10"
+    android:background="@drawable/shape_white_c10"
+    android:paddingLeft="@dimen/dp_15"
+    android:paddingRight="@dimen/dp_15"
+    android:paddingBottom="@dimen/dp_15">
+
+    <LinearLayout
+        android:id="@+id/llTop"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_15"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tvName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="看电影"
+            android:textColor="@color/color_3f4663"
+            android:textSize="@dimen/textSize18"
+            android:textStyle="bold"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            android:id="@+id/llPerform"
+            android:layout_width="@dimen/dp_72"
+            android:layout_height="@dimen/dp_32"
+            android:background="@drawable/shape_eeeeee_c4"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <ProgressBar
+                android:id="@+id/rbPerform"
+                android:layout_width="@dimen/dp_15"
+                android:layout_height="@dimen/dp_15"
+                android:indeterminateDrawable="@anim/rotation_progressbar"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/tvPerform"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="@string/scene_perform"
+                android:textSize="@dimen/textSize14"
+                android:textStyle="bold"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/llSwitch"
+            android:layout_width="@dimen/dp_35"
+            android:layout_height="@dimen/dp_18"
+            android:background="@drawable/shape_2da3f6_c30"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="@dimen/dp_2"
+            android:paddingRight="@dimen/dp_2"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:id="@+id/rbBg"
+                android:layout_width="@dimen/dp_14"
+                android:layout_height="@dimen/dp_14"
+                android:background="@drawable/shape_circle_r7"
+                android:orientation="horizontal"
+                android:padding="@dimen/dp_2">
+
+                <ProgressBar
+                    android:id="@+id/rbSwitch"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:indeterminateDrawable="@anim/rotation_progressbar"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+
+        </LinearLayout>
+
+        <Switch
+            android:id="@+id/sw"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:thumb="@drawable/shape_circle_r7"
+            android:track="@drawable/selector_switch"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/ivSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/icon_on_disable"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/ivType"
+        android:layout_width="@dimen/dp_40"
+        android:layout_height="@dimen/dp_40"
+        android:layout_marginTop="@dimen/dp_18"
+        android:scaleType="fitCenter"
+        android:src="@drawable/icon_scene_timing"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/llTop" />
+
+    <ImageView
+        android:id="@+id/ivLink"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/dp_10"
+        android:src="@drawable/icon_scene_link"
+        app:layout_constraintBottom_toBottomOf="@+id/ivType"
+        app:layout_constraintLeft_toRightOf="@+id/ivType"
+        app:layout_constraintTop_toTopOf="@+id/ivType" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvDevice"
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_18"
+        android:minHeight="@dimen/dp_40"
+        app:layout_constraintLeft_toRightOf="@+id/ivLink"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/llTop" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

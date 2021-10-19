@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.camera.view.PreviewView
+        android:id="@+id/previewView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <com.king.zxing.ViewfinderView
+        android:id="@+id/viewfinderView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:cornerColor="@color/viewfinder_2da3f6"
+        app:cornerRectHeight="@dimen/size_20dp"
+        app:cornerRectWidth="@dimen/size_3dp"
+        app:frameColor="@color/viewfinder_9dd7ff"
+        app:labelText="请扫码家庭/公司二维码\n扫码后即可加入"
+        app:labelTextColor="@android:color/white"
+        app:labelTextLocation="bottom"
+        app:labelTextSize="@dimen/size_14sp"
+        app:laserColor="@color/viewfinder_9dd7ff" />
+
+    <ImageView
+        android:id="@+id/ivFlashlight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="@dimen/zxl_flashlight_margin_top"
+        android:src="@drawable/zxl_flashlight_selector"
+        android:visibility="gone" />
+
+</RelativeLayout>

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/color_F1F4FC"
+    tools:context=".activity.DeviceSettingActivity">
+    <LinearLayout
+        android:id="@+id/ll_top"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:background="@color/white"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingTop="@dimen/dp_2"
+        android:paddingBottom="@dimen/dp_43">
+        <ImageView
+            android:id="@+id/ivCover"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="@dimen/dp_120"
+            android:minHeight="@dimen/dp_120"
+            android:src="@drawable/default_bg" />
+        <TextView
+            android:id="@+id/tvName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_5"
+            android:text="智能灯"
+            android:textSize="@dimen/textSize16"
+            android:textColor="@color/color_3f4663"
+            android:textStyle="bold"/>
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/rlName"
+        app:layout_constraintTop_toBottomOf="@+id/ll_top"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_marginTop="@dimen/dp_10"
+        style="@style/rl_key_value">
+        <TextView
+            style="@style/user_info_title"
+            android:text="@string/home_device_name"
+            android:textStyle="bold"
+            android:layout_centerVertical="true"/>
+        <TextView
+            android:id="@+id/tvDeviceName"
+            android:maxLines="1"
+            android:ellipsize="end"
+            style="@style/mine_tv_value"/>
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/rlLocation"
+        app:layout_constraintTop_toBottomOf="@+id/rlName"
+        app:layout_constraintLeft_toLeftOf="parent"
+        style="@style/rl_key_value">
+        <TextView
+            style="@style/user_info_title"
+            android:text="@string/home_device_location"
+            android:textStyle="bold"
+            android:layout_centerVertical="true"/>
+        <TextView
+            android:id="@+id/tvLocation"
+            style="@style/mine_tv_value"/>
+
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/tvDel"
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_margin="@dimen/dp_15"
+        android:background="@drawable/shape_white_c10"
+        android:paddingTop="@dimen/dp_18"
+        android:paddingBottom="@dimen/dp_19"
+        android:gravity="center"
+        android:text="@string/home_device_del"
+        android:textSize="@dimen/textSize14"
+        android:textColor="@color/color_3f4663"
+        android:textStyle="bold"
+        android:visibility="gone"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

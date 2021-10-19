@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="id_base_title_bar" type="id"/>
+    <item name="blur_dialog_bg" type="id"/>
+    <item name="base_states_bar" type="id"/>
+
+    <!--MyTabLayout-->
+    <item name="toolbar" type="id"/>
+    <item name="viewpager" type="id"/>
+    <item name="viewpagertab" type="id"/>
+
+</resources>

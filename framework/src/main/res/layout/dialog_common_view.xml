@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/llDialogRootView"
+    android:layout_width="@dimen/dp_280"
+    android:layout_height="match_parent"
+    android:background="@drawable/circular_white_background"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingTop="@dimen/dp_24">
+
+    <ImageView
+        android:id="@+id/ivDialogIcon"
+        android:layout_width="@dimen/dp_100"
+        android:layout_height="@dimen/dp_100"
+        android:src="@mipmap/pic_modeloff"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tvDialogMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        tools:text="Title"
+        android:paddingLeft="@dimen/dp_24"
+        android:paddingRight="@dimen/dp_24"
+        android:layout_marginBottom="@dimen/dp_24"
+        android:textColor="@color/appBlack"
+        android:textSize="@dimen/textSize16" />
+
+    <TextView
+        android:id="@+id/tvLine"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_1"
+        android:background="@color/appLightGray"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <LinearLayout
+        android:id="@+id/llDialogOkButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btDialogOK"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dp_50"
+            android:background="@null"
+            android:text="@string/ok_button"
+            android:textColor="@color/appColor" />
+    </LinearLayout>
+</LinearLayout>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/color_f6f8fd"
+    tools:context=".activity.TaskDeviceControlActivity">
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@color/eeeeee"/>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvFunction"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/color_f6f8fd" />
+
+    <LinearLayout
+        android:id="@+id/llDelay"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_50"
+        android:layout_marginTop="@dimen/dp_11"
+        android:layout_below="@id/rvFunction"
+        android:background="@color/white"
+        android:gravity="center_vertical"
+        android:visibility="gone"
+        tools:visibility="visible">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="@dimen/dp_16"
+            android:background="@color/white"
+            android:text="@string/scene_delay"
+            android:textStyle="bold"
+            android:textColor="@color/color_3f4663"
+            android:textSize="@dimen/textSize14"/>
+        <TextView
+            android:id="@+id/tvDelay"
+            android:layout_width="@dimen/dp_0"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:paddingLeft="@dimen/dp_16"
+            android:background="@color/white"
+            android:gravity="right"
+            android:textStyle="bold"
+            android:textColor="@color/color_94A5BE"
+            android:textSize="@dimen/textSize14" />
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/dp_10"
+            android:layout_marginRight="@dimen/dp_15"
+            android:src="@drawable/icon_gray_right_arrow" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvNext"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:gravity="center"
+        android:background="@drawable/shape_2da3f6_c10"
+        android:padding="@dimen/dp_18"
+        android:enabled="false"
+        android:layout_margin="@dimen/dp_15"
+        android:text="@string/scene_next"
+        android:textSize="@dimen/textSize14"
+        android:textColor="@color/white"
+        android:visibility="gone"
+        tools:visibility="visible"/>
+</RelativeLayout>

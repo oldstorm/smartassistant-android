@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_centerInParent="true"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:paddingTop="@dimen/dp_6"
+    android:paddingBottom="@dimen/dp_6">
+
+    <RelativeLayout
+        android:layout_width="@dimen/dp_18"
+        android:layout_height="@dimen/dp_20">
+
+        <ImageView
+            android:id="@+id/tab_image"
+            android:layout_width="@dimen/dp_18"
+            android:layout_height="@dimen/dp_20"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_gravity="center"
+            android:focusable="false"
+            tools:src="@drawable/main_home_s" />
+
+        <View
+            android:id="@+id/tab_message"
+            android:layout_width="@dimen/dp_8"
+            android:layout_height="@dimen/dp_8"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="@dimen/dp_5"
+            android:background="@drawable/message_reminder_background"
+            android:visibility="gone" />
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:focusable="false"
+        android:textColor="@color/selector_tab_text"
+        android:textSize="@dimen/textSize11"
+        tools:text="首页" />
+</LinearLayout>

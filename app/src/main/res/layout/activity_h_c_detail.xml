@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/color_f6f8fd"
+    tools:context=".activity.HCDetailActivity">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/tvQuit"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:animateLayoutChanges="true"
+            android:background="@color/color_f6f8fd"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/llTips"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/white"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/dp_15"
+                    android:layout_marginRight="@dimen/dp_15"
+                    android:layout_weight="1"
+                    android:background="@drawable/shape_26f6ae1e_c10"
+                    android:drawableLeft="@drawable/icon_home_small_fail"
+                    android:drawablePadding="@dimen/dp_10"
+                    android:gravity="center_vertical"
+                    android:paddingLeft="@dimen/dp_15"
+                    android:paddingTop="@dimen/dp_13"
+                    android:paddingRight="@dimen/dp_15"
+                    android:paddingBottom="@dimen/dp_13"
+                    android:text="@string/home_connect_fail"
+                    android:textColor="@color/color_F6AE1E"
+                    android:textSize="@dimen/textSize12" />
+
+            </LinearLayout>
+
+            <RelativeLayout
+                android:id="@+id/rlName"
+                style="@style/rl_key_value">
+
+                <TextView
+                    style="@style/user_info_title"
+                    android:layout_centerVertical="true"
+                    android:text="@string/mine_name" />
+
+                <TextView
+                    android:id="@+id/tvName"
+                    style="@style/mine_tv_value"
+                    android:ellipsize="end"
+                    android:maxLines="1" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/rlCode"
+                style="@style/rl_key_value"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <TextView
+                    style="@style/user_info_title"
+                    android:layout_centerVertical="true"
+                    android:text="@string/mine_qr_code" />
+
+                <TextView
+                    android:id="@+id/tvCode"
+                    style="@style/mine_tv_value" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/rlRoom"
+                style="@style/rl_key_value">
+
+                <TextView
+                    style="@style/user_info_title"
+                    android:layout_centerVertical="true"
+                    android:text="@string/mine_room_area" />
+
+                <TextView
+                    android:id="@+id/tvRoom"
+                    style="@style/mine_tv_value" />
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:id="@+id/llMember"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dp_10"
+                android:background="@color/white"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tvMember"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/dp_16"
+                    android:layout_marginTop="@dimen/dp_14"
+                    android:textColor="@color/color_94A5BE"
+                    android:textSize="@dimen/textSize12" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvMember"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/dp_10"
+                    android:nestedScrollingEnabled="false"
+                    android:overScrollMode="never"
+                    tools:listitem="@layout/item_member" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <TextView
+        android:id="@+id/tvQuit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_margin="@dimen/dp_15"
+        android:background="@drawable/shape_white_c10"
+        android:gravity="center"
+        android:padding="@dimen/dp_18"
+        android:text="@string/mine_quit_family"
+        android:textColor="@color/color_3F4663"
+        android:textSize="@dimen/textSize14" />
+
+</RelativeLayout>

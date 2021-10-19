@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/shape_white_top_c10"
+    android:paddingBottom="@dimen/dp_26">
+
+    <TextView
+        android:id="@+id/tvRoom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/dp_16"
+        android:layout_marginTop="@dimen/dp_18"
+        android:text="@string/mine_room_name"
+        android:textColor="@color/color_3F4663"
+        android:textSize="@dimen/textSize16"
+        android:textStyle="bold"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/ivClose"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_6"
+        android:padding="@dimen/dp_15"
+        android:src="@drawable/icon_close"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/etContent"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@null"
+        android:hint="@string/mine_input_room_name"
+        android:maxLines="1"
+        android:paddingLeft="@dimen/dp_15"
+        android:paddingTop="@dimen/dp_11"
+        android:paddingRight="@dimen/dp_15"
+        android:paddingBottom="@dimen/dp_11"
+        android:singleLine="true"
+        android:textColor="@color/color_3f4663"
+        android:textColorHint="@color/color_94A5BE"
+        android:textSize="@dimen/textSize14"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivClose" />
+
+    <View
+        android:id="@+id/viewLine"
+        android:layout_width="0dp"
+        android:layout_height="0.5dp"
+        android:layout_marginLeft="@dimen/dp_15"
+        android:layout_marginRight="@dimen/dp_15"
+        android:background="@color/color_DDE4EA"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/etContent" />
+
+    <TextView
+        android:id="@+id/tvSave"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/dp_15"
+        android:layout_marginTop="@dimen/dp_25"
+        android:layout_marginRight="@dimen/dp_15"
+        android:background="@drawable/shape_f1f4fd_c10"
+        android:enabled="true"
+        android:gravity="center"
+        android:paddingTop="@dimen/dp_15"
+        android:paddingBottom="@dimen/dp_15"
+        android:text="@string/mine_save"
+        android:textStyle="bold"
+        android:textColor="@color/color_3f4663_94a5be"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/viewLine" />
+</androidx.constraintlayout.widget.ConstraintLayout>

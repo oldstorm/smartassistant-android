@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="RoundImageViewStyleable">
+        <attr name="roundImageCornerLeftTop" format="boolean" />
+        <attr name="roundImageCornerRightTop" format="boolean" />
+        <attr name="roundImageCornerRightBottom" format="boolean" />
+        <attr name="roundImageCornerLeftBottom" format="boolean" />
+        <attr name="roundImageCornerAll" format="boolean" />
+        <attr name="roundImageCornerRadius" format="integer" />
+        <attr name="roundImageCornerBackground" format="color" />
+    </declare-styleable>
+
+    <declare-styleable name="VerifyCodeViewStyleable">
+        <attr name="verifyCodeLenght" format="integer" />
+    </declare-styleable>
+
+    <declare-styleable name="FixedEditTextStyleable">
+        <attr name="fixedText" format="string" />
+        <attr name="fixedTextColor" format="color" />
+    </declare-styleable>
+
+    <declare-styleable name="SwitchButton">
+        <attr name="hasShadow" format="boolean" />
+        <attr name="primaryColor" format="color" />
+        <attr name="primaryColorDark" format="color" />
+        <attr name="isOpened" format="boolean" />
+    </declare-styleable>
+
+    <declare-styleable name="stl_SmartTabLayout">
+        <attr name="stl_indicatorAlwaysInCenter" format="boolean" />
+        <attr name="stl_indicatorWithoutPadding" format="boolean" />
+        <attr name="stl_indicatorInFront" format="boolean" />
+        <attr name="stl_indicatorInterpolation" format="enum">
+            <enum name="smart" value="0" />
+            <enum name="linear" value="1" />
+        </attr>
+        <attr name="stl_indicatorGravity" format="enum">
+            <enum name="bottom" value="0" />
+            <enum name="top" value="1" />
+            <enum name="center" value="2" />
+        </attr>
+        <attr name="stl_indicatorColor" format="color" />
+        <attr name="stl_indicatorColors" format="reference" />
+        <attr name="stl_indicatorThickness" format="dimension" />
+        <attr name="stl_indicatorWidth" format="dimension">
+            <enum name="auto" value="-1" />
+        </attr>
+        <attr name="stl_indicatorCornerRadius" format="dimension" />
+        <attr name="stl_overlineColor" format="color" />
+        <attr name="stl_overlineThickness" format="dimension" />
+        <attr name="stl_underlineColor" format="color" />
+        <attr name="stl_underlineThickness" format="dimension" />
+        <attr name="stl_dividerColor" format="color" />
+        <attr name="stl_dividerColors" format="reference" />
+        <attr name="stl_dividerThickness" format="dimension" />
+        <attr name="stl_defaultTabBackground" format="reference" />
+        <attr name="stl_defaultTabTextAllCaps" format="boolean" />
+        <attr name="stl_defaultTabTextColor" format="color|reference" />
+        <attr name="stl_defaultTabTextSize" format="dimension" />
+        <attr name="stl_defaultTabTextHorizontalPadding" format="dimension" />
+        <attr name="stl_defaultTabTextMinWidth" format="dimension" />
+        <attr name="stl_customTabTextLayoutId" format="reference" />
+        <attr name="stl_customTabTextViewId" format="reference" />
+        <attr name="stl_distributeEvenly" format="boolean" />
+        <attr name="stl_clickable" format="boolean" />
+        <attr name="stl_titleOffset" format="dimension">
+            <enum name="auto_center" value="-1" />
+        </attr>
+        <attr name="stl_drawDecorationAfterTab" format="boolean" />
+    </declare-styleable>
+
+    <!-- RoundImageView -->
+    <declare-styleable name="RoundImageView">
+        <attr name="round_image_ratio" format="float" />
+        <attr name="rect_adius" format="dimension" />
+    </declare-styleable>
+
+    <!-- CircleImageView -->
+    <declare-styleable name="CircleImageView">
+        <attr name="civ_border_width" format="dimension" />
+        <attr name="civ_border_color" format="color" />
+        <attr name="civ_border_overlay" format="boolean" />
+        <attr name="civ_fill_color" format="color" />
+    </declare-styleable>
+
+    <declare-styleable name="MyTextView">
+        <attr name="left_text_size" format="dimension" />
+        <attr name="left_text_color" format="color" />
+        <attr name="left_text_visible" format="boolean" />
+        <attr name="left_text" format="string" />
+        <attr name="right_text_size" format="dimension" />
+        <attr name="right_text_color" format="color" />
+        <attr name="right_text_visible" format="boolean" />
+        <attr name="right_text" format="string" />
+    </declare-styleable>
+
+    <declare-styleable name="CommonEditTextStyleable">
+        <attr name="cetInputType" format="string" /> <!--输入框类型-->
+        <attr name="cetInputDigits" format="string" /> <!--输入框限制-->
+        <attr name="catInputText" format="string" /> <!--显示文本-->
+        <attr name="catInputHintText" format="string" /> <!--提示文本-->
+        <attr name="catInputDigits" format="string" /> <!--限制-->
+        <attr name="catInputMaxLength" format="integer" /> <!--文本限制长度-->
+        <attr name="catInputTextColor" format="color" /> <!--文本颜色-->
+        <attr name="catInputTextSize" format="dimension" /> <!--文本大小-->
+        <attr name="cetErrorTextSize" format="dimension" /> <!--错误文本尺寸-->
+        <attr name="cetErrorTextColor" format="color" /> <!--错误文本颜色-->
+        <attr name="cetErrorText" format="string" /> <!--错误文本-->
+        <attr name="cetTitleTextSize" format="dimension" /> <!--顶部文本尺寸-->
+        <attr name="cetTitleTextColor" format="color" /> <!--顶部文本颜色-->
+        <attr name="cetTitleText" format="string" /> <!--顶部文本-->
+    </declare-styleable>
+</resources>

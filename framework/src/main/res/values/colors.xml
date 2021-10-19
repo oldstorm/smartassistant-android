@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="white">#ffffff</color> <!-- 白色 -->
+    <color name="whitesmoke">#f5f5f5</color> <!-- 烟白色 -->
+    <color name="black">#000000</color> <!-- 黑色 -->
+    <color name="gray_backgroud">#f0f0f0</color> <!-- 浅灰 -->
+    <color name="gray_898989">#898989</color> <!-- 浅灰 -->
+    <color name="black_414141">#414141</color> <!-- 灰黑 -->
+    <color name="transBlack">#33333333</color> <!-- 透明黑色 -->
+    <color name="userLevelColor">#0091FF</color> <!--用户等级背景色-->
+    <color name="homeTabBarBackground">#F9F9F9</color> <!--首页分页栏背景色-->
+    <color name="popup_dialog_background">#F2FFFFFF</color>
+    <color name="popup_dialog_out_background">#B3000000</color>
+    <color name="transparent">#00000000</color> <!--首页分页栏背景色-->
+    <color name="baseBackground">#F9F9F9</color> <!--界面的底部的颜色-->
+    <color name="baseLineColor">#EDEDED</color> <!--间隔线-->
+
+    <!--设计规范配色-->
+    <color name="appColor">#E62F5C</color> <!--logo红色-->
+    <color name="appOrange">#FA6400</color> <!--橙色-->
+    <color name="appBlack">#222222</color> <!--黑色-->
+    <color name="appDarkGray">#555555</color> <!--深灰色-->
+    <color name="appGray">#888888</color> <!--灰色-->
+    <color name="appLightGray">#CCCCCC</color> <!--浅灰色-->
+    <color name="appWhite">#F5F5F5</color> <!--白色-->
+    <color name="appBlue">#2DA3F6</color> <!--蓝色-->
+    <color name="appGrey">#CFD6E0</color> <!--灰色-->
+    <!--短信验证界面-->
+    <color name="messageRed">#E02020</color> <!--消息提醒红点颜色-->
+    <!--logo红色线-->
+    <color name="appDarkLight">#EDEDED</color> <!--语音按钮背景-->
+    <!--选中框颜色-->
+
+    <!--Toast-->
+    <color name="defaultTextColor">@color/appBlack</color>
+    <color name="errorColor">#D50000</color>
+    <color name="infoColor">#3F51B5</color>
+    <color name="successColor">#388E3C</color>
+    <color name="warningColor">#FFA900</color>
+    <color name="normalColor">#F1ECE3</color>
+
+    <!--style color-->
+    <color name="colorPrimary">@color/white</color>
+    <color name="colorPrimaryDark">@color/appDarkGray</color>
+    <color name="colorAccent">@color/appColor</color>
+
+    <color name="darkRed">#99E62F5C</color>
+    <color name="black_19">#191919</color>
+    <color name="color_eeeeee">#33cccccc</color>
+    <color name="color_f9f9f9">#F9F9F9</color>
+    <color name="eeeeee">#EEEEEE</color>
+
+    <!--zxing-->
+    <color name="possible_result_points">#ffbd21</color>
+    <color name="result_view">#000000</color>
+    <color name="viewfinder_mask">#60000000</color>
+    <color name="react">#ffffff</color>
+    <color name="scanLineColor">#ffffff</color>
+
+    <color name="color_f1ece3">#F1ECE3</color>
+    <color name="color_cccccc">#CCCCCC</color>
+    <color name="color_fa6400">#FA6400</color>
+    <color name="color_222222">#222222</color>
+    <color name="color_4CD964">#4CD964</color>
+    <color name="color_3F466">#3F4663</color>
+    <color name="color_80ffffff">#80ffffff</color>
+
+</resources>

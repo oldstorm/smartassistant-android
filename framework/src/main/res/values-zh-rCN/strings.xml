@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--共享元素transitionName-->
+    <string name="shareElement_img">shareElement_img</string>
+    <string name="shareElement_txt">shareElement_txt</string>
+
+    <string name="base_permisson_request">如果应用程序缺少以下权限，其中一些功能可能无法正常工作</string>
+    <string name="permisson_request_audio">如果应用程序无法访问麦克风，其中一些功能可能无法正常工作</string>
+    <string name="network_error">不正确的验证码。</string>
+    <string name="network_params_error">请求错误</string>
+    <string name="network_error_btn">上传失败!</string>
+    <string name="no_data_hint">暂无数据</string>
+
+    <!--视频播放器-->
+
+    <!--Dialog string-->
+    <string name="ok_button">确定</string>
+    <string name="cancel_button">取消</string>
+
+    <!--格式化单位-->
+    <string name="price_for_minute" translatable="false">$%s/%d分</string>
+    <string name="time_unit" translatable="false">%d分</string>
+    <string name="time_unit_with_slash" translatable="false">/%d分</string>
+    <string name="price_unit" translatable="false">$%s</string>
+    <string name="rate_unit" translatable="false">%d%%</string>
+    <string name="distance_unit" translatable="false">%.1f米</string>
+    <string name="distance_km_unit" translatable="false">%.1f公里</string>
+    <string name="total_unit" translatable="false">%d+</string>
+    <string name="height_unit" translatable="false">%d厘米</string>
+    <string name="weight_unit" translatable="false">%d千克</string>
+    <string name="level_unit" translatable="false">lv%d</string>
+    <string name="defaule_commont_hours" translatable="false">%d 小时前</string>
+    <string name="defaule_commont_minutes" translatable="false">%d 分钟前</string>
+    <string name="defaule_commont_now" translatable="false">刚才</string>
+    <string name="no">取消</string>
+    <string name="yes">确定</string>
+    <string name="order_timeout">成功，用户超时，你会继续为该用户服务吗?</string>
+    <string name="copy_success">复制成功</string>
+
+
+    <string name="permission_apply">该App需要存储空间、位置信息和相机权限</string>
+    <string name="storage_permission_apply">该功能需要存储空间权限</string>
+
+    <string name="title_save">保存</string>
+</resources>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--共享元素transitionName-->
+    <string name="shareElement_img">shareElement_img</string>
+    <string name="shareElement_txt">shareElement_txt</string>
+    <string name="inputTypePassword" translatable="false">password</string>
+    <string name="inputTypeNumber" translatable="false">number</string>
+    <string name="inputTypeMobile" translatable="false">mobile</string>
+
+    <string name="base_permisson_request">Some of the features may not work properly if the app lacks the following permissions</string>
+    <string name="permisson_request_audio">Some of the features may not work properly if the app lacks access to the microphone</string>
+    <string name="network_error">Incorrect verification code.</string>
+    <string name="network_params_error">Request error</string>
+    <string name="network_error_btn">Failed to upload!</string>
+    <string name="no_data_hint">no data</string>
+    <string name="copy_success">Copy success</string>
+
+    <!--视频播放器-->
+
+    <!--Dialog string-->
+    <string name="ok_button">Yes</string>
+    <string name="cancel_button">No</string>
+
+    <!--格式化单位-->
+    <string name="price_for_minute" translatable="false">$%s/%dMin</string>
+    <string name="time_unit" translatable="false">%dMin</string>
+    <string name="time_unit_with_slash" translatable="false">/%dMin</string>
+    <string name="price_unit" translatable="false">$%s</string>
+    <string name="rate_unit" translatable="false">%d%%</string>
+    <string name="distance_unit" translatable="false">%.1fm</string>
+    <string name="distance_km_unit" translatable="false">%.1fkm</string>
+    <string name="total_unit" translatable="false">%d+</string>
+    <string name="height_unit" translatable="false">%dcm</string>
+    <string name="weight_unit" translatable="false">%dkg</string>
+    <string name="level_unit" translatable="false">lv%d</string>
+    <string name="default_mobile_prefix" translatable="false">+61</string>
+    <string name="defaule_commont_hours" translatable="false">%d hours ago</string>
+    <string name="defaule_commont_minutes" translatable="false">%d mins ago</string>
+    <string name="defaule_commont_now" translatable="false">Just now</string>
+    <string name="no">No</string>
+    <string name="yes">Yes</string>
+    <string name="order_timeout">Successful,User timed out Will you continue to serve this user?</string>
+    <string name="price_unit_only" translatable="false">$</string>
+    <string name="distance_less_than_unit" translatable="false">&lt;500M</string>
+    <string name="card_format" translatable="false">**** **** **** %s</string>
+    <string name="default_deposit_rate" translatable="false">X %s%%</string>
+    <string name="default_page_indicator" translatable="false">%d/%d</string>
+    <string name="default_time_display" translatable="false">00:00</string>
+    <string name="default_level" translatable="false">lv0</string>
+    <string name="username_unit" translatable="false">%s***%s</string>
+
+    <string name="title_save">save</string>
+    <string name="loading1">Loading.</string>
+    <string name="loading2">Loading..</string>
+    <string name="loading3">Loading...</string>
+
+
+    <string name="permission_apply">This app needs access to your storage,location and camera</string>
+    <string name="storage_permission_apply">该功能需要存储空间权限</string>
+
+
+
+
+
+
+</resources>

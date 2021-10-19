@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/llPopupDialog"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_alignParentBottom="true"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <Button
+        android:id="@+id/btn_cancel"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_57"
+        android:layout_alignParentBottom="true"
+        android:background="@color/white"
+        android:text="@string/cancel_button"
+        android:textColor="@color/appBlack"
+        android:textSize="@dimen/textSize18" />
+
+    <View
+        android:id="@+id/line"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_1"
+        android:layout_above="@id/btn_cancel"
+        android:background="@color/appBlack" />
+
+    <ListView
+        android:id="@+id/lvPopupMenuList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/line"
+        android:background="@drawable/dialog_popupmenu_background"/>
+</RelativeLayout>

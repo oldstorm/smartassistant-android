@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingLeft="@dimen/dp_15"
+    android:paddingTop="@dimen/dp_15"
+    android:paddingRight="@dimen/dp_15">
+
+    <ImageView
+        android:id="@+id/ivCover"
+        android:layout_width="@dimen/dp_60"
+        android:layout_height="@dimen/dp_60"
+        android:src="@drawable/default_bg"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/dp_16"
+        android:layout_marginRight="@dimen/dp_15"
+        android:textColor="@color/color_3f4663"
+        android:textSize="@dimen/textSize14"
+        app:layout_constraintBottom_toBottomOf="@+id/ivCover"
+        app:layout_constraintLeft_toRightOf="@+id/ivCover"
+        app:layout_constraintRight_toLeftOf="@+id/tvTodo"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="米家台灯1S" />
+
+    <TextView
+        android:id="@+id/tvTodo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/shape_f1f4fc_c4"
+        android:gravity="center"
+        android:minWidth="@dimen/dp_70"
+        android:paddingLeft="@dimen/dp_7"
+        android:paddingTop="@dimen/dp_9"
+        android:paddingRight="@dimen/dp_7"
+        android:paddingBottom="@dimen/dp_9"
+        android:textColor="@color/color_2da3f6"
+        android:textSize="@dimen/textSize14"
+        app:layout_constraintBottom_toBottomOf="@+id/ivCover"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="添加" />
+
+    <View
+        android:id="@+id/viewLine"
+        style="@style/line_eee"
+        android:layout_marginLeft="@dimen/dp_15"
+        android:layout_marginTop="@dimen/dp_15"
+        android:layout_marginRight="@dimen/dp_15"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivCover" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/color_f6f8fd"
+    tools:context=".activity.UserInfoActivity">
+
+    <RelativeLayout
+        android:id="@+id/rlAvatar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="0.5dp"
+        android:background="@color/white"
+        android:minHeight="@dimen/dp_50"
+        android:paddingLeft="@dimen/dp_15"
+        android:paddingTop="0.5dp"
+        android:paddingRight="@dimen/dp_15"
+        android:paddingBottom="0.5dp">
+
+        <TextView
+            style="@style/user_info_title"
+            android:layout_centerVertical="true"
+            android:text="@string/mine_avatar" />
+
+        <com.yctc.zhiting.widget.CircleImageView
+            android:id="@+id/ciAvatar"
+            android:layout_width="@dimen/dp_40"
+            android:layout_height="@dimen/dp_40"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_gravity="right"
+            android:src="@drawable/icon_default_avatar" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/rlNickname"
+        style="@style/rl_key_value"
+        android:layout_below="@id/rlAvatar">
+
+        <TextView
+            style="@style/user_info_title"
+            android:layout_centerVertical="true"
+            android:text="@string/mine_nickname" />
+
+        <TextView
+            android:id="@+id/tvNickname"
+            style="@style/mine_tv_value"
+            tools:text="13fasd4541" />
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/rlPhone"
+        style="@style/rl_key_value"
+        android:layout_below="@id/rlNickname"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            style="@style/user_info_title"
+            android:layout_centerVertical="true"
+            android:text="@string/mine_phone_number" />
+
+        <TextView
+            android:id="@+id/tvPhone"
+            style="@style/mine_tv_value_no_arrow"
+            tools:text="130****4541" />
+
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/tvLogout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="@dimen/dp_15"
+        android:layout_marginRight="@dimen/dp_15"
+        android:layout_marginBottom="@dimen/dp_10"
+        android:background="@drawable/shape_white_c10"
+        android:gravity="center"
+        android:padding="@dimen/dp_19"
+        android:text="@string/mine_mine_log_out"
+        android:textColor="@color/color_FF0000"
+        android:textSize="@dimen/textSize14"
+        android:textStyle="bold"
+        android:visibility="gone"
+        tools:visibility="visible" />
+</RelativeLayout>

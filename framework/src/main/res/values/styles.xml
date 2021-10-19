@@ -1,0 +1,222 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowContentTransitions">true</item>
+        <item name="android:windowEnterTransition">@android:transition/slide_right</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="MainActTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowContentTransitions">true</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <!--&lt;!&ndash; 应用启动页(StartingWindow)的theme &ndash;&gt;-->
+    <style name="AppTheme.StartingWindowTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/white</item>
+        <item name="android:windowBackground">@mipmap/fantastia_startpage</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:navigationBarColor">@color/white</item>
+    </style>
+
+    <style name="AppTheme.Translate" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/white</item>
+        <item name="android:windowBackground">@color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
+    <style name="checkBoxStyle" parent="@android:style/Widget.CompoundButton.CheckBox">
+        <item name="android:button">@drawable/checkbox_background</item>
+        <item name="android:paddingLeft">@dimen/dp_5</item>
+        <item name="android:textSize">@dimen/textSize14</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="textAllCaps">false</item>
+    </style>
+
+    <style name="loginTheme">
+        <item name="colorPrimary">@color/appWhite</item>
+        <item name="colorPrimaryDark">@color/appWhite</item>
+        <item name="colorAccent">@color/appDarkGray</item>
+    </style>
+
+    <!--dialog default style-->
+    <style name="DialogStyle" parent="android:style/Theme.Dialog">
+        <item name="android:windowFrame">@null</item><!--边框 -->
+        <item name="android:windowIsFloating">true</item><!--是否浮现在activity之上 -->
+        <item name="android:windowIsTranslucent">true</item><!--半透明 -->
+        <item name="android:windowNoTitle">true</item><!--无标题 -->
+        <item name="android:windowBackground">@android:color/transparent</item><!--背景透明 -->
+        <item name="android:backgroundDimEnabled">true</item><!--模糊 -->
+    </style>
+
+    <style name="DialogTopStyle" parent="android:style/Theme.Dialog">
+        <item name="android:windowFrame">@null</item><!--边框 -->
+        <item name="android:windowIsFloating">true</item><!--是否浮现在activity之上 -->
+        <item name="android:windowIsTranslucent">true</item><!--半透明 -->
+        <item name="android:windowNoTitle">true</item><!--无标题 -->
+        <item name="android:windowBackground">@android:color/transparent</item><!--背景透明 -->
+        <item name="android:backgroundDimEnabled">true</item><!--模糊 -->
+        <item name="android:backgroundDimAmount">0.0</item>  <!-- 屏幕背景是否变暗 -->
+    </style>
+
+    <!--default text style-->
+
+    <style name="TextStyle14">
+        <item name="android:textSize">@dimen/textSize14</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <style name="TextStyle18">
+        <item name="android:textSize">@dimen/textSize18</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+    </style>
+
+    <!--hahah-->
+
+    <!-- Base application theme. -->
+    <style name="LoginAppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowContentTransitions">true</item>
+        <item name="android:windowEnterTransition">@android:transition/slide_right</item>
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <style name="TextErrorAppTheme">
+        <item name="colorPrimary">@color/appWhite</item>
+        <item name="colorPrimaryDark">@color/appWhite</item>
+        <item name="colorAccent">@color/appOrange</item>
+        <item name="android:textSize">@dimen/textSize14</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/appOrange</item>
+        <item name="colorControlNormal">@color/appOrange</item>
+        <item name="colorControlActivated">@color/appOrange</item>
+        <item name="colorControlHighlight">@color/appOrange</item>
+    </style>
+
+    <!--dialog default style-->
+    <style name="DialogStyleTransparent" parent="Theme.AppCompat.Dialog">
+        <item name="android:windowFrame">@null</item><!--边框 -->
+        <item name="android:windowIsFloating">true</item><!--是否浮现在activity之上 -->
+        <item name="android:windowIsTranslucent">true</item><!--半透明 -->
+        <item name="android:windowNoTitle">true</item><!--无标题 -->
+        <item name="android:windowBackground">@android:color/transparent</item><!--背景透明 -->
+        <item name="android:backgroundDimEnabled">false</item><!--模糊 -->
+        <item name="android:fontFamily">sans-serif</item>
+    </style>
+
+    <style name="common_dialog" parent="@android:style/Theme.Dialog">
+        <item name="android:windowFrame">@null</item>
+        <!-- Dialog的windowFrame框为无 -->
+        <item name="android:windowIsFloating">true</item>
+        <!-- 是否漂现在activity上 -->
+        <item name="android:windowIsTranslucent">true</item>
+        <!-- 是否半透明 -->
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <!-- 去除黑色边框的关键设置项 -->
+        <item name="android:backgroundDimEnabled">true</item>
+        <!-- 屏幕背景是否变暗 -->
+        <item name="android:backgroundDimAmount">0.3</item>
+    </style>
+
+    <!--<style name="bottom_dialog" parent="@android:style/Theme.Dialog">-->
+    <style name="bottom_dialog" parent="android:Animation">
+        <item name="android:windowFrame">@null</item>
+        <!-- Dialog的windowFrame框为无 -->
+        <item name="android:windowIsFloating">true</item>
+        <!-- 是否漂现在activity上 -->
+        <item name="android:windowIsTranslucent">true</item>
+        <!-- 是否半透明 -->
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:background">@null</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <!-- 去除黑色边框的关键设置项 -->
+        <item name="android:backgroundDimEnabled">true</item>
+        <!-- 屏幕背景是否变暗 -->
+        <item name="android:backgroundDimAmount">0.8</item>
+        <item name="android:windowEnterAnimation">@anim/bottom_enter</item>
+        <item name="android:windowExitAnimation">@anim/bottom_exit</item>
+    </style>
+
+    <style name="AppTheme.Transparent">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+    </style>
+
+    <!--全面屏-->
+    <style name="NoTitleTheme" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowNoTitle">true</item>       
+        <item name="android:windowFullscreen">true</item> 
+    </style>
+
+    <style name="JFrameDialogDefaultAnim">
+        <item name="android:windowEnterAnimation">@anim/m_dialog_defalut_enter_anim</item>
+        <item name="android:windowExitAnimation">@anim/m_dialog_defalut_exit_anim</item>
+    </style>
+
+    <style name="BitFrameDialog" parent="@android:style/Theme.Dialog">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowTitleStyle">@null</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
+        <item name="android:windowSoftInputMode">stateUnspecified|adjustPan</item>
+        <item name="android:gravity">center</item>
+        <!--<item name="android:windowFullscreen">true</item>-->
+        <!-- 去除标题 -->
+        <item name="android:windowNoTitle">true</item>
+        <!--<item name="android:windowIsFloating">true</item>-->
+        <!--<item name="android:windowFrame">@null</item>-->
+        <!--<item name="android:windowIsTranslucent">true</item>-->
+        <!--<item name="android:windowContentOverlay">@null</item>-->
+        <!--<item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>-->
+        <!--<item name="android:backgroundDimEnabled">true</item>-->
+    </style>
+
+    <!--PopupWindow对话框-->
+    <style name="CommonAnimTop" parent="@android:style/Animation">
+        <item name="android:windowEnterAnimation">@anim/common_push_scale_in</item>
+        <item name="android:windowExitAnimation">@anim/common_push_scale_out</item>
+    </style>
+
+    <style name="CommonAnimLeft" parent="@android:style/Animation">
+        <item name="android:windowEnterAnimation">@anim/common_push_scale_left_in</item>
+        <item name="android:windowExitAnimation">@anim/common_push_scale_left_out</item>
+    </style>
+
+    <style name="CommonAnimRight" parent="@android:style/Animation">
+        <item name="android:windowEnterAnimation">@anim/common_push_scale_right_in</item>
+        <item name="android:windowExitAnimation">@anim/common_push_scale_right_out</item>
+    </style>
+
+    <style name="CommonAnimBottom" parent="@android:style/Animation">
+        <item name="android:windowEnterAnimation">@anim/common_push_bottom_in</item>
+        <item name="android:windowExitAnimation">@anim/common_push_bottom_out</item>
+    </style>
+
+    <style name="CommonAnimCenter" parent="@android:style/Animation">
+        <item name="android:windowEnterAnimation">@anim/common_push_center_in</item>
+        <item name="android:windowExitAnimation">@anim/common_push_center_out</item>
+    </style>
+
+    <!--对话框-->
+
+
+
+</resources>

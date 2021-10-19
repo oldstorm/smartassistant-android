@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".activity.AuthorizeActivity">
+
+    <com.app.main.framework.widget.StatusBarView
+        android:id="@+id/sbView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/ivLogo"
+        android:layout_width="@dimen/dp_70"
+        android:layout_height="@dimen/dp_70"
+        android:layout_marginLeft="@dimen/dp_50"
+        android:layout_marginTop="@dimen/dp_80"
+        android:src="@drawable/icon_author_logo"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sbView" />
+
+    <TextView
+        android:id="@+id/tvName"
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/dp_17"
+        android:layout_marginTop="@dimen/dp_7"
+        android:layout_marginRight="@dimen/dp_30"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="管******"
+        android:textColor="@color/color_1A2734"
+        android:textSize="@dimen/textSize20"
+        android:textStyle="bold"
+        app:layout_constraintLeft_toRightOf="@+id/ivLogo"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/ivLogo" />
+
+    <TextView
+        android:id="@+id/tvJoin"
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/dp_17"
+        android:layout_marginRight="@dimen/dp_30"
+        android:layout_marginBottom="@dimen/dp_6"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="@string/main_welcome_join"
+        android:textColor="@color/color_1A2734"
+        android:textSize="@dimen/textSize20"
+        app:layout_constraintBottom_toBottomOf="@+id/ivLogo"
+        app:layout_constraintLeft_toRightOf="@+id/ivLogo"
+        app:layout_constraintRight_toRightOf="parent" />
+
+    <com.yctc.zhiting.widget.MediumTextView
+        android:id="@+id/tvTips"
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_64"
+        android:layout_marginRight="@dimen/dp_30"
+        android:lineSpacingExtra="@dimen/dp_2"
+        android:text="同意将智汀家庭云（管******）的以下信息授权给智汀家庭云盘"
+        android:textColor="@color/color_1A2734"
+        android:textSize="@dimen/textSize14"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="@+id/ivLogo"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ivLogo"
+        app:strokeWidth="0.5dp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvScopes"
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_2"
+        android:layout_marginRight="@dimen/dp_30"
+        app:layout_constraintLeft_toLeftOf="@+id/ivLogo"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvTips" />
+
+    <TextView
+        android:id="@+id/tvConfirm"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/dp_50"
+        android:layout_marginRight="@dimen/dp_50"
+        android:layout_marginBottom="@dimen/dp_78"
+        android:background="@drawable/shape_427aed"
+        android:gravity="center"
+        android:padding="@dimen/dp_18"
+        android:text="@string/main_confirm_auth"
+        android:textColor="@color/white"
+        android:textSize="@dimen/textSize14"
+        app:layout_constraintBottom_toTopOf="@+id/tvAgreement" />
+
+    <TextView
+        android:id="@+id/tvAgreement"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/dp_12"
+        android:text="@string/main_agreement"
+        android:textColor="@color/color_A2A7AE"
+        android:textSize="@dimen/textSize11"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

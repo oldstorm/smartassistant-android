@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingBottom="@dimen/dp_15"
+    android:background="@drawable/shape_white_top_c10">
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/clTop"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:paddingBottom="@dimen/dp_13">
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            android:layout_marginLeft="@dimen/dp_18"
+            android:layout_marginTop="@dimen/dp_17"
+            android:layout_marginBottom="@dimen/dp_4"
+            android:text="@string/scene_timing"
+            android:textSize="@dimen/textSize16"
+            android:textColor="@color/color_3F4663"
+            android:textStyle="bold"/>
+        <ImageView
+            android:id="@+id/ivClose"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_5"
+            android:padding="@dimen/dp_15"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            android:src="@drawable/icon_close" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <View
+        android:id="@+id/viewLine"
+        android:layout_width="0dp"
+        android:layout_height="0.5dp"
+        android:background="@color/color_EEEEEE"
+        app:layout_constraintTop_toBottomOf="@+id/clTop"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/llTime"
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_35"
+        android:paddingBottom="@dimen/dp_29"
+        app:layout_constraintTop_toBottomOf="@id/viewLine"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:paddingLeft="@dimen/dp_15"
+        android:paddingRight="@dimen/dp_15"
+        android:orientation="horizontal">
+        <com.yctc.zhiting.widget.PickerView
+            android:id="@+id/pvHour"
+            android:layout_width="@dimen/dp_0"
+            android:layout_weight="1"
+            android:layout_height="@dimen/dp_200" />
+
+        <com.yctc.zhiting.widget.PickerView
+            android:id="@+id/pvMinute"
+            android:layout_width="@dimen/dp_0"
+            android:layout_weight="1"
+            android:layout_height="@dimen/dp_200" />
+
+        <com.yctc.zhiting.widget.PickerView
+            android:id="@+id/pvSecond"
+            android:layout_width="@dimen/dp_0"
+            android:layout_weight="1"
+            android:layout_height="@dimen/dp_200" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvConfirm"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/llTime"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:gravity="center"
+        android:background="@drawable/shape_f6f8fd_c10"
+        android:padding="@dimen/dp_18"
+        android:layout_margin="@dimen/dp_15"
+        android:text="@string/common_confirm"
+        android:textSize="@dimen/textSize14"
+        android:textColor="@color/color_3F4663"
+        android:textStyle="bold"/>
+</androidx.constraintlayout.widget.ConstraintLayout>

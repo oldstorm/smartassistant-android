@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ll_root"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#f6f8fd"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tvTop"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_100" />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_marginTop="@dimen/dp_50"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/empty_md_work" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_32"
+        android:gravity="center"
+        android:textColor="#ff888888"
+        android:textSize="@dimen/textSize14"
+        tools:text="Perfecting Technician Information" />
+
+    <TextView
+        android:id="@+id/tv_action"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_16"
+        android:background="@drawable/selector_stroke_gray_30dp"
+        android:paddingLeft="@dimen/dp_15"
+        android:paddingTop="@dimen/dp_6"
+        android:paddingRight="@dimen/dp_15"
+        android:paddingBottom="@dimen/dp_6"
+        tools:text="Add Model"
+        android:textColor="#222222"
+        android:textSize="@dimen/textSize14"
+        android:visibility="gone"
+        tools:visibility="visible" />
+</LinearLayout>

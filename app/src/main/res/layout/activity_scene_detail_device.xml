@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activity.SceneDeviceActivity">
+
+    <com.scwang.smart.refresh.layout.SmartRefreshLayout
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:srlEnableRefresh="false"
+        app:srlEnableLoadMore="false">
+
+        <com.scwang.smart.refresh.header.ClassicsHeader
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:srlFinishDuration="500"
+            app:srlEnableLastTime="true"
+            app:srlClassicsSpinnerStyle="FixedBehind"
+            app:srlTextSizeTitle="16sp"
+            app:srlTextSizeTime="10dp"
+            app:srlTextTimeMarginTop="2dp"
+            app:srlDrawableArrowSize="20dp"
+            app:srlDrawableProgressSize="20dp"
+            app:srlDrawableMarginRight="20dp" />
+        <LinearLayout
+            android:id="@+id/llParent"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvData"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:overScrollMode="never"
+                android:visibility="visible"/>
+            <include
+                android:id="@+id/layout_null"
+                android:visibility="visible"
+                layout="@layout/layout_empty" />
+        </LinearLayout>
+    </com.scwang.smart.refresh.layout.SmartRefreshLayout>
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

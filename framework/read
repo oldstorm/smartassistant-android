@@ -1,0 +1,59 @@
+1、适配状态栏的高度，两个方法
+ScreenUtil.fitNotchScreen(getContext(),rootView);
+
+   <com.app.main.framework.widget.StatusBarView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+2、TabLayout 属性
+                        <android.support.design.widget.TabLayout
+                            android:id="@+id/tabLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="@dimen/common_dp_55"
+                            android:layout_centerVertical="true"
+                            android:layout_marginLeft="@dimen/common_dp_0"
+                            android:layout_marginTop="@dimen/common_dp_0"
+                            android:layout_marginRight="@dimen/common_dp_0"
+                            android:layout_toRightOf="@id/ivShadow"
+                            app:tabBackground="@null"
+                            app:tabGravity="center"
+                            app:tabIndicatorColor="@color/colorAccent"
+                            app:tabIndicatorHeight="@dimen/common_dp_0"
+                            app:tabMaxWidth="@dimen/common_dp_200"
+                            app:tabMinWidth="@dimen/common_dp_20"
+                            app:tabMode="scrollable"
+                            app:tabPaddingEnd="@dimen/common_dp_15"
+                            app:tabPaddingStart="@dimen/common_dp_0"
+                            app:tabSelectedTextColor="@color/common_white"
+                            app:tabTextAppearance="@style/CommonTabLayoutTextStyle"
+                            app:tabTextColor="@color/common_black" />
+                    </RelativeLayout>
+
+3、对话框CommonBaseDialog实现上中下位置
+4、BasePopupWindow
+5、常用工具类
+   图片加载:GlideUtil
+   云端用户工具类：UserUtils
+   集合判断：CollectionUtil
+   生成二维码工具：CodeUtils
+   校验是否双重点击：FastUtil
+
+6、WebSocket使用
+        WSocketManager.getInstance().addWebSocketListener(new IWebSocketListener() {
+            @Override
+            public void onOpen(WebSocket webSocket, Response response) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "onOpen", Toast.LENGTH_SHORT).show());
+            }
+
+            @Override
+            public void onMessage(WebSocket webSocket, String text) {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, text, Toast.LENGTH_SHORT).show());
+            }
+
+            @Override
+            public void onFailure(WebSocket webSocket, Throwable t, @Nullable Response response) {
+
+            }
+        });
+7、防止键盘将控件顶起
+android:windowSoftInputMode="adjustNothing|stateHidden"

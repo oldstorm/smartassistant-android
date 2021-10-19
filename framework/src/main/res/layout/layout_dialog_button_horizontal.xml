@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:id="@+id/llDialogOkButton"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <Button
+        android:id="@+id/btDialogCancel"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_50"
+        android:background="@null"
+        android:layout_weight="1"
+        android:textColor="@color/appBlack"
+        android:text="@string/cancel_button"/>
+
+    <View
+        android:layout_width="@dimen/dp_1"
+        android:layout_height="match_parent"
+        android:background="@color/appLightGray"/>
+
+    <Button
+        android:id="@+id/btDialogOK"
+        android:layout_width="match_parent"
+        android:layout_weight="1"
+        android:layout_height="@dimen/dp_50"
+        android:background="@null"
+        android:textColor="@color/appColor"
+        android:text="@string/ok_button"/>
+</LinearLayout>
