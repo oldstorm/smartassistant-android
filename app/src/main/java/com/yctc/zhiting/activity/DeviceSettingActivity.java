@@ -130,7 +130,7 @@ public class DeviceSettingActivity extends MVPBaseActivity<DeviceSettingContract
                  centerAlertDialog = CenterAlertDialog.newInstance(getResources().getString(R.string.home_device_del_title), null, true);
                 centerAlertDialog.setConfirmListener(new CenterAlertDialog.OnConfirmListener() {
                     @Override
-                    public void onConfirm() {
+                    public void onConfirm(boolean del) {
                         mPresenter.delDevice(mDeviceId);
 
                     }
@@ -217,6 +217,7 @@ public class DeviceSettingActivity extends MVPBaseActivity<DeviceSettingContract
     public void updateNameSuccess() {
         tvName.setText(updateName);
         tvDeviceName.setText(updateName);
+        mDeviceName = updateName;
         EventBus.getDefault().post(new DeviceNameEvent(updateName));
         ToastUtil.show(getResources().getString(R.string.mine_save_success));
     }

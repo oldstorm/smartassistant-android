@@ -1,22 +1,17 @@
 package com.yctc.zhiting.dialog;
 
-import android.app.Dialog;
-import android.content.Context;
 import android.os.Bundle;
 import android.text.InputFilter;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
-import com.app.main.framework.baseutil.AndroidUtil;
-import com.app.main.framework.baseutil.LibLoader;
 import com.app.main.framework.baseutil.UiUtil;
 import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.dialog.CommonBaseDialog;

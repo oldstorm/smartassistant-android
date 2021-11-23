@@ -2,8 +2,10 @@ package com.yctc.zhiting.activity;
 
 
 import android.content.Context;
+import android.os.Bundle;
 import android.text.TextUtils;
 import android.text.method.HideReturnsTransformationMethod;
+import android.text.method.LinkMovementMethod;
 import android.text.method.PasswordTransformationMethod;
 import android.util.TypedValue;
 import android.view.View;
@@ -20,14 +22,19 @@ import com.google.gson.Gson;
 import com.yctc.zhiting.R;
 import com.yctc.zhiting.activity.contract.LoginContract;
 import com.yctc.zhiting.activity.presenter.LoginPresenter;
+import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.db.DBManager;
 import com.yctc.zhiting.entity.mine.LoginBean;
 import com.yctc.zhiting.entity.mine.MemberDetailBean;
 import com.yctc.zhiting.entity.mine.RegisterPost;
 import com.yctc.zhiting.entity.mine.UpdateUserPost;
 import com.yctc.zhiting.event.MineUserInfoEvent;
+import com.yctc.zhiting.utils.AgreementPolicyListener;
 import com.yctc.zhiting.utils.AllRequestUtil;
+import com.yctc.zhiting.utils.ChannelUtil;
 import com.yctc.zhiting.utils.HomeUtil;
+import com.yctc.zhiting.utils.IntentConstant;
+import com.yctc.zhiting.utils.StringUtil;
 import com.yctc.zhiting.utils.UserUtils;
 
 import org.greenrobot.eventbus.EventBus;
@@ -61,6 +68,10 @@ public class LoginActivity extends MVPBaseActivity<LoginContract.View, LoginPres
     TextView tvBind;
     @BindView(R.id.tvTips)
     TextView tvTips;
+    @BindView(R.id.tvAgreementPolicy)
+    TextView tvAgreementPolicy;
+    @BindView(R.id.ivSel)
+    ImageView ivSel;
 
     private boolean showPwd;
     private WeakReference<Context> mContext;
@@ -76,6 +87,30 @@ public class LoginActivity extends MVPBaseActivity<LoginContract.View, LoginPres
         super.initUI();
         mContext = new WeakReference<>(this);
         dbManager = DBManager.getInstance(mContext.get());
+        tvAgreementPolicy.setMovementMethod(LinkMovementMethod.getInstance());
+        tvAgreementPolicy.setText(StringUtil.setAgreementAndPolicyTextStyle(UiUtil.getString(R.string.login_read_and_agree), UiUtil.getColor(R.color.color_2da3f6),
+                new AgreementPolicyListener() {
+                    @Override
+                    public void onHead() {
+                        ivSel.setSelected(!ivSel.isSelected());
+                    }
+
+                    @Override
+                    public void onAgreement() {
+                        Bundle bundle = new Bundle();
+                        bundle.putString(IntentConstant.TITLE, UiUtil.getString(R.string.user_agreement));
+                        bundle.putString(IntentConstant.URL, Constant.AGREEMENT_URL);
+                        switchToActivity(NormalWebActivity.class, bundle);
+                    }
+
+                    @Override
+                    public void onPolicy() {
+                        Bundle bundle = new Bundle();
+                        bundle.putString(IntentConstant.TITLE, UiUtil.getString(R.string.privacy_policy));
+                        bundle.putString(IntentConstant.URL, Constant.POLICY_URL);
+                        switchToActivity(NormalWebActivity.class, bundle);
+                    }
+                }));
     }
 
     @Override
@@ -84,35 +119,35 @@ public class LoginActivity extends MVPBaseActivity<LoginContract.View, LoginPres
     }
 
     @OnTextChanged(R.id.etPhone)
-    void onPhoneChanged(CharSequence s){
+    void onPhoneChanged(CharSequence s) {
         boolean hint = false;
-        etPhone.setTextSize( TypedValue.COMPLEX_UNIT_SP, !TextUtils.isEmpty(etPhone.getText().toString().trim()) ? 24 : 14);
+        etPhone.setTextSize(TypedValue.COMPLEX_UNIT_SP, !TextUtils.isEmpty(etPhone.getText().toString().trim()) ? 24 : 14);
         viewLinePhone.setBackgroundResource(!TextUtils.isEmpty(etPhone.getText().toString().trim()) ? R.color.color_3f4663 : R.color.color_CCCCCC);
     }
 
     @OnTextChanged(R.id.etPassword)
-    void onChanged(){
-        etPassword.setTextSize( TypedValue.COMPLEX_UNIT_SP, !TextUtils.isEmpty(etPassword.getText().toString().trim()) ? 24 : 14);
+    void onChanged() {
+        etPassword.setTextSize(TypedValue.COMPLEX_UNIT_SP, !TextUtils.isEmpty(etPassword.getText().toString().trim()) ? 24 : 14);
         ivVisible.setVisibility(TextUtils.isEmpty(etPassword.getText().toString().trim()) ? View.GONE : View.VISIBLE);
         viewLinePassword.setBackgroundResource(!TextUtils.isEmpty(etPassword.getText().toString().trim()) ? R.color.color_3f4663 : R.color.color_CCCCCC);
     }
 
-    @OnClick({R.id.ivVisible, R.id.llLogin, R.id.tvBind})
-    void onClick(View view){
-        switch (view.getId()){
+    @OnClick({R.id.ivVisible, R.id.llLogin, R.id.tvBind, R.id.ivSel})
+    void onClick(View view) {
+        switch (view.getId()) {
             case R.id.ivVisible:  // 密码是否可见
                 showPwd = !showPwd;
                 ivVisible.setImageResource(showPwd ? R.drawable.icon_password_visible : R.drawable.icon_password_invisible);
-                if (showPwd){
+                if (showPwd) {
                     etPassword.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
-                }else {
+                } else {
                     etPassword.setTransformationMethod(PasswordTransformationMethod.getInstance());
                 }
                 etPassword.setSelection(etPassword.getText().length());
                 break;
 
             case R.id.llLogin:  // 登录
-                if (checkPhone() && checkPwd()){
+                if (checkPhone() && checkPwd() && checkAgree()) {
                     String phone = etPhone.getText().toString().trim();
                     String password = etPassword.getText().toString().trim();
                     RegisterPost registerPost = new RegisterPost(phone, password);
@@ -126,20 +161,25 @@ public class LoginActivity extends MVPBaseActivity<LoginContract.View, LoginPres
             case R.id.tvBind:  // 绑定云
                 switchToActivity(BindCloudActivity.class);
                 break;
+
+            case R.id.ivSel:
+                ivSel.setSelected(!ivSel.isSelected());
+                break;
         }
     }
 
     /**
      * 检验手机号
+     *
      * @return
      */
-    private boolean checkPhone(){
+    private boolean checkPhone() {
         String phone = etPhone.getText().toString().trim();
-        if (TextUtils.isEmpty(phone)){
+        if (TextUtils.isEmpty(phone)) {
             ToastUtil.show(getResources().getString(R.string.login_please_input_phone));
             return false;
         }
-        if (phone.length()!=11){
+        if (phone.length() != 11) {
             ToastUtil.show(getResources().getString(R.string.login_phone_wrong_format));
             return false;
         }
@@ -148,11 +188,12 @@ public class LoginActivity extends MVPBaseActivity<LoginContract.View, LoginPres
 
     /**
      * 检验密码
+     *
      * @return
      */
-    private boolean checkPwd(){
+    private boolean checkPwd() {
         String password = etPassword.getText().toString().trim();
-        if (TextUtils.isEmpty(password)){
+        if (TextUtils.isEmpty(password)) {
             ToastUtil.show(getResources().getString(R.string.login_please_input_password));
             return false;
         }
@@ -164,48 +205,66 @@ public class LoginActivity extends MVPBaseActivity<LoginContract.View, LoginPres
     }
 
     /**
+     * 检查是否勾选用户协议
+     *
+     * @return
+     */
+    private boolean checkAgree() {
+        if (!ivSel.isSelected()) {
+            ToastUtil.show(UiUtil.getString(R.string.please_check_agreement));
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * 设置登录是否可用
+     *
      * @param enabled
      */
-    private void setLoginEnabled(boolean enabled){
+    private void setLoginEnabled(boolean enabled) {
         llLogin.setEnabled(enabled);
     }
 
 
     /**
      * 设置loading是否可见
+     *
      * @param visible
      */
-    private void setProgressBarVisible(boolean visible){
+    private void setProgressBarVisible(boolean visible) {
         rbLogin.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 
     /**
      * 设置绑定云是否可用
+     *
      * @param enabled
      */
-    private void setTvBindEnabled(boolean enabled){
+    private void setTvBindEnabled(boolean enabled) {
         tvBind.setEnabled(enabled);
     }
 
 
     /**
      * 登录成功
+     *
      * @param loginBean
      */
     @Override
     public void loginSuccess(LoginBean loginBean) {
-        if (loginBean!=null){
+        if (loginBean != null) {
             MemberDetailBean memberDetailBean = loginBean.getUser_info();
-            if (memberDetailBean!=null) {
+            if (memberDetailBean != null) {
                 UserUtils.saveUser(memberDetailBean);
-                EventBus.getDefault().post(new MineUserInfoEvent(true));
+                EventBus.getDefault().post(new MineUserInfoEvent(false));
                 AllRequestUtil.getCloudArea();
+                //ChannelUtil.reSaveChannel();
                 finish();
-            }else {
+            } else {
                 fail();
             }
-        }else {
+        } else {
             fail();
         }
     }
@@ -213,7 +272,7 @@ public class LoginActivity extends MVPBaseActivity<LoginContract.View, LoginPres
     /**
      * 用户信息为空
      */
-    private void fail(){
+    private void fail() {
         ToastUtil.show(getResources().getString(R.string.login_fail));
         setLoginEnabled(true);
         setTvBindEnabled(true);
@@ -222,6 +281,7 @@ public class LoginActivity extends MVPBaseActivity<LoginContract.View, LoginPres
 
     /**
      * 登录失败
+     *
      * @param errorCode
      * @param msg
      */

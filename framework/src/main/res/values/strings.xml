@@ -57,10 +57,13 @@
 
     <string name="permission_apply">This app needs access to your storage,location and camera</string>
     <string name="storage_permission_apply">该功能需要存储空间权限</string>
+    <string name="access_fine_location_apply">该功能需要定位权限</string>
 
 
-
-
-
-
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="whether_trust_this_certificate">是否信任此证书？</string>
+    <string name="whether_trust_this_certificate_again">证书认证失败，是否重新授权？</string>
+    <string name="unzip_file_exception">Unzip file exception</string>
+    <string name="server_error">server error</string>
 </resources>

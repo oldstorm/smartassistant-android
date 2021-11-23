@@ -5,10 +5,7 @@ import android.app.Application;
 import android.content.Context;
 import android.os.Bundle;
 
-import com.app.main.framework.BuildConfig;
 import com.app.main.framework.baseutil.LibLoader;
-import com.app.main.framework.baseutil.SpConstant;
-import com.app.main.framework.baseutil.SpUtil;
 import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.httputil.HTTPCaller;
 import com.app.main.framework.httputil.comfig.HttpConfig;

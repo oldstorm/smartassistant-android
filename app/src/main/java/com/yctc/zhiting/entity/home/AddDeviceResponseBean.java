@@ -1,9 +1,12 @@
 package com.yctc.zhiting.entity.home;
 
+import com.yctc.zhiting.entity.mine.IdBean;
+
 public class AddDeviceResponseBean {
     private int device_id;
     private String plugin_url;
     private UserInfo user_info;
+    private IdBean area_info;
 
     public int getDevice_id() {
         return device_id;
@@ -27,6 +30,14 @@ public class AddDeviceResponseBean {
 
     public void setUser_info(UserInfo user_info) {
         this.user_info = user_info;
+    }
+
+    public IdBean getArea_info() {
+        return area_info;
+    }
+
+    public void setArea_info(IdBean area_info) {
+        this.area_info = area_info;
     }
 
     public class UserInfo {

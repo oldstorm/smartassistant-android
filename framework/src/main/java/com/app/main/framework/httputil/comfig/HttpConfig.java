@@ -19,10 +19,11 @@ public class HttpConfig {
     private int readTimeout = 30;//读取超时时间 单位:秒
     public static final String TOKEN_KEY = "smart-assistant-token";
     public static final String AREA_ID = "Area-ID";
+    public static final String SA_ID = "SA-ID";
 
     //通用字段
     private List<NameValuePair> commonField = new ArrayList<>();
-    private static List<Header> headers = new ArrayList<>();
+    public static List<Header> headers = new ArrayList<>();
 
     public boolean isDebug() {
         return debug;
@@ -138,7 +139,16 @@ public class HttpConfig {
      * @param value
      */
     public static void addHeader(String value) {
-        if (!TextUtils.isEmpty(value)) {
+        if (TextUtils.isEmpty(value)) {
+            if (headers != null && headers.size() > 0) {
+                for (Header header : headers) {
+                    if (header.getName().equalsIgnoreCase(TOKEN_KEY)) {
+                        headers.remove(header);
+                        break;
+                    }
+                }
+            }
+        } else {
             headers.clear();
             headers.add(new Header(TOKEN_KEY, value));
         }

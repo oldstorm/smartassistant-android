@@ -91,6 +91,8 @@
         android:layout_marginTop="@dimen/dp_8"
         android:paddingBottom="@dimen/dp_16"
         android:lineSpacingExtra="@dimen/dp_2"
+        android:maxLines="3"
+        android:ellipsize="end"
         android:text="该插件包括台灯的所有控制，如开关、色温等，添加插件后可控制yeelight台灯系列的所有的产品，支持的产品型号包括：A 123、B123、C123"
         android:textColor="@color/color_3f4663"
         android:textSize="@dimen/textSize12" />

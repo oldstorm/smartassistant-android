@@ -10,40 +10,40 @@ import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.app.main.framework.baseutil.LogUtil;
+import com.app.main.framework.baseutil.SpUtil;
 import com.app.main.framework.baseutil.UiUtil;
 import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.BaseActivity;
-import com.app.main.framework.gsonutils.GsonConverter;
 import com.yctc.zhiting.R;
+import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.db.DBManager;
+import com.yctc.zhiting.dialog.AgreementDialog;
 import com.yctc.zhiting.entity.mine.HomeCompanyBean;
 import com.yctc.zhiting.entity.mine.UserInfoBean;
 import com.yctc.zhiting.event.UpdateProfessionStatusEvent;
+import com.yctc.zhiting.fragment.HomeFragment;
 import com.yctc.zhiting.receiver.WifiReceiver;
 import com.yctc.zhiting.utils.CollectionUtil;
 import com.yctc.zhiting.utils.IntentConstant;
 import com.yctc.zhiting.utils.UsernameUtil;
-import com.yctc.zhiting.websocket.WSocketManager;
 
 import org.greenrobot.eventbus.EventBus;
 
+import java.io.Serializable;
 import java.lang.ref.WeakReference;
 import java.util.List;
 
 import pub.devrel.easypermissions.AppSettingsDialog;
-import pub.devrel.easypermissions.EasyPermissions;
 
 import static com.yctc.zhiting.config.Constant.CurrentHome;
 import static com.yctc.zhiting.config.Constant.wifiInfo;
 
 /**
- * 欢迎页
+ * 启动页
  */
 public class SplashActivity extends BaseActivity {
 
@@ -66,6 +66,8 @@ public class SplashActivity extends BaseActivity {
      */
     private String appName;
 
+    private AgreementDialog mAgreementDialog;
+
 
     @Override
     protected int getLayoutId() {
@@ -82,43 +84,104 @@ public class SplashActivity extends BaseActivity {
         return false;
     }
 
-//    @Override
-//    protected void onCreate(Bundle savedInstanceState) {
-//        // 避免从桌面启动程序后，会重新实例化入口类的activity
-//        if (!this.isTaskRoot()) { // 当前类不是该Task的根部，那么之前启动
-//            Intent intent = getIntent();
-//            if (intent != null) {
-//                String action = intent.getAction();
-//                if (intent.hasCategory(Intent.CATEGORY_LAUNCHER) && Intent.ACTION_MAIN.equals(action)) { // 当前类是从桌面启动的
-//                    super.onCreate(savedInstanceState);
-//                    finish(); // finish掉该类，直接打开该Task中现存的Activity
-//                    return;
-//                }
-//            }
-//        }
-//        super.onCreate(savedInstanceState);
-//    }
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        // 避免从桌面启动程序后，会重新实例化入口类的activity
+        if (!this.isTaskRoot()) { // 当前类不是该Task的根部，那么之前启动
+            Intent intent = getIntent();
+            if (intent != null) {
+                String action = intent.getAction();
+                if (intent.hasCategory(Intent.CATEGORY_LAUNCHER) && Intent.ACTION_MAIN.equals(action)) { // 当前类是从桌面启动的
+                    super.onCreate(savedInstanceState);
+                    finish(); // finish掉该类，直接打开该Task中现存的Activity
+                    return;
+                }
+            }
+        }
+        super.onCreate(savedInstanceState);
+    }
 
     @Override
     protected void initUI() {
         super.initUI();
+        SpUtil.init(this);
         registerWifiReceiver();
+        initAgreementDialog();
         mContext = new WeakReference<>(this);
         dbManager = DBManager.getInstance(mContext.get());
         mainThreadHandler = new Handler(Looper.getMainLooper());
+    }
 
-        locationAndContactsTask();
+    /**
+     * 初始化用户协议弹窗
+     */
+    private void initAgreementDialog(){
+        mAgreementDialog = new AgreementDialog(this);
+        mAgreementDialog.setOnOperateListener(new AgreementDialog.OnOperateListener() {
+            @Override
+            public void onAgreement() {
+                Bundle bundle = new Bundle();
+                bundle.putString(IntentConstant.TITLE, UiUtil.getString(R.string.user_agreement));
+                bundle.putString(IntentConstant.URL, Constant.AGREEMENT_URL);
+                switchToActivity(NormalWebActivity.class, bundle);
+            }
+
+            @Override
+            public void onPolicy() {
+                Bundle bundle = new Bundle();
+                bundle.putString(IntentConstant.TITLE, UiUtil.getString(R.string.privacy_policy));
+                bundle.putString(IntentConstant.URL, Constant.POLICY_URL);
+                switchToActivity(NormalWebActivity.class, bundle);
+            }
+
+            @Override
+            public void onDisagree() {
+                mAgreementDialog.dismiss();
+                finish();
+            }
+
+            @Override
+            public void onAgree() {
+                SpUtil.put(Constant.AGREED, true);
+                afterAgreed(getIntent());
+                mAgreementDialog.dismiss();
+            }
+        });
     }
 
     @Override
     protected void initIntent(Intent intent) {
         super.initIntent(intent);
+        boolean agreed = SpUtil.getBoolean(Constant.AGREED);
+        if (agreed) {
+            afterAgreed(intent);
+        }else {
+            mAgreementDialog.show();
+        }
+    }
+
+    /**
+     * 同意过用户协议和隐私政策
+     * @param intent
+     */
+    private void afterAgreed(Intent intent){
         Uri uri = intent.getData();
         if (uri != null) {
             type = uri.getQueryParameter("type");
         }
         needPermissions = intent.getStringExtra("needPermissions");
         appName = intent.getStringExtra("appName");
+        if (type != null && type.equals("1") && CurrentHome != null) {  // 如果是授权过来且当前家庭不为空，直接调整授权界面
+//            Bundle bundle = new Bundle();
+//            bundle.putString(IntentConstant.NEED_PERMISSION, needPermissions);
+//            bundle.putString(IntentConstant.APP_NAME, appName);
+//            // 如果type不为空且为1的情况下到授权界面，否则直接到主界面
+//            switchToActivity(AuthorizeActivity.class, bundle);
+//            finish();
+            toMain();
+        } else { // 否则，正常流程
+            checkPermissionTask();
+        }
     }
 
     @Override
@@ -190,36 +253,54 @@ public class SplashActivity extends BaseActivity {
         });
     }
 
+    /**
+     * 去到主界面/授权界面
+     */
     private void toMain() {
-
-
-
         UiUtil.starThread(() -> {
             List<HomeCompanyBean> homeList = dbManager.queryHomeCompanyList();
-            if (CollectionUtil.isNotEmpty(homeList)){
-            CurrentHome = homeList.get(0);
-            UiUtil.runInMainThread(() -> {
-                if (wifiInfo != null) {
-                    for (HomeCompanyBean home : homeList) {
-                        if (home.getMac_address() != null && home.getMac_address().
-                                equalsIgnoreCase(wifiInfo.getBSSID()) && home.isIs_bind_sa()) { // 当前sa环境
-                            CurrentHome = home;
-                            break;
+            if (CollectionUtil.isNotEmpty(homeList)) {
+                CurrentHome = homeList.get(0);
+                UiUtil.runInMainThread(() -> {
+                   if (HomeFragment.homeLocalId>0){ // 之前打开过，没退出，按Home键之前的那个家庭
+                       for (HomeCompanyBean home : homeList){
+                           if (home.getLocalId() == HomeFragment.homeLocalId) {
+                               CurrentHome = home;
+                               break;
+                           }
+                       }
+                   }else {
+                       if (wifiInfo != null) {
+                           for (HomeCompanyBean home : homeList) {
+                               if (home.getMac_address() != null && home.getMac_address().
+                                       equalsIgnoreCase(wifiInfo.getBSSID()) && home.isIs_bind_sa()) { // 当前sa环境
+                                   CurrentHome = home;
+                                   break;
+                               }
+
+                           }
+                       }
+                   }
+
+                    for (HomeCompanyBean homeCompanyBean : homeList){
+                        if (homeCompanyBean.getLocalId() == CurrentHome.getLocalId()){
+                            homeCompanyBean.setSelected(true);
+                        }else {
+                            homeCompanyBean.setSelected(false);
                         }
                     }
-                }
-                UiUtil.postDelayed(() -> {
-                    Bundle bundle = new Bundle();
-                    bundle.putString(IntentConstant.TYPE, type);
-                    bundle.putString(IntentConstant.NEED_PERMISSION, needPermissions);
-                    bundle.putString(IntentConstant.APP_NAME, appName);
-                    switchToActivity(type!=null && type.equals("1") ? AuthorizeActivity.class : MainActivity.class, bundle);
-                    finish();
-                }, 1500);
-            });
-
+                    UiUtil.postDelayed(() -> {
+                        Bundle bundle = new Bundle();
+                        bundle.putString(IntentConstant.TYPE, type);
+                        bundle.putString(IntentConstant.NEED_PERMISSION, needPermissions);
+                        bundle.putString(IntentConstant.APP_NAME, appName);
+                        bundle.putSerializable(IntentConstant.BEAN_LIST, (Serializable) homeList);
+                        // 如果type不为空且为1的情况下到授权界面，否则直接到主界面
+                        switchToActivity(type != null && type.equals("1") ? AuthorizeActivity.class : MainActivity.class, bundle);
+                        finish();
+                    }, 1500);
+                });
             }
-
         });
     }
 
@@ -240,7 +321,6 @@ public class SplashActivity extends BaseActivity {
                         wifiInfo = wifiManager.getConnectionInfo();
                     }
                 }
-
             }
         }
     };
@@ -262,9 +342,8 @@ public class SplashActivity extends BaseActivity {
      */
     public void unRegisterWifiReceiver() {
         if (mWifiReceiver == null) return;
-            unregisterReceiver(mWifiReceiver);
+        unregisterReceiver(mWifiReceiver);
     }
-
 
     /**
      * 创建家庭
@@ -280,7 +359,7 @@ public class SplashActivity extends BaseActivity {
                 homeCompanyBean.setSa_user_token(null);
                 homeCompanyBean.setSa_lan_address(null);
                 homeCompanyBean.setUser_id(1);
-                long count = dbManager.insertHomeCompany(homeCompanyBean, null);
+                long count = dbManager.insertHomeCompany(homeCompanyBean, null, false);
                 UiUtil.runInMainThread(() -> {
                     if (count > 0) {
                         toMain();

@@ -1,6 +1,8 @@
 package com.yctc.zhiting.activity;
 
 import android.content.Context;
+import android.net.wifi.WifiInfo;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -8,6 +10,7 @@ import android.widget.TextView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.app.main.framework.baseutil.LogUtil;
 import com.app.main.framework.baseutil.UiUtil;
 import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.MVPBaseActivity;
@@ -20,8 +23,10 @@ import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.db.DBManager;
 import com.yctc.zhiting.entity.mine.HomeCompanyBean;
 import com.yctc.zhiting.entity.mine.HomeCompanyListBean;
+import com.yctc.zhiting.entity.mine.IdBean;
 import com.yctc.zhiting.entity.mine.PermissionBean;
 import com.yctc.zhiting.event.RefreshHomeList;
+import com.yctc.zhiting.utils.AllRequestUtil;
 import com.yctc.zhiting.utils.CollectionUtil;
 import com.yctc.zhiting.utils.HomeUtil;
 import com.yctc.zhiting.utils.IntentConstant;
@@ -87,21 +92,32 @@ public class HomeCompanyActivity extends MVPBaseActivity<HomeCompanyContract.Vie
         refreshLayout.setOnRefreshListener(refreshLayout -> loadData());
         homeCompanyAdapter.setOnItemClickListener((adapter, view, position) -> {
             HomeCompanyBean homeBean = mHomeList.get(position);
-//            if (homeBean.isIs_bind_sa() && Constant.wifiInfo != null) {
-//                bundle.putSerializable(IntentConstant.BEAN, homeBean);
-//                switchToActivity(HCDetailActivity.class, bundle);
-//            } else if (homeBean.getId() > 0 && !UserUtils.isLogin()) {
-//                switchToActivity(LoginActivity.class);
-//            } else {
-//                bundle.putSerializable(IntentConstant.BEAN, homeBean);
-//                switchToActivity(HCDetailActivity.class, bundle);
-//            }
+
             if (!UserUtils.isLogin() && homeBean.getId() > 0) {
-                if (HomeUtil.isHomeSAEnvironment(homeBean) && homeBean.isIs_bind_sa()){
+                if (HomeUtil.isSAEnvironment(homeBean) && homeBean.isIs_bind_sa()) {
                     bundle.putSerializable(IntentConstant.BEAN, homeBean);
                     switchToActivity(HCDetailActivity.class, bundle);
-                }else {
-                    switchToActivity(LoginActivity.class);
+                } else {
+                    if (homeBean.isIs_bind_sa() && TextUtils.isEmpty(homeBean.getMac_address()) && !TextUtils.isEmpty(homeBean.getSa_lan_address())) {  // 已绑sa，需判断地址是否在sa环境
+                        AllRequestUtil.checkUrl(homeBean.getSa_lan_address(), new AllRequestUtil.onCheckUrlListener() {
+                            @Override
+                            public void onSuccess() {
+                                LogUtil.e("checkUrl===onSuccess");
+                                WifiInfo wifiInfo = Constant.wifiInfo;
+                                homeBean.setMac_address(wifiInfo.getBSSID());
+                                dbManager.updateHomeMacAddress(homeBean.getLocalId(), wifiInfo.getBSSID());
+                                bundle.putSerializable(IntentConstant.BEAN, homeBean);
+                                switchToActivity(HCDetailActivity.class, bundle);
+                            }
+
+                            @Override
+                            public void onError() {
+                                switchToActivity(LoginActivity.class);
+                            }
+                        });
+                    } else {
+                        switchToActivity(LoginActivity.class);
+                    }
                 }
             } else {
                 bundle.putSerializable(IntentConstant.BEAN, homeBean);
@@ -113,11 +129,6 @@ public class HomeCompanyActivity extends MVPBaseActivity<HomeCompanyContract.Vie
     @OnClick(R.id.llAdd)
     void onClickAdd() {
         switchToActivity(AddHCActivity.class);
-    }
-
-    @OnClick(R.id.tvTodo)
-    void onClickTodo() {
-
     }
 
     /**
@@ -146,6 +157,7 @@ public class HomeCompanyActivity extends MVPBaseActivity<HomeCompanyContract.Vie
                     homeCompanyAdapter.setNewData(mHomeList);
                 }
             });
+            refreshLayout.finishRefresh();
         });
     }
 
@@ -170,22 +182,37 @@ public class HomeCompanyActivity extends MVPBaseActivity<HomeCompanyContract.Vie
                         homeBean.setCloud_user_id(cloudUserId);
                     }
                     List<HomeCompanyBean> userHomeCompanyList = dbManager.queryHomeCompanyListByCloudUserId(cloudUserId);
-                    List<Integer> cloudIdList = new ArrayList<>();
+                    List<Long> cloudIdList = new ArrayList<>();
                     for (HomeCompanyBean hcb : userHomeCompanyList) {
                         cloudIdList.add(hcb.getId());
                     }
+                    // 用于存储从服务获取的数据
+                    List<Long> serverIdList = new ArrayList<>();
                     for (HomeCompanyBean area : mHomeList) {
+                        serverIdList.add(area.getId());
                         if (cloudIdList.contains(area.getId())) {
                             dbManager.updateHomeCompanyByCloudId(area.getId(), area.getName());
                         } else {
+                            if (area.isIs_bind_sa()) {
+                                area.setArea_id(area.getId());
+                            }
                             dbManager.insertCloudHomeCompany(area);
                         }
                     }
+
+                    // 移除sc已删除的数据
+                    for (Long id : cloudIdList) {
+                        if (!serverIdList.contains(id) && id>0) {  // 如果云端数据不在，删除本地
+                            dbManager.removeFamilyByCloudId(id);
+                        }
+                    }
+                    mHomeList = dbManager.queryHomeCompanyList();
                     UiUtil.runInMainThread(() -> homeCompanyAdapter.setNewData(mHomeList));
                 }
                 EventBus.getDefault().post(new RefreshHomeList());
             });
-        } else {
+        }
+        if (CollectionUtil.isEmpty(mHomeList)) {
             loadLocalData();
         }
     }
@@ -205,5 +232,26 @@ public class HomeCompanyActivity extends MVPBaseActivity<HomeCompanyContract.Vie
     @Override
     public void getFail(int errorCode, String msg) {
         refreshLayout.finishRefresh();
+    }
+
+    /**
+     * 添加云端家庭成功
+     *
+     * @param idBean
+     */
+    @Override
+    public void addHomeCompanySuccess(IdBean idBean) {
+        loadData();
+    }
+
+    /**
+     * 添加云端家庭失败
+     *
+     * @param errorCode
+     * @param msg
+     */
+    @Override
+    public void addHomeCompanyFail(int errorCode, String msg) {
+
     }
 }

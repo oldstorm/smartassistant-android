@@ -34,8 +34,7 @@ public class UserAgentInterceptor implements Interceptor {
                 mAreaId = String.valueOf(home.getId());
             }
         }
-//        mToken = "MTYyNjc2NTE5NnxOd3dBTkVWTlZFVXpRalEyV1VKUVZVVkdWbEZCVUVoTFZGUXpWRVF5UzBSVlIxaFhXRWhDVWtKV1dWTTFVRWhFVVRWTVNFUklXRUU9fCP3VyRxChSgTRM6XlcsNaI__si9sMa3vAzJ6Uj_UBfT";
-//        mAreaId = "622";
+
         Request request = chain.request().newBuilder()
                 .addHeader(KEY_TOKEN, mToken)
                 .addHeader(AREA_ID, mAreaId)

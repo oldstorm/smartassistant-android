@@ -2,12 +2,12 @@ package com.yctc.zhiting.entity.mine;
 
 public class InvitationCheckBean {
 
-
     /**
      * user_info : {"user_id":0,"role_infos":null,"account_name":"","nickname":"","token":"","phone":"","is_set_password":false}
      */
 
     private UserInfoBean user_info;
+    private IdBean area_info;
 
     public UserInfoBean getUser_info() {
         return user_info;
@@ -15,6 +15,14 @@ public class InvitationCheckBean {
 
     public void setUser_info(UserInfoBean user_info) {
         this.user_info = user_info;
+    }
+
+    public IdBean getArea_info() {
+        return area_info;
+    }
+
+    public void setArea_info(IdBean area_info) {
+        this.area_info = area_info;
     }
 
     public static class UserInfoBean {

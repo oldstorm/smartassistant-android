@@ -21,7 +21,8 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="@dimen/dp_120"
+            android:paddingTop="@dimen/dp_14"
+            android:minHeight="@dimen/dp_110"
             android:background="@drawable/img_mine_upload_bg">
             <TextView
                 android:id="@+id/tvUpload"
@@ -35,7 +36,7 @@
                 android:paddingBottom="@dimen/dp_9"
                 android:paddingLeft="@dimen/dp_33"
                 android:paddingRight="@dimen/dp_33"
-                android:layout_marginTop="@dimen/dp_20"
+                android:layout_marginTop="@dimen/dp_6"
                 android:background="@drawable/shape_stroke_white_c30"
                 android:layout_centerHorizontal="true"
                 android:text="@string/mine_mine_upload_plugin"
@@ -75,6 +76,25 @@
                 android:textSize="@dimen/textSize16"
                 android:textStyle="bold"
                 android:visibility="gone"/>
+
+            <TextView
+                android:id="@+id/tvClear"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingLeft="@dimen/dp_12"
+                android:paddingRight="@dimen/dp_12"
+                android:paddingTop="@dimen/dp_4"
+                android:paddingBottom="@dimen/dp_4"
+                android:layout_marginTop="@dimen/dp_16"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvTips"
+                android:background="@drawable/shape_stroke_white_c30"
+                android:gravity="center_horizontal"
+                android:text="@string/mine_clear"
+                android:textColor="@color/white"
+                android:textSize="@dimen/textSize12"
+                android:visibility="gone" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <TextView

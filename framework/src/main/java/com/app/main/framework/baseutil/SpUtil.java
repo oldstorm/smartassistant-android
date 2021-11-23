@@ -26,4 +26,12 @@ public class SpUtil {
     public static int getInt(String key){
         return sharedPreferences.getInt(key, 0);
     }
+
+    public static void put(String key,boolean value){
+        sharedPreferences.edit().putBoolean(key,value).apply();
+    }
+
+    public static boolean getBoolean(String key){
+        return sharedPreferences.getBoolean(key,false);
+    }
 }

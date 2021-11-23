@@ -4,6 +4,7 @@ package com.yctc.zhiting.activity.model;
 import com.app.main.framework.httputil.HTTPCaller;
 import com.app.main.framework.httputil.RequestDataCallback;
 import com.yctc.zhiting.activity.contract.MemberDetailContract;
+import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.config.HttpUrlConfig;
 import com.yctc.zhiting.entity.mine.HomeCompanyBean;
 import com.yctc.zhiting.entity.mine.MemberDetailBean;

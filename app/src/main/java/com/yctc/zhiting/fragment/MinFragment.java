@@ -2,8 +2,7 @@ package com.yctc.zhiting.fragment;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Handler;
-import android.os.Looper;
+import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -14,20 +13,20 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.app.main.framework.baseutil.LogUtil;
 import com.app.main.framework.baseutil.UiUtil;
-import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.MVPBaseFragment;
 import com.google.gson.Gson;
+import com.yctc.zhiting.activity.AboutActivity;
+import com.yctc.zhiting.activity.AgreementAndPolicyActivity;
 import com.yctc.zhiting.activity.CaptureNewActivity;
 import com.yctc.zhiting.R;
 import com.yctc.zhiting.activity.CommonWebActivity;
 import com.yctc.zhiting.activity.HomeCompanyActivity;
 import com.yctc.zhiting.activity.LoginActivity;
-import com.yctc.zhiting.activity.SupportBrandActivity;
+import com.yctc.zhiting.activity.SupportBrand2Activity;
 import com.yctc.zhiting.activity.UserInfoActivity;
 import com.yctc.zhiting.adapter.MineFunctionAdapter;
 import com.yctc.zhiting.bean.MineFunctionBean;
 import com.yctc.zhiting.db.DBManager;
-import com.yctc.zhiting.db.DBThread;
 import com.yctc.zhiting.entity.mine.UpdateUserPost;
 import com.yctc.zhiting.entity.mine.UserInfoBean;
 import com.yctc.zhiting.event.MineUserInfoEvent;
@@ -37,6 +36,7 @@ import com.yctc.zhiting.event.UpdateSaUserNameEvent;
 import com.yctc.zhiting.fragment.contract.MeFragmentContract;
 import com.yctc.zhiting.fragment.presenter.MeFragmentPresenter;
 import com.yctc.zhiting.listener.IMinView;
+import com.yctc.zhiting.utils.AllRequestUtil;
 import com.yctc.zhiting.utils.CollectionUtil;
 import com.yctc.zhiting.utils.HomeUtil;
 import com.yctc.zhiting.utils.IntentConstant;
@@ -66,7 +66,6 @@ public class MinFragment extends MVPBaseFragment<MeFragmentContract.View, MeFrag
     LinearLayout llLogin;
 
     private int userId;
-    private Handler mainThreadHandler;
     private DBManager dbManager;
     private WeakReference<Context> mContext;
     private MineFunctionAdapter mineFunctionAdapter;
@@ -86,9 +85,11 @@ public class MinFragment extends MVPBaseFragment<MeFragmentContract.View, MeFrag
     protected void initUI() {
         functions.add(new MineFunctionBean(R.drawable.icon_mine_home, getContext().getResources().getString(R.string.mine_home_company), true));
         functions.add(new MineFunctionBean(R.drawable.icon_mine_brand, getContext().getResources().getString(R.string.mine_brand), getIsBindSA()));
-        functions.add(new MineFunctionBean(R.drawable.icon_mine_third_party, getContext().getResources().getString(R.string.mine_third_party), false));
+        functions.add(new MineFunctionBean(R.drawable.icon_mine_third_party, getContext().getResources().getString(R.string.mine_third_party), true));
         functions.add(new MineFunctionBean(R.drawable.icon_mine_language, getContext().getResources().getString(R.string.mine_language), false));
         functions.add(new MineFunctionBean(R.drawable.icon_mine_professional, UiUtil.getString(R.string.mine_professional), getIsBindSA()));
+        functions.add(new MineFunctionBean(R.drawable.icon_about_us, UiUtil.getString(R.string.mine_about_us), true));
+        functions.add(new MineFunctionBean(R.drawable.icon_user_agreement, UiUtil.getString(R.string.mine_user_agreement_and_privacy_policy), true));
 
         mineFunctionAdapter = new MineFunctionAdapter();
         mineFunctionAdapter.setNewData(functions);
@@ -101,29 +102,45 @@ public class MinFragment extends MVPBaseFragment<MeFragmentContract.View, MeFrag
                     break;
                 case 1: // 支持品牌
                     if (getIsBindSA())
-                        switchToActivity(SupportBrandActivity.class);
+                        switchToActivity(SupportBrand2Activity.class);
                     break;
                 case 2:
+                    Bundle thirdPartyBundle = new Bundle();
+                    thirdPartyBundle.putInt(IntentConstant.WEB_URL_TYPE, 1);
+                    switchToActivity(CommonWebActivity.class, thirdPartyBundle);
                     break;
                 case 3:
                     break;
                 case 4:
-                    if (getIsBindSA())
-                        switchToActivity(CommonWebActivity.class);
+                    if (getIsBindSA()) {
+                        Bundle proBundle = new Bundle();
+                        proBundle.putInt(IntentConstant.WEB_URL_TYPE, 0);
+                        switchToActivity(CommonWebActivity.class, proBundle);
+                    }
+                    break;
+
+                case 5:  // 关于我们
+//                    Bundle bundle = new Bundle();
+//                    bundle.putString(IntentConstant.TITLE, UiUtil.getString(R.string.mine_about_us));
+//                    bundle.putString(IntentConstant.URL, Constant.ABOUT_US_URL);
+//                    switchToActivity(AboutActivity.class, bundle);
+                    switchToActivity(AboutActivity.class);
+                    break;
+
+                case 6:  // 用户协议和隐私政策
+                    switchToActivity(AgreementAndPolicyActivity.class);
                     break;
             }
         });
     }
-
 
     @Override
     protected void initData() {
         super.initData();
         mContext = new WeakReference<>(getActivity());
         dbManager = DBManager.getInstance(mContext.get());
-        mainThreadHandler = new Handler(Looper.getMainLooper());
         if (UserUtils.isLogin()) {
-            setCloudName();
+            setCloudName(true);
         } else {
             getUserInfo();
         }
@@ -133,15 +150,16 @@ public class MinFragment extends MVPBaseFragment<MeFragmentContract.View, MeFrag
      * 获取用户信息
      */
     private void getUserInfo() {
-        new DBThread(() -> {
+        UiUtil.starThread(() -> {
             UserInfoBean userInfoBean = dbManager.getUser();
             if (userInfoBean != null) {
-                mainThreadHandler.post(() -> {
-                    tvName.setText(userInfoBean.getNickname());
+                UiUtil.runInMainThread(() -> {
                     userId = userInfoBean.getUserId();
+                    AllRequestUtil.nickName = userInfoBean.getNickname();
+                    tvName.setText(userInfoBean.getNickname());
                 });
             }
-        }).start();
+        });
     }
 
     @OnClick(R.id.llInfo)
@@ -165,7 +183,6 @@ public class MinFragment extends MVPBaseFragment<MeFragmentContract.View, MeFrag
      */
     @OnClick(R.id.ivScan)
     void onClickScan() {
-        //switchToActivity(ScanActivity.class);
         switchToActivity(CaptureNewActivity.class);
     }
 
@@ -181,7 +198,7 @@ public class MinFragment extends MVPBaseFragment<MeFragmentContract.View, MeFrag
      */
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(MineUserInfoEvent mineUserInfoEvent) {
-        setCloudName();
+        setCloudName(mineUserInfoEvent.isUpdateSAUserName());
         if (CollectionUtil.isNotEmpty(functions)){
             functions.get(4).setEnable(getIsBindSA());
             if (mineFunctionAdapter!=null){
@@ -220,7 +237,7 @@ public class MinFragment extends MVPBaseFragment<MeFragmentContract.View, MeFrag
      * 修改sa的用户昵称
      */
     private void updateSaUserName(){
-        if (HomeUtil.isBindSA()) {
+        if (HomeUtil.isHomeIdThanZero()) {
             UpdateUserPost updateUserPost = new UpdateUserPost();
             updateUserPost.setNickname(UserUtils.getCloudUserName());
             String body = new Gson().toJson(updateUserPost);
@@ -228,28 +245,23 @@ public class MinFragment extends MVPBaseFragment<MeFragmentContract.View, MeFrag
         }
     }
 
-
     /**
      * 修改用户昵称
      */
     private void updateUserInfo() {
         UiUtil.starThread(() -> {
-            long count = dbManager.updateUser(1, UserUtils.getCloudUserName());
+            dbManager.updateUser(1, UserUtils.getCloudUserName());
         });
     }
 
     /**
      * 云端昵称
      */
-    private void setCloudName() {
+    private void setCloudName(boolean resetName) {
         LogUtil.e("setCloudName="+UserUtils.getCloudUserName());
+        if (resetName)
         tvName.setText(UserUtils.getCloudUserName());
         llLogin.setVisibility(UserUtils.isLogin() ? View.GONE : View.VISIBLE);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
     }
 
     /**
@@ -278,10 +290,6 @@ public class MinFragment extends MVPBaseFragment<MeFragmentContract.View, MeFrag
      * @return
      */
     private boolean getIsBindSA() {
-//        boolean isBindSa = false;
-//        if (WSocketManager.isConnecting && Constant.CurrentHome != null && !TextUtils.isEmpty(Constant.CurrentHome.getSa_user_token())) {
-//            isBindSa = true;
-//        }
         return HomeUtil.isSAEnvironment();
     }
 

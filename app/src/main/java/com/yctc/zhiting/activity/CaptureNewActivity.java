@@ -2,8 +2,8 @@ package com.yctc.zhiting.activity;
 
 import android.Manifest;
 import android.content.Context;
-import android.database.Cursor;
 import android.text.TextUtils;
+import android.util.Log;
 import android.widget.ImageView;
 
 import androidx.annotation.LayoutRes;
@@ -12,11 +12,18 @@ import androidx.camera.view.PreviewView;
 
 import com.app.main.framework.baseutil.LogUtil;
 import com.app.main.framework.baseutil.ScreenUtil;
+import com.app.main.framework.baseutil.SpConstant;
+import com.app.main.framework.baseutil.SpUtil;
 import com.app.main.framework.baseutil.UiUtil;
 import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.MVPBaseActivity;
+import com.app.main.framework.entity.ChannelEntity;
 import com.app.main.framework.gsonutils.GsonConverter;
+import com.app.main.framework.httputil.HTTPCaller;
 import com.app.main.framework.httputil.Header;
+import com.app.main.framework.httputil.NameValuePair;
+import com.app.main.framework.httputil.RequestDataCallback;
+import com.app.main.framework.httputil.TempChannelUtil;
 import com.app.main.framework.httputil.comfig.HttpConfig;
 import com.google.zxing.Result;
 import com.king.zxing.CameraScan;
@@ -28,17 +35,22 @@ import com.yctc.zhiting.R;
 import com.yctc.zhiting.activity.contract.ScanContract;
 import com.yctc.zhiting.activity.presenter.ScanPresenter;
 import com.yctc.zhiting.config.Constant;
+import com.yctc.zhiting.config.HttpUrlConfig;
 import com.yctc.zhiting.db.DBManager;
+import com.yctc.zhiting.dialog.CenterAlertDialog;
 import com.yctc.zhiting.dialog.ScanFailDialog;
 import com.yctc.zhiting.entity.GenerateCodeJson;
 import com.yctc.zhiting.entity.mine.HomeCompanyBean;
+import com.yctc.zhiting.entity.mine.IdBean;
 import com.yctc.zhiting.entity.mine.InvitationCheckBean;
 import com.yctc.zhiting.entity.mine.UserInfoBean;
 import com.yctc.zhiting.event.HomeEvent;
 import com.yctc.zhiting.event.HomeSelectedEvent;
 import com.yctc.zhiting.request.BindCloudRequest;
 import com.yctc.zhiting.utils.AllRequestUtil;
+import com.yctc.zhiting.utils.JwtUtil;
 import com.yctc.zhiting.utils.UserUtils;
+import com.yctc.zhiting.utils.jwt.JwtBean;
 import com.yctc.zhiting.utils.statusbarutil.StatusBarUtil;
 
 import org.greenrobot.eventbus.EventBus;
@@ -64,6 +76,11 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
 
     private String saToken;
     private String nickname;
+    private boolean insertWifiInfo; // 是否插入WiFi信息
+    private ChannelEntity channelEntity;  // 临时通道实体类
+    private CenterAlertDialog alertDialog;
+    private String mTempChannelUrl;//临时通道地址
+    private String saId; // sa设备的id
 
     @Override
     protected boolean isLoadTitleBar() {
@@ -94,6 +111,7 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
         previewView = findViewById(getPreviewViewId());
         ivBack = findViewById(R.id.ivBack);
         ScreenUtil.fitNotchScreen(this, ivBack);
+        initAlertDialog();
         int viewfinderViewId = getViewfinderViewId();
         if (viewfinderViewId != 0) {
             viewfinderView = findViewById(viewfinderViewId);
@@ -106,6 +124,19 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
         });
     }
 
+    /**
+     * 不在局域网提示弹窗
+     */
+    private void initAlertDialog() {
+        alertDialog = CenterAlertDialog.newInstance(getResources().getString(R.string.home_not_in_lan_tips), getResources().getString(R.string.home_cancel), getResources().getString(R.string.home_go_to_login), false);
+        alertDialog.setConfirmListener(del -> {
+            alertDialog.dismiss();
+            switchToActivity(LoginActivity.class);
+            finish();
+        });
+        alertDialog.setDismissListener(() -> resetScan(false));
+    }
+
     @Override
     protected void initData() {
         super.initData();
@@ -115,7 +146,7 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
         scanFailDialog = new ScanFailDialog();
         scanFailDialog.setClickCloseListener(() -> {
             scanFailDialog.dismiss();
-            resetScan();
+            resetScan(false);
         });
         getUserInfo();
     }
@@ -123,7 +154,15 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
     /**
      * 重置扫码
      */
-    private void resetScan(){
+    private void resetScan(boolean needDelay) {
+        if (needDelay) {
+            UiUtil.postDelayed(() -> resetCamera(), 2000);
+        } else {
+            resetCamera();
+        }
+    }
+
+    private void resetCamera() {
         mCameraScan.setAnalyzeImage(true);
         mCameraScan.startCamera();
         viewfinderView.setScan(true);
@@ -255,9 +294,9 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
         mCameraScan.stopCamera();
         viewfinderView.setScan(false);
         LogUtil.e("扫描结果=" + scanResult);
-        if (scanResult.contains("qr_code")) {
+        if (scanResult.contains("qr_code") && scanResult.contains("url")) {  // 二维码中包含 qr_code
             checkToken(scanResult);
-        } else {
+        } else { // 二维码中不包含 qr_code，则说明扫码失败
             showTipsDialog();
         }
         return true;
@@ -271,49 +310,143 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
     private void checkToken(String scanResult) {
         UiUtil.starThread(() -> {
             mQRCodeBean = GsonConverter.getGson().fromJson(scanResult, GenerateCodeJson.class);
-            //只是判断是否新加入
             saToken = dbManager.getSaTokenByUrl(mQRCodeBean.getUrl());
-            mQRCodeBean.setSaToken(saToken);
-            String body = "{\"qr_code\":\"" + mQRCodeBean.getQr_code() + "\", \"nickname\":\"" + nickname + "\"}";
-            mPresenter.invitationCheck(body, mQRCodeBean);
+            String qrCode = mQRCodeBean.getQr_code();
+            String body = "{\"qr_code\":\"" + qrCode + "\", \"nickname\":\"" + nickname + "\"}";
+            JwtBean jwtBean = JwtUtil.decodeJwt(qrCode);
+            long areaId = 0;
+            if (jwtBean != null) {
+                JwtBean.JwtBody jwtBody = jwtBean.getJwtBody();
+                areaId = jwtBody.getArea_id();
+                saId = jwtBody.getSa_id();
+
+                mQRCodeBean.setSaId(jwtBody.getSa_id());
+            } else {
+                ToastUtil.show(getResources().getString(R.string.home_jwt_decode_fail));
+                resetScan(false);
+                return;
+            }
+            if (areaId > 0) {
+                mQRCodeBean.setArea_id(areaId);
+            }
+            channelEntity = null;
+            showLoadingView();
+            AllRequestUtil.checkUrl500(mQRCodeBean.getUrl(), new AllRequestUtil.onCheckUrlListener() {// 检查地址是否可以连接
+                @Override
+                public void onSuccess() {  // 可以连接上
+                    LogUtil.e("checkUrl===onSuccess");
+                    //只是判断是否新加入
+                    hideLoadingView();
+                    mQRCodeBean.setSaToken(saToken);
+                    insertWifiInfo = true;
+                    inviteCheck(body, mQRCodeBean.getUrl());
+                }
+
+                @Override
+                public void onError() {  // 连接失败
+                    LogUtil.e("checkUrl===onError");
+                    hideLoadingView();
+                    requestTempChannel(saId, body);
+                }
+            });
         });
+    }
+
+    /**
+     * 请求临时通道
+     *
+     * @param saId
+     * @param body
+     */
+    private void requestTempChannel(String saId, String body) {
+        if (UserUtils.isLogin()) { // 用户已登录sc
+            List<Header> headers = new ArrayList<>();
+            headers.add(new Header(HttpConfig.SA_ID, saId));
+            List<NameValuePair> requestData = new ArrayList<>();
+            requestData.add(new NameValuePair("scheme", Constant.HTTPS));
+            String url = TempChannelUtil.baseSCUrl + "/datatunnel";
+
+            HTTPCaller.getInstance().getChannel(ChannelEntity.class, url, headers.toArray(new Header[headers.size()]), requestData,
+                    new RequestDataCallback<ChannelEntity>() {
+                        @Override
+                        public void onSuccess(ChannelEntity obj) {  // 获取临时通道成功
+                            super.onSuccess(obj);
+                            channelEntity = obj;
+                            insertWifiInfo = false;
+                            if (obj != null) {
+                                Log.e("CaptureNewActivity=", "checkTemporaryUrl=onSuccess=");
+                                inviteCheck(body, Constant.HTTPS_HEAD + obj.getHost());
+                            }
+                        }
+
+                        @Override
+                        public void onFailed(int errorCode, String errorMessage) {  // 获取临时通道失败
+                            super.onFailed(errorCode, errorMessage);
+                            hideLoadingView();
+                            Log.e("CaptureNewActivity=", "checkTemporaryUrl=onFailed");
+                            resetScan(false);
+                            ToastUtil.show(getResources().getString(R.string.home_temp_channel_fail));
+                        }
+                    }, false);
+        } else {  // 用户未登录sc，去到登录界面
+            if (alertDialog != null && !alertDialog.isShowing()) {
+                alertDialog.show(CaptureNewActivity.this);
+            }
+        }
+    }
+
+    /**
+     * 校验邀请码
+     *
+     * @param body
+     * @param tempChannelUrl
+     */
+    private void inviteCheck(String body, String tempChannelUrl) {
+        if (mQRCodeBean != null) {
+            mTempChannelUrl = tempChannelUrl;
+            mPresenter.invitationCheck(body, mQRCodeBean, tempChannelUrl);
+        }
     }
 
     @Override
     public void invitationCheckSuccess(InvitationCheckBean invitationCheckBean) {
         UiUtil.starThread(() -> {
-            Cursor cursor = dbManager.getLastHomeCompany();
             homeCompanyBean = new HomeCompanyBean(mQRCodeBean.getArea_name());
-            homeCompanyBean.setSa_user_token(invitationCheckBean.getUser_info().getToken());
-            homeCompanyBean.setUser_id(invitationCheckBean.getUser_info().getUser_id());
-            if (cursor != null && cursor.getCount() > 0) {
-                cursor.moveToLast();
-                int id = cursor.getInt(cursor.getColumnIndex("h_id"));
-                if (!TextUtils.isEmpty(saToken))
-                    homeCompanyBean.setLocalId(id + 1);
-            } else {
-                homeCompanyBean.setLocalId(1);
-            }
-            if (UserUtils.isLogin())
-                homeCompanyBean.setId(mQRCodeBean.getArea_id());
-            homeCompanyBean.setUser_id(invitationCheckBean.getUser_info().getUser_id());
-            homeCompanyBean.setName(mQRCodeBean.getArea_name());
-            homeCompanyBean.setSa_user_token(invitationCheckBean.getUser_info().getToken());
             homeCompanyBean.setIs_bind_sa(true);
+            homeCompanyBean.setName(mQRCodeBean.getArea_name());
             homeCompanyBean.setSa_lan_address(mQRCodeBean.getUrl());
             homeCompanyBean.setCloud_user_id(UserUtils.getCloudUserId());
-            if (wifiInfo != null) {
+            homeCompanyBean.setUser_id(invitationCheckBean.getUser_info().getUser_id());
+            homeCompanyBean.setSa_user_token(invitationCheckBean.getUser_info().getToken());
+            homeCompanyBean.setSa_id(saId);
+            IdBean idBean = invitationCheckBean.getArea_info();
+            long areaId = 0;
+            if (idBean != null) {
+                areaId = idBean.getId();
+                homeCompanyBean.setArea_id(areaId);
+            }
+            if (wifiInfo != null && channelEntity == null) {  // wifi信息不为空且没有走临时通道时
                 homeCompanyBean.setSs_id(wifiInfo.getSSID());
                 homeCompanyBean.setMac_address(wifiInfo.getBSSID());
             }
+            HttpConfig.addAreaIdHeader(HttpConfig.AREA_ID, String.valueOf(homeCompanyBean.getArea_id()));
+            HttpConfig.addAreaIdHeader(HttpConfig.TOKEN_KEY, homeCompanyBean.getSa_user_token());
             Constant.CurrentHome = homeCompanyBean;
-            if (TextUtils.isEmpty(saToken)) {  // 没有加入过，加入数据库
+            if (channelEntity != null) {
+                SpUtil.put(SpConstant.SA_TOKEN, homeCompanyBean.getSa_user_token());
+                TempChannelUtil.saveTempChannelUrl(channelEntity);
+            }
+            HomeCompanyBean checkHome = dbManager.queryHomeCompanyByAreaId(areaId); // 根据areaId查找家庭
+            LogUtil.e("CaptureNewActivity="+GsonConverter.getGson().toJson(homeCompanyBean));
+            if (checkHome == null) {  // 没有加入过，加入数据库
                 insertHome(homeCompanyBean);
             } else {  // 加入过，更新数据库
-                dbManager.updateHomeCompanyBySaToken(homeCompanyBean);
+                dbManager.updateHomeCompanyByAreaId(homeCompanyBean);
+                homeCompanyBean.setId(checkHome.getId());
                 UiUtil.runInMainThread(() -> toMain());
             }
-            AllRequestUtil.createHomeBindSC(homeCompanyBean);
+//            AllRequestUtil.createHomeBindSC(homeCompanyBean, channelEntity);
+//            AllRequestUtil.bindCloudWithoutCreateHome(homeCompanyBean, channelEntity);
         });
     }
 
@@ -321,7 +454,7 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
      * 插入家庭
      */
     private void insertHome(HomeCompanyBean hcb) {
-        long id = dbManager.insertHomeCompany(hcb, null);
+        long id = dbManager.insertHomeCompany(hcb, null, insertWifiInfo);
         homeCompanyBean.setLocalId(id);
         UiUtil.runInMainThread(() -> {
             toMain();
@@ -333,6 +466,12 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
      */
     private void toMain() {
         if (homeCompanyBean != null) {
+            if (!TextUtils.isEmpty(homeCompanyBean.getSa_lan_address())) {
+                HttpUrlConfig.baseSAUrl = homeCompanyBean.getSa_lan_address();
+            } else if (!TextUtils.isEmpty(mTempChannelUrl)) {
+                HttpUrlConfig.baseSAUrl = mTempChannelUrl;
+            }
+            HttpUrlConfig.apiSAUrl = HttpUrlConfig.baseSAUrl + HttpUrlConfig.API;
             EventBus.getDefault().post(new HomeEvent(TextUtils.isEmpty(saToken), homeCompanyBean));
             EventBus.getDefault().post(new HomeSelectedEvent(mQRCodeBean.getArea_name()));
             ToastUtil.show(String.format(UiUtil.getString(R.string.home_welcome_add_home), mQRCodeBean.getArea_name()));
@@ -345,9 +484,9 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
     public void invitationCheckFail(int errorCode, String msg) {
         if (errorCode == -1) {
             showTipsDialog();
-        }else {
+        } else {
             ToastUtil.show(msg);
-            resetScan();
+            resetScan(true);
         }
     }
 
@@ -360,21 +499,35 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
         }
     }
 
+    /**
+     * 更新云id
+     *
+     * @param idBean
+     */
     @Override
-    public void createHomeSCSuccess(int cloudId) {
-        //更新云id
-        int cloudUserId = UserUtils.getCloudUserId();
-        dbManager.updateHomeCompanyCloudId(homeCompanyBean.getLocalId(), cloudId, cloudUserId);
-        homeCompanyBean.setId(cloudId);
-        homeCompanyBean.setCloud_user_id(cloudUserId);
-        Constant.CurrentHome = homeCompanyBean;
+    public void createHomeSCSuccess(IdBean idBean) {
+        if (idBean != null) {
+            int cloudUserId = UserUtils.getCloudUserId();
+            long cloudId = idBean.getId();
+            IdBean.CloudSaUserInfo cloudSaUserInfo = idBean.getCloud_sa_user_info();
+            int userId = homeCompanyBean.getUser_id();
+            String token = homeCompanyBean.getSa_user_token();
+            if (cloudSaUserInfo != null && !homeCompanyBean.isIs_bind_sa()) {
+                userId = cloudSaUserInfo.getId();
+                token = cloudSaUserInfo.getToken();
+            }
+            dbManager.updateHomeCompanyCloudId(homeCompanyBean.getLocalId(), cloudId, cloudUserId, userId, token);
+            homeCompanyBean.setId(cloudId);
+            homeCompanyBean.setCloud_user_id(cloudUserId);
+            Constant.CurrentHome = homeCompanyBean;
 
-        BindCloudRequest request = new BindCloudRequest();
-        request.setCloud_area_id(cloudId);
-        request.setCloud_user_id(UserUtils.getCloudUserId());
-        HttpConfig.addHeader(homeCompanyBean.getSa_user_token());
+            BindCloudRequest request = new BindCloudRequest();
+            request.setCloud_area_id(String.valueOf(cloudId));
+            request.setCloud_user_id(UserUtils.getCloudUserId());
+            HttpConfig.addHeader(homeCompanyBean.getSa_user_token());
 
-        mPresenter.bindCloudSC(request);
+            mPresenter.bindCloudSC(request);
+        }
     }
 
     @Override

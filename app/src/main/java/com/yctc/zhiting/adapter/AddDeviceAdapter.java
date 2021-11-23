@@ -8,6 +8,7 @@ import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.yctc.zhiting.R;
 import com.yctc.zhiting.entity.home.DeviceBean;
+import com.yctc.zhiting.utils.StringUtil;
 
 import java.util.List;
 
@@ -24,7 +25,9 @@ public class AddDeviceAdapter extends BaseQuickAdapter<DeviceBean, BaseViewHolde
         GlideUtil.load(item.getLogoUrl()).into(ivLogo);
 
         String decText = item.isBind() ? UiUtil.getString(R.string.mine_home_device_join) : UiUtil.getString(R.string.mine_home_device_add);
-        helper.setText(R.id.tvTodo, decText);
+        String tag = item.getPluginId();
+        helper.setText(R.id.tvTodo, decText)
+                .setText(R.id.tvTag, StringUtil.isNotEmpty(tag) ? tag : "zhiting");
         helper.addOnClickListener(R.id.tvTodo);
     }
 }

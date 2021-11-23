@@ -6,11 +6,10 @@ import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.app.main.framework.baseutil.LogUtil;
 import com.app.main.framework.baseutil.UiUtil;
 import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.MVPBaseActivity;
-import com.app.main.framework.gsonutils.GsonConverter;
+import com.app.main.framework.httputil.cookie.PersistentCookieStore;
 import com.google.gson.Gson;
 import com.yctc.zhiting.R;
 import com.yctc.zhiting.activity.contract.UserInfoContract;
@@ -22,6 +21,7 @@ import com.yctc.zhiting.dialog.EditBottomDialog;
 import com.yctc.zhiting.entity.mine.UpdateUserPost;
 import com.yctc.zhiting.event.MineUserInfoEvent;
 import com.yctc.zhiting.event.NicknameEvent;
+import com.yctc.zhiting.utils.AllRequestUtil;
 import com.yctc.zhiting.utils.HomeUtil;
 import com.yctc.zhiting.utils.IntentConstant;
 import com.yctc.zhiting.utils.UserUtils;
@@ -99,7 +99,7 @@ public class UserInfoActivity extends MVPBaseActivity<UserInfoContract.View, Use
             String body = new Gson().toJson(updateUserPost);
             if (UserUtils.isLogin()) {  // 登录的情况
                 mPresenter.updateMemberSC(UserUtils.getCloudUserId(), body);  // 更新sa昵称
-                if (HomeUtil.isBindSA()) {  // 当前家庭有绑sa,sc转sa
+                if (HomeUtil.isHomeIdThanZero()) {  // 当前家庭有绑sa,sc转sa
                     mPresenter.updateMember(HomeUtil.getUserId(), body);
                 }
             } else if (!TextUtils.isEmpty(Constant.CurrentHome.getSa_user_token())) {  // 没登录
@@ -117,7 +117,7 @@ public class UserInfoActivity extends MVPBaseActivity<UserInfoContract.View, Use
     @OnClick(R.id.tvLogout)
     void onClickLogout() {
         CenterAlertDialog centerAlertDialog = CenterAlertDialog.newInstance(getResources().getString(R.string.login_logout_tips), null);
-        centerAlertDialog.setConfirmListener(() -> {
+        centerAlertDialog.setConfirmListener((del) -> {
             mPresenter.logout();
             centerAlertDialog.dismiss();
         });
@@ -142,6 +142,7 @@ public class UserInfoActivity extends MVPBaseActivity<UserInfoContract.View, Use
     private void updateSuccessful() {
         ToastUtil.show(UiUtil.getString(R.string.mine_save_success));
         EventBus.getDefault().post(new NicknameEvent(nickname));
+        AllRequestUtil.nickName = nickname;
         tvNickname.setText(nickname);
     }
 
@@ -185,6 +186,7 @@ public class UserInfoActivity extends MVPBaseActivity<UserInfoContract.View, Use
     @Override
     public void logoutSuccess() {
         UserUtils.saveUser(null);
+        PersistentCookieStore.getInstance().removeAll();
         EventBus.getDefault().post(new MineUserInfoEvent(false));
         finish();
     }

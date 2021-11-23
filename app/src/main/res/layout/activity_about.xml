@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/white"
+    tools:context=".activity.AboutActivity">
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_37"
+        android:layout_gravity="center_horizontal"
+        android:src="@drawable/icon_about_logo" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_27"
+        android:layout_gravity="center_horizontal"
+        android:text="@string/about_name"
+        android:textSize="@dimen/textSize20"
+        android:textColor="@color/color_3f4663"
+        android:textStyle="bold" />
+    <TextView
+        android:id="@+id/tvVersion"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_16"
+        android:layout_gravity="center_horizontal"
+        tools:text="版本号：V2.0.6"
+        android:textColor="@color/color_94a5be"
+        android:textSize="@dimen/textSize14"
+        android:textStyle="bold" />
+</LinearLayout>

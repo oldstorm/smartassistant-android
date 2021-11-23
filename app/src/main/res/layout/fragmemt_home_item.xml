@@ -29,6 +29,11 @@
                 android:paddingRight="@dimen/dp_7"
                 android:visibility="gone" />
 
+            <androidx.core.widget.NestedScrollView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:fillViewport="true">
+
             <LinearLayout
                 android:id="@+id/llEmpty"
                 android:layout_width="match_parent"
@@ -89,6 +94,7 @@
                     android:textSize="@dimen/textSize14"
                     android:visibility="gone" />
             </LinearLayout>
+            </androidx.core.widget.NestedScrollView>
         </LinearLayout>
 
         <com.scwang.smart.refresh.footer.ClassicsFooter

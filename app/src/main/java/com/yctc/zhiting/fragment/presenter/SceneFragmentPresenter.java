@@ -1,11 +1,15 @@
 package com.yctc.zhiting.fragment.presenter;
 
 import com.app.main.framework.baseview.BasePresenterImpl;
+import com.app.main.framework.httputil.NameValuePair;
 import com.app.main.framework.httputil.RequestDataCallback;
+import com.yctc.zhiting.entity.FindSATokenBean;
 import com.yctc.zhiting.entity.mine.PermissionBean;
 import com.yctc.zhiting.entity.scene.SceneListBean;
 import com.yctc.zhiting.fragment.contract.SceneFragmentContract;
 import com.yctc.zhiting.fragment.model.SceneFragmentModel;
+
+import java.util.List;
 
 public class SceneFragmentPresenter extends BasePresenterImpl<SceneFragmentContract.View> implements SceneFragmentContract.Presenter {
     SceneFragmentModel model;
@@ -97,10 +101,36 @@ public class SceneFragmentPresenter extends BasePresenterImpl<SceneFragmentContr
                 public void onFailed(int errorCode, String errorMessage) {
                     super.onFailed(errorCode, errorMessage);
                     if (mView != null) {
-                        mView.performFail(errorCode, errorMessage);
+                        mView.onPermissionsFail(errorCode, errorMessage);
                     }
                 }
             });
         }
+    }
+
+    /**
+     * 通过sc找回sa的用户凭证
+     * @param userId
+     * @param requestData
+     */
+    @Override
+    public void getSAToken(int userId, List<NameValuePair> requestData) {
+        model.getSATokenBySC(userId, requestData, new RequestDataCallback<FindSATokenBean>() {
+            @Override
+            public void onSuccess(FindSATokenBean obj) {
+                super.onSuccess(obj);
+                if (mView!=null){
+                    mView.getSATokenSuccess(obj);
+                }
+            }
+
+            @Override
+            public void onFailed(int errorCode, String errorMessage) {
+                super.onFailed(errorCode, errorMessage);
+                if (mView!=null){
+                    mView.getSATokenFail(errorCode, errorMessage);
+                }
+            }
+        });
     }
 }

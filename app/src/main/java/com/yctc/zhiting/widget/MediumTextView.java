@@ -27,7 +27,7 @@ public class MediumTextView extends AppCompatTextView {
         super(context, attrs, defStyleAttr);
         TypedArray array = context.obtainStyledAttributes(attrs, R.styleable.MediumTextView,defStyleAttr,0);
         mStrokeWidth = array.getFloat(R.styleable.MediumTextView_strokeWidth,mStrokeWidth);
-
+        array.recycle();
     }
 
     @Override

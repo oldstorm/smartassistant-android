@@ -5,9 +5,17 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.app.main.framework.baseutil.LogUtil;
+import com.app.main.framework.baseutil.SpConstant;
+import com.app.main.framework.baseutil.SpUtil;
+import com.app.main.framework.baseutil.TimeFormatUtil;
 import com.app.main.framework.baseutil.UiUtil;
+import com.app.main.framework.entity.ChannelEntity;
+import com.app.main.framework.gsonutils.GsonConverter;
+import com.app.main.framework.httputil.SSLSocketClient;
 import com.app.main.framework.httputil.cookie.CookieJarImpl;
 import com.app.main.framework.httputil.cookie.PersistentCookieStore;
+import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.utils.HomeUtil;
 import com.yctc.zhiting.utils.UserUtils;
 
@@ -39,8 +47,12 @@ public class WSocketManager {
     //private String url = "ws://192.168.0.112:8088/ws";//马健
     //private String url = "ws://192.168.0.127:8088/ws";//巫力宏
     //private String urlSA = "ws://sa.zhitingtech.com:8088/ws";//SA服务器获取的url
-    private String urlSC = "wss://sc.zhitingtech.com/ws";//SC服务器获取的url
-    private String urlSA = "ws://192.168.0.123:9020/ws";//SA服务器获取的url
+    private String urlSC = "wss://scgz.zhitingtech.com/ws";//SC服务器获取的url
+    private String urlSA = "ws://192.168.22.123:9020/ws";//SA服务器获取的url
+//    private String urlSA = "ws://192.168.22.106:37965/ws";//SA服务器获取的url
+//    private String urlSC = "wss://192.168.22.76:9097/ws";//SC服务器获取的url
+//    private String urlSA = "ws://192.168.22.76:8088/ws";//SA服务器获取的url
+    private String mHostSC = "scgz.zhitingtech.com";
 
     private Request mRequest;
     private WebSocket mWebSocket;
@@ -188,15 +200,39 @@ public class WSocketManager {
      * @return
      */
     private String getUrl() {
+        if (Constant.CurrentHome!=null && !TextUtils.isEmpty(Constant.CurrentHome.getSa_lan_address())) {
+            String url = "ws://"+Constant.CurrentHome.getSa_lan_address().replace("http://", "")+"/ws";
+            urlSA = url;
+        }
         if (HomeUtil.isSAEnvironment()) {
             return urlSA;
         } else {
             if (UserUtils.isLogin()) {
-                return urlSC;
+                return getSCUrl();
             } else {
                 return urlSA;
             }
         }
+    }
+
+    private String getSCUrl() {
+        String newUrlSC = urlSC;
+        long currentTime = TimeFormatUtil.getCurrentTime();
+        String tokenKey = SpUtil.get(SpConstant.SA_TOKEN);
+        String json = SpUtil.get(tokenKey);
+
+        if (!TextUtils.isEmpty(json)) {
+            ChannelEntity channel = GsonConverter.getGson().fromJson(json, ChannelEntity.class);
+            if (channel != null) {
+                LogUtil.e("WSocketManager=getSCUrl=" + GsonConverter.getGson().toJson(channel));
+                if ((currentTime - channel.getCreate_channel_time()) < channel.getExpires_time()) {
+                    newUrlSC = newUrlSC.replace(mHostSC, channel.getHost());
+//                    newUrlSC=newUrlSC.replace("wss","ws");
+                    LogUtil.e("WSocketManager=getSCUrl=" + newUrlSC);
+                }
+            }
+        }
+        return newUrlSC;
     }
 
     /**

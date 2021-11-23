@@ -15,6 +15,8 @@ import com.app.main.framework.baseutil.LogUtil;
 import com.app.main.framework.baseutil.UiUtil;
 import com.app.main.framework.baseview.MVPBaseActivity;
 import com.app.main.framework.gsonutils.GsonConverter;
+import com.yctc.zhiting.entity.home.DeviceTypeListBean;
+import com.yctc.zhiting.entity.scene.PluginDetailBean;
 import com.yctc.zhiting.websocket.IWebSocketListener;
 import com.yctc.zhiting.websocket.WSocketManager;
 import com.yctc.zhiting.R;
@@ -265,14 +267,36 @@ public class ScanDeviceActivity extends MVPBaseActivity<AddDeviceContract.View, 
         LogUtil.e("checkBindSaFail==errorCode=" + errorCode + ",msg=" + msg);
     }
 
+    @Override
+    public void getDeviceTypeSuccess(DeviceTypeListBean deviceTypeListBean) {
+
+    }
+
+    @Override
+    public void getDeviceTypeFail(int errorCode, String msg) {
+
+    }
+
+    @Override
+    public void getPluginDetailSuccess(PluginDetailBean pluginDetailBean) {
+
+    }
+
+    @Override
+    public void getPluginDetailFail(int errorCode, String msg) {
+
+    }
+
     private void initDefaultSA(boolean isBind) {
         String json1 = "{\"address\":\"http://192.168.0.188:8088\",\"identity\":\"0x00000000157b4d9c\",\"manufacturer\":\"yeelight\",\"model\":\"smart_assistant\",\"name\":\"WeiJie'SA\",\"plugin_id\":\"light_001\",\"sw_version\":\"17\",\"type\":\"sa\"}";
         String json2 = "{\"address\":\"http://192.168.0.112:8088\",\"identity\":\"0x00000000157b4d9d\",\"manufacturer\":\"yeelight\",\"model\":\"smart_assistant\",\"name\":\"MaJian'SA\",\"plugin_id\":\"light_002\",\"sw_version\":\"18\",\"type\":\"sa\"}";
         String json3 = "{\"address\":\"http://192.168.0.165:8089\",\"identity\":\"0x00000000157b4d9e\",\"manufacturer\":\"yeelight\",\"model\":\"smart_assistant\",\"name\":\"LiHong'SA\",\"plugin_id\":\"light_003\",\"sw_version\":\"19\",\"type\":\"sa\"}";
-        String json4 = "{\"address\":\"http://192.168.0.123:9020\",\"identity\":\"0x00000000157b4d9f\",\"manufacturer\":\"yeelight\",\"model\":\"smart_assistant\",\"name\":\"CeShi'SA\",\"plugin_id\":\"light_004\",\"sw_version\":\"120\",\"type\":\"sa\"}";
+        String json4 = "{\"address\":\"http://192.168.22.123:9020\",\"identity\":\"0x00000000157b4d9f\",\"manufacturer\":\"yeelight\",\"model\":\"smart_assistant\",\"name\":\"CeShi'SA\",\"plugin_id\":\"light_004\",\"sw_version\":\"120\",\"type\":\"sa\"}";
         String json5 = "{\"address\":\"http://192.168.0.84:8088\",\"identity\":\"0x00000000157b4d9f\",\"manufacturer\":\"yeelight\",\"model\":\"smart_assistant\",\"name\":\"CeShi1'SA\",\"plugin_id\":\"light_004\",\"sw_version\":\"120\",\"type\":\"sa\"}";
         String json6 = "{\"address\":\"http://192.168.0.82:8088\",\"identity\":\"0x00000000157b4d9f\",\"manufacturer\":\"yeelight\",\"model\":\"smart_assistant\",\"name\":\"CeShi2'SA\",\"plugin_id\":\"light_004\",\"sw_version\":\"120\",\"type\":\"sa\"}";
         String json7 = "{\"address\":\"http://192.168.0.182:8088\",\"identity\":\"0x00000000157b4d9e\",\"manufacturer\":\"yeelight\",\"model\":\"smart_assistant\",\"name\":\"LiHong'SA\",\"plugin_id\":\"light_003\",\"sw_version\":\"19\",\"type\":\"sa\"}";
+        String json8 = "{\"address\":\"http://192.168.22.76:8088\",\"identity\":\"0x00000000157b4d9e\",\"manufacturer\":\"yeelight\",\"model\":\"smart_assistant\",\"name\":\"LiHong'SA\",\"plugin_id\":\"light_003\",\"sw_version\":\"19\",\"type\":\"sa\"}";
+        String json9 = "{\"address\":\"http://192.168.22.106:37965\",\"identity\":\"0x00000000157b4d9e\",\"manufacturer\":\"yeelight\",\"model\":\"smart_assistant\",\"name\":\"LiHong'SA\",\"plugin_id\":\"light_003\",\"sw_version\":\"19\",\"type\":\"sa\"}";
         DeviceBean bean1 = GsonConverter.getGson().fromJson(json1, DeviceBean.class);
         DeviceBean bean2 = GsonConverter.getGson().fromJson(json2, DeviceBean.class);
         DeviceBean bean3 = GsonConverter.getGson().fromJson(json3, DeviceBean.class);
@@ -280,28 +304,36 @@ public class ScanDeviceActivity extends MVPBaseActivity<AddDeviceContract.View, 
         DeviceBean bean5 = GsonConverter.getGson().fromJson(json5, DeviceBean.class);
         DeviceBean bean6 = GsonConverter.getGson().fromJson(json6, DeviceBean.class);
         DeviceBean bean7 = GsonConverter.getGson().fromJson(json7, DeviceBean.class);
+        DeviceBean bean8 = GsonConverter.getGson().fromJson(json8, DeviceBean.class);
+        DeviceBean bean9 = GsonConverter.getGson().fromJson(json9, DeviceBean.class);
 
-        if (HttpUrlConfig.baseSAUrl.contains(bean1.getAddress())) {
+        if (HttpUrlConfig.apiSAUrl.contains(bean1.getAddress())) {
             mScanLists.add(bean1);
             bean1.setBind(isBind);
-        } else if (HttpUrlConfig.baseSAUrl.contains(bean2.getAddress())) {
+        } else if (HttpUrlConfig.apiSAUrl.contains(bean2.getAddress())) {
             mScanLists.add(bean2);
             bean2.setBind(isBind);
-        } else if (HttpUrlConfig.baseSAUrl.contains(bean3.getAddress())) {
+        } else if (HttpUrlConfig.apiSAUrl.contains(bean3.getAddress())) {
             mScanLists.add(bean3);
             bean3.setBind(isBind);
-        } else if (HttpUrlConfig.baseSAUrl.contains(bean4.getAddress())) {
+        } else if (HttpUrlConfig.apiSAUrl.contains(bean4.getAddress())) {
             mScanLists.add(bean4);
             bean4.setBind(isBind);
-        } else if (HttpUrlConfig.baseSAUrl.contains(bean5.getAddress())) {
+        } else if (HttpUrlConfig.apiSAUrl.contains(bean5.getAddress())) {
             mScanLists.add(bean5);
             bean5.setBind(isBind);
-        } else if (HttpUrlConfig.baseSAUrl.contains(bean6.getAddress())) {
+        } else if (HttpUrlConfig.apiSAUrl.contains(bean6.getAddress())) {
             mScanLists.add(bean6);
             bean6.setBind(isBind);
-        } else if (HttpUrlConfig.baseSAUrl.contains(bean7.getAddress())) {
+        } else if (HttpUrlConfig.apiSAUrl.contains(bean7.getAddress())) {
             mScanLists.add(bean7);
             bean7.setBind(isBind);
+        }else if (HttpUrlConfig.apiSAUrl.contains(bean8.getAddress())) {
+            mScanLists.add(bean8);
+            bean8.setBind(isBind);
+        }else if (HttpUrlConfig.apiSAUrl.contains(bean9.getAddress())) {
+            mScanLists.add(bean9);
+            bean9.setBind(isBind);
         }
         addDeviceAdapter.notifyDataSetChanged();
         setDeviceRecyclerViewVisible(mScanLists.size() > 0);

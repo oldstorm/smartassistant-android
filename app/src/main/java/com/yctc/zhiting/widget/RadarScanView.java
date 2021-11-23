@@ -31,6 +31,8 @@ public class RadarScanView extends View {
     private int mCircleColor = DEFAULT_COLOR;
     // 直线的颜色
     private int mLineColor = DEFAULT_COLOR;
+    // 直线的宽度
+    private int mLineWidth = 2;
     // 中心点颜色
     private int mCenterDotColor = DEFAULT_COLOR;
     // 中心点半径
@@ -95,6 +97,9 @@ public class RadarScanView extends View {
     private void initAttrs(Context context, AttributeSet attrs) {
         if (attrs != null) {
             TypedArray mTypedArray = context.obtainStyledAttributes(attrs, R.styleable.RadarScanView);
+            mCenterDotColor = mTypedArray.getColor(R.styleable.RadarScanView_cntDotColor, DEFAULT_COLOR);
+            mLineColor = mTypedArray.getColor(R.styleable.RadarScanView_lineColor, DEFAULT_COLOR);
+            mLineWidth = mTypedArray.getInt(R.styleable.RadarScanView_lineWidth, 2);
             mCircleColor = mTypedArray.getColor(R.styleable.RadarScanView_circleColor, DEFAULT_COLOR);
             mCircleNum = mTypedArray.getInt(R.styleable.RadarScanView_circleNum, mCircleNum);
             if (mCircleNum < 1) {
@@ -143,7 +148,7 @@ public class RadarScanView extends View {
 
         // 直线
         mLinePaint = new Paint();
-        mLinePaint.setStrokeWidth(2);
+        mLinePaint.setStrokeWidth(mLineWidth);
         mLinePaint.setAntiAlias(true);
         mLinePaint.setStyle(Paint.Style.STROKE);
         mLinePaint.setColor(mLineColor);

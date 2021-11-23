@@ -28,8 +28,8 @@ public class DeviceConnectPresenter extends BasePresenterImpl<DeviceConnectContr
     }
 
     @Override
-    public void sync(String body) {
-        model.sync(body, new RequestDataCallback<InvitationCheckBean>() {
+    public void sync(String body, String url) {
+        model.sync(body, url, new RequestDataCallback<InvitationCheckBean>() {
             @Override
             public void onSuccess(InvitationCheckBean obj) {
                 super.onSuccess(obj);
@@ -52,6 +52,7 @@ public class DeviceConnectPresenter extends BasePresenterImpl<DeviceConnectContr
 
     @Override
     public void addDevice(DeviceBean bean) {
+        if (model!=null)
         model.addDevice(bean, new RequestDataCallback<AddDeviceResponseBean>() {
             @Override
             public void onSuccess(AddDeviceResponseBean obj) {

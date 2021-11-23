@@ -23,7 +23,7 @@ public class ScopeTokenBean {
          */
 
         private String token;
-        private int expires_in;
+        private int expires_in;  // 有效期，单位为秒
 
         public String getToken() {
             return token;

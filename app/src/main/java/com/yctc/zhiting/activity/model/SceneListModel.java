@@ -1,10 +1,10 @@
 package com.yctc.zhiting.activity.model;
 
 
+import com.app.main.framework.baseutil.LogUtil;
 import com.app.main.framework.httputil.HTTPCaller;
 import com.app.main.framework.httputil.NameValuePair;
 import com.app.main.framework.httputil.RequestDataCallback;
-import com.yctc.zhiting.activity.contract.BrandDetailContract;
 import com.yctc.zhiting.activity.contract.SceneListContract;
 import com.yctc.zhiting.config.HttpUrlConfig;
 import com.yctc.zhiting.entity.scene.SceneListBean;

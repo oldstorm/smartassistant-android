@@ -5,7 +5,7 @@ import com.google.gson.annotations.SerializedName;
 
 public class HomeCompanyBean extends BaseEntity {
 
-    private int id;//云端家庭id
+    private long id;//云端家庭id
     private long localId; // 本地家庭id
     private int roomAreaCount;//房间个数
     private int location_count;  // 房间数量
@@ -13,14 +13,45 @@ public class HomeCompanyBean extends BaseEntity {
     private int user_count; // 成员数量
     @SerializedName("sa_user_id")
     private int user_id; // sa用户id
+    private int cloud_user_id; // 云端用户id
     private boolean is_bind_sa;  //是否绑定sa
     private boolean selected; // 标识是否被选中
+    private boolean SAEnvironment;//是否在SA环境
     private String name;//家庭名称
     private String sa_lan_address; // sa地址
     private String sa_user_token;  // sa token
     private String ss_id;//wifi id
     private String mac_address;//wifi地址
-    private int cloud_user_id; // 云端用户id
+    private String sc_lan_address;//sc地址
+    private long area_id; // sa家庭id
+    private boolean isVirtual;//虚拟SA
+    private String sa_id; // sa设备id
+
+    public boolean isVirtual() {
+        return isVirtual;
+    }
+
+    public void setVirtual(boolean virtual) {
+        isVirtual = virtual;
+    }
+
+    public boolean isSAEnvironment() {
+        return SAEnvironment;
+    }
+
+    public HomeCompanyBean setSAEnvironment(boolean SAEnvironment) {
+        this.SAEnvironment = SAEnvironment;
+        return this;
+    }
+
+    public String getSc_lan_address() {
+        return sc_lan_address;
+    }
+
+    public HomeCompanyBean setSc_lan_address(String sc_lan_address) {
+        this.sc_lan_address = sc_lan_address;
+        return this;
+    }
 
     public String getSs_id() {
         return ss_id;
@@ -50,11 +81,11 @@ public class HomeCompanyBean extends BaseEntity {
         this.name = name;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
@@ -152,5 +183,21 @@ public class HomeCompanyBean extends BaseEntity {
 
     public void setCloud_user_id(int cloud_user_id) {
         this.cloud_user_id = cloud_user_id;
+    }
+
+    public long getArea_id() {
+        return area_id;
+    }
+
+    public void setArea_id(long area_id) {
+        this.area_id = area_id;
+    }
+
+    public String getSa_id() {
+        return sa_id;
+    }
+
+    public void setSa_id(String sa_id) {
+        this.sa_id = sa_id;
     }
 }

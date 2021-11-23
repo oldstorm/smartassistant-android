@@ -7,6 +7,7 @@ import com.app.main.framework.httputil.RequestDataCallback;
 import com.yctc.zhiting.activity.contract.DeviceConnectContract;
 import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.config.HttpUrlConfig;
+import com.yctc.zhiting.config.HttpUrlParams;
 import com.yctc.zhiting.entity.home.AddDeviceResponseBean;
 import com.yctc.zhiting.entity.home.DeviceBean;
 import com.yctc.zhiting.entity.home.DevicePostBean;
@@ -25,8 +26,8 @@ public class DeviceConnectModel implements DeviceConnectContract.Model {
      * @param callback
      */
     @Override
-    public void sync(String body, RequestDataCallback<InvitationCheckBean> callback) {
-        HTTPCaller.getInstance().post(InvitationCheckBean.class, HttpUrlConfig.getSync(), body, callback);
+    public void sync(String body,String url, RequestDataCallback<InvitationCheckBean> callback) {
+        HTTPCaller.getInstance().post(InvitationCheckBean.class, url+ HttpUrlConfig.API + HttpUrlParams.sync, body, callback);
     }
 
     /**
@@ -39,8 +40,13 @@ public class DeviceConnectModel implements DeviceConnectContract.Model {
     public void addDevice(DeviceBean bean, RequestDataCallback<AddDeviceResponseBean> callback) {
         String body = GsonConverter.getGson().toJson(new DevicePostBean(bean));
         String requestUrl = HttpUrlConfig.getAddDeviceUrl();
-        if (bean.getType()!=null && !bean.getType().equalsIgnoreCase(Constant.DeviceType.TYPE_SA))
-            requestUrl = HttpUrlConfig.getAddLightDeviceUrl();
+        if (bean.getType()!=null){
+            if(bean.getType().equalsIgnoreCase(Constant.DeviceType.TYPE_SA)){  // sa设备
+                requestUrl = Constant.HTTP_HEAD + bean.getAddress() + ":" + bean.getPort() + HttpUrlConfig.API + HttpUrlParams.devices;
+            }else {
+                requestUrl = HttpUrlConfig.getAddLightDeviceUrl();
+            }
+        }
         HTTPCaller.getInstance().post(AddDeviceResponseBean.class, requestUrl, body, callback);
     }
 

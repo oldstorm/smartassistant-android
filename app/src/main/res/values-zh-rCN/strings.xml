@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">智汀</string>
+    <string name="app_name">智汀家庭云</string>
     <string name="main_home">家居</string>
     <string name="main_scene">场景</string>
     <string name="main_mine">我的</string>
@@ -8,6 +8,7 @@
     <string name="main_get_login_status">获取你的登录状态</string>
     <string name="main_get_family_info">获取你的家庭信息</string>
     <string name="main_agreement">确认授权即视为同意《用户授权协议》</string>
+    <string name="main_auth_failed">授权失败,请登录后再授权</string>
     <string name="main_confirm_auth">确认授权</string>
     <string name="main_agree">同意将智汀家庭云（%s）的以下信息授权给智汀家庭云盘</string>
     <string name="main_login_fail">登录失败</string>
@@ -19,6 +20,8 @@
     <string name="mine_third_party">第三方平台</string>
     <string name="mine_language">语言</string>
     <string name="mine_professional">专业版</string>
+    <string name="mine_about_us">关于我们</string>
+    <string name="mine_user_agreement_and_privacy_policy">用户协议和隐私政策</string>
     <string name="mine_user_info">个人资料</string>
     <string name="mine_avatar">头像</string>
     <string name="mine_nickname">昵称</string>
@@ -106,6 +109,7 @@
     <string name="mine_home_not_find_device">未发现设备</string>
     <string name="mine_home_scan_again">重新扫描</string>
     <string name="mine_home_scan_tip">1.请确保智能设备已连接电源，且已连接局域网\n2.第一次添加某品牌时，请进入【我-支持品牌】添加该品牌</string>
+    <string name="mine_home_scan_tip_new">1.请确保设备已连接电源，且已重置；\n2.第一次添加某品牌的设备时，请进入【我-支持品牌】添加该品牌；</string>
     <string name="mine_home_device_connect">设备连接</string>
     <string name="mine_home_device_connecting">设备连接中...</string>
     <string name="mine_home_device_connect_failed">连接失败！</string>
@@ -140,6 +144,12 @@
     <string name="mine_select_member_transfer">选择成员将拥有者角色转移给他：</string>
     <string name="mine_please_select_member">请选择要转移的成员</string>
     <string name="mine_transfer_success">转移成功</string>
+    <string name="mine_uploading">上传中...</string>
+    <string name="mine_sb_system_tips">系统支持以下品牌的设备，请进入对应品牌详情添加插件；如系统没有对应品牌的插件，可切换至【创作】中手动上传插件。</string>
+    <string name="mine_clear">清空</string>
+    <string name="mine_uploading_now">正在上传</string>
+    <string name="mine_uploading_fail">上传失败，</string>
+    <string name="mine_format_incorrect">插件包格式不正确</string>
 
     <string name="home_online">在线</string>
     <string name="home_offline">离线</string>
@@ -166,6 +176,32 @@
     <string name="home_device_del_title">确定删除该设备吗？</string>
     <string name="home_device_del_set_location">设置位置</string>
     <string name="home_welcome_add_home">你已成功加入%s</string>
+    <string name="home_invalid_token">暂无凭证或已过期</string>
+    <string name="home_how_to_find_user_sa_token">如何设置找回用户凭证</string>
+    <string name="home_how_find_sa_desc">“当前终端无凭证”是因为您更换了手机/平板登录或卸载了APP，为了您的家庭信息安全进行的凭证验证。\n
+家庭拥有者可通过以下路径进行设置找回用户凭证：</string>
+    <string name="home_find_sa_token_1">1.登录专业版进入智慧中心详情</string>
+    <string name="home_find_sa_token_2">2.选择权限管理-找回用户凭证</string>
+    <string name="home_find_sa_token_3">3.选择权限管理-更改选择，保存</string>
+    <string name="home_meantime_del_disk_folder">同时删除智汀家庭云盘存储的文件</string>
+    <string name="home_jwt_decode_fail">jwt解密失败</string>
+    <string name="home_temp_channel_fail">获取临时通道失败</string>
+    <string name="home_input_homekit_code">输入HomeKit设置代码</string>
+    <string name="home_input_homekit_code_tip">请在包装或配件上查找8位设置代码</string>
+    <string name="home_not_in_lan_tips">请在局域网内扫码或登录后重新扫描</string>
+    <string name="home_connect_other_router">连接其他路由器</string>
+    <string name="home_connect_router">连接路由器</string>
+    <string name="home_homekit_set_code">Homekit设置代码</string>
+    <string name="home_please_input_wifi_name">请输入wifi名称</string>
+    <string name="home_please_input_wifi_password">请输入wifi密码</string>
+    <string name="home_cancel">取消</string>
+    <string name="home_go_to_login">去登录</string>
+    <string name="home_wrong_code">设置代码不正确，请重新输入！</string>
+    <string name="home_please_connect_wifi_of_device">请先连接要置网设备的热点</string>
+    <string name="home_blue_tooth_disabled">蓝牙服务已关闭</string>
+    <string name="home_guide_user_to_open_bluetooth">你需要打开蓝牙权限，才可以正常使用，请到设置>智汀家庭云中开启蓝牙服务。</string>
+    <string name="home_download_plugin_package_fail">下载插件包失败</string>
+    <string name="please_add_intelligent_center_or_login_before_adding_device">请添加智慧中心或登录后再添加设备</string>
 
     <string name="scene_not">暂无场景</string>
     <string name="scene_reconnect">重新连接</string>
@@ -327,10 +363,82 @@
     <string name="main_create_user_fail">创建用户失败</string>
     <string name="device_info">{\"service\":\"get_attributes\",\"domain\":\"%s\",\"identity\":\"%s\",\"id\":%d}</string>
     <string name="device_switch">{\"service_data\":{\"attributes\":[{\"val\":\"%s\",\"instance_id\":%d,\"attribute\":\"power\"}]},\"id\":%d,\"identity\":\"%s\",\"service\":\"set_attributes\",\"domain\":\"%s\"}</string>
+    <string name="device_set_attr">{\"service_data\":{\"attributes\":[{\"val\":\"%s\",\"instance_id\":%d,\"attribute\":\""%s\"}]},\"id\":%d,\"identity\":\"%s\",\"service\":\"set_attributes\",\"domain\":\"%s\"}</string>
 
 
     <string name="common_server_error">服务端错误</string>
+    <string name="common_network_connect_failed">网络连接失败</string>
 
     <string name="scene_scene_removed">场景已被删除</string>
 
+    <string name="error_device_connect_failed">Error! Failed to connect with device.</string>
+    <string name="error_session_creation">Failed to create session</string>
+    <string name="error_prov_step_1">Failed to send Wi-Fi credentials</string>
+    <string name="error_prov_step_2">Failed to apply Wi-Fi credentials</string>
+    <string name="error_prov_step_3">Failed to provisioning device</string>
+    <string name="error_network_not_found">Network not found.</string>
+    <string name="error_authentication_failed">Wi-Fi Authentication failed.</string>
+
+
+    <string name="bluetooth_connect_success">蓝牙连接成功</string>
+    <string name="bluetooth_disconnect">蓝牙断开连接</string>
+    <string name="bluetooth_connect_fail">蓝牙连接失败</string>
+    <string name="bluetooth_is_not_found">没有发现该蓝牙设备</string>
+    <string name="please_input_hotspotname">请输入设备的热点名称</string>
+    <string name="please_input_ownership">请输入设备拥有权</string>
+    <string name="wifi_disable">WiFi不可用</string>
+
+    <string name="success">成功</string>
+    <string name="failed">失败</string>
+
+    <string name="only_zip">只能上传zip格式文件</string>
+    <string name="home_find_user_certificate">找回用户凭证</string>
+    <string name="home_find_certificate_tip">用户凭证是访问智慧中心的密钥，请选择 是否允许成员通过云端找回凭证。</string>
+    <string name="home_allow_find">允许找回</string>
+    <string name="home_allow_find_tip">成员可以在任何手机/平板连接智慧中心</string>
+    <string name="home_no_allow_find">不允许找回</string>
+    <string name="home_no_allow_find_tip">成员更换手机/平板或卸载APP后无法再次连接</string>
+    <string name="home_find_certificate_warn_tip">拥有者可以到专业版-家居-智慧中心修改</string>
+    <string name="mine_verification_code">验证码</string>
+    <string name="mine_create_code">生成</string>
+    <string name="mine_code">验证码有效时间为10分钟</string>
+    <string name="common_copy">复制</string>
+    <string name="mine_copy_success">复制成功</string>
+    <string name="home_software_upgrade">软件升级</string>
+    <string name="home_firmware_upgrade">固件升级</string>
+    <string name="home_check_update">检查更新</string>
+    <string name="home_check_update_content">检查到有新版本%s，是否更新？</string>
+    <string name="home_update_success">更新成功</string>
+    <string name="home_update_failed">更新失败</string>
+    <string name="home_get_update_info_failed">获取更新信息失败</string>
+    <string name="home_version_is_latest">当前已是最新版本</string>
+
+    <string name="user_agreement_and_privacy_policy">用户协议与隐私政策</string>
+    <string name="user_agreement_and_privacy_policy_content">我们深知隐私对您的重要性，为了更全面地呈现我们收集和使用您个人信息的相关情况，我们根据最新法律法规的要求，对用户协议和隐私政策进行了详细的修订。当您点击【同意】即代表您已充分阅读、理解并接受更新过的《用户协议》和《隐私政策》的全部内容。请花一些时间熟悉我们的隐私政策，如果您有任何问题，请随时联系我们。</string>
+    <string name="user_agreement">用户协议</string>
+    <string name="and">与</string>
+    <string name="privacy_policy">隐私政策</string>
+    <string name="disagree">不同意</string>
+    <string name="agree">同意</string>
+    <string name="login_represent_agree_agreement_policy">登录即代表你已同意智汀家庭云用户协议、隐私政策</string>
+    <string name="login_read_and_agree">阅读并同意智汀家庭云用户协议、隐私政策</string>
+
+    <string name="please_select_home">请选择家庭</string>
+    <string name="family_without_intelligent_center">当前家庭无智慧中心，请添加智慧中心后重新授权</string>
+    <string name="exit_family_please_select_again">你已退出该家庭，请重新选择一个家庭进行授权</string>
+    <string name="invalid_token_please_find_back">当前客户端无凭证，请找回凭证后重新授权。</string>
+    <string name="how_to_find">如何找回</string>
+    <string name="please_check_agreement">请阅读并勾选协议</string>
+    <string name="home_current_version">当前版本：%s</string>
+    <string name="about_name">智汀家庭云</string>
+    <string name="version_code">版本号：V</string>
+    <string name="about">关于</string>
+    <string name="add_fail">添加失败</string>
+
+    <string name="check_update">检查更新</string>
+
+    <string-array name="support_brand_title">
+        <item>系统</item>
+        <item>创作</item>
+    </string-array>
 </resources>

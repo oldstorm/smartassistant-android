@@ -24,8 +24,8 @@
             android:layout_height="wrap_content"
             android:paddingTop="@dimen/dp_5"
             android:paddingBottom="@dimen/dp_5"
-            android:paddingLeft="@dimen/dp_40"
-            android:paddingRight="@dimen/dp_40"
+            android:paddingLeft="@dimen/dp_35"
+            android:paddingRight="@dimen/dp_35"
             android:text="确定删除吗？"
             android:textColor="@color/color_3F4663"
             android:textSize="@dimen/textSize14"
@@ -35,13 +35,35 @@
             android:id="@+id/tvTip"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:paddingLeft="@dimen/dp_10"
+            android:paddingRight="@dimen/dp_10"
             android:gravity="center"
             android:text="删除后，该家庭/公司下的全部设备自动解除绑定"
             android:textColor="@color/color_3F4663"
             android:textSize="@dimen/textSize12"/>
+
+        <LinearLayout
+            android:id="@+id/llDelFolder"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_20"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal"
+            android:visibility="gone"
+            tools:visibility="visible">
+            <ImageView
+                android:layout_width="@dimen/dp_19"
+                android:layout_height="@dimen/dp_19"
+                android:src="@drawable/selector_circle_red" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/dp_10"
+                android:text="@string/home_meantime_del_disk_folder"
+                android:textColor="@color/color_FF0000"
+                android:textSize="@dimen/textSize14" />
+        </LinearLayout>
     </LinearLayout>
-
-
 
     <View
         android:id="@+id/viewLine"

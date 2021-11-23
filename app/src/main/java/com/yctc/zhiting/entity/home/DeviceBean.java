@@ -1,5 +1,7 @@
 package com.yctc.zhiting.entity.home;
 
+import android.bluetooth.BluetoothDevice;
+
 import com.app.main.framework.entity.BaseEntity;
 import com.google.gson.annotations.SerializedName;
 
@@ -35,6 +37,10 @@ public class DeviceBean extends BaseEntity {
     private String ip;
     @SerializedName("port")
     private String port;
+    @SerializedName("sa_id")
+    private String sa_id;
+
+    transient BluetoothDevice bluetoothDevice;
 
     public String getBrandId() {
         return brandId;
@@ -162,6 +168,22 @@ public class DeviceBean extends BaseEntity {
 
     public void setUser_info(UserInfo user_info) {
         this.user_info = user_info;
+    }
+
+    public BluetoothDevice getBluetoothDevice() {
+        return bluetoothDevice;
+    }
+
+    public void setBluetoothDevice(BluetoothDevice bluetoothDevice) {
+        this.bluetoothDevice = bluetoothDevice;
+    }
+
+    public String getSa_id() {
+        return sa_id;
+    }
+
+    public void setSa_id(String sa_id) {
+        this.sa_id = sa_id;
     }
 
     class UserInfo extends BaseEntity {

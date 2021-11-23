@@ -174,4 +174,12 @@ public class TimeFormatUtil {
     public static String getSysTime() {
         return getSysTime(DATE_FORMAT);
     }
+
+    /**
+     * 获取当前时间 秒
+     */
+    public static long getCurrentTime() {
+        long time = System.currentTimeMillis() / 1000;
+        return time;
+    }
 }

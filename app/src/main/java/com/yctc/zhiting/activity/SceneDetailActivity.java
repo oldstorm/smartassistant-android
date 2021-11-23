@@ -1,7 +1,5 @@
 package com.yctc.zhiting.activity;
 
-import androidx.constraintlayout.solver.state.State;
-import androidx.constraintlayout.utils.widget.ImageFilterButton;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -661,7 +659,7 @@ public class SceneDetailActivity extends MVPBaseActivity<SceneDetailContract.Vie
         delDialog = CenterAlertDialog.newInstance(getResources().getString(R.string.scene_remove), null, true);
         delDialog.setConfirmListener(new CenterAlertDialog.OnConfirmListener() {
             @Override
-            public void onConfirm() {
+            public void onConfirm(boolean del) {
                 isDel = true;
                 mPresenter.delScene(sceneId);
 
@@ -846,7 +844,7 @@ public class SceneDetailActivity extends MVPBaseActivity<SceneDetailContract.Vie
             CenterAlertDialog centerAlertDialog = CenterAlertDialog.newInstance(getResources().getString(R.string.scene_back_tips), null);
             centerAlertDialog.setConfirmListener(new CenterAlertDialog.OnConfirmListener() {
                 @Override
-                public void onConfirm() {
+                public void onConfirm(boolean del) {
                     centerAlertDialog.dismiss();
                     onBackPressed();
                 }

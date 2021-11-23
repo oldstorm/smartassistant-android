@@ -81,15 +81,15 @@ public class HomeSelectDialog extends CommonBaseDialog {
         homeSelectAdapter.setNewData(data);
 
         homeSelectAdapter.setOnItemClickListener((adapter, view1, position) -> {
-            for (int i=0; i<homeSelectAdapter.getData().size(); i++){
-                homeSelectAdapter.getData().get(i).setSelected(false);
-            }
+
             homeSelectAdapter.getItem(position).setSelected(true);
             if (clickItemListener!=null){
                 clickItemListener.onItem(homeSelectAdapter.getItem(position));
+                for (int i=0; i<homeSelectAdapter.getData().size(); i++){
+                    homeSelectAdapter.getData().get(i).setSelected(false);
+                }
             }
         });
-
     }
 
     @OnClick(R.id.ivClose)

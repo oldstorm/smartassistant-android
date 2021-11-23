@@ -18,4 +18,17 @@ public class Md5Util {
         }
         return str;
     }
+
+    public static byte[] getMD5(byte[] data){
+        try {
+            // 生成一个MD5加密计算摘要
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            // 计算md5函数
+            byte[] result = md.digest(data);
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

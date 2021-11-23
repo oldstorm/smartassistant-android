@@ -3,19 +3,12 @@ package com.yctc.zhiting.entity;
 public class GenerateCodeJson {
     private String qr_code;
     private String url;
-    private int area_id;//家庭id
+    private long area_id;//家庭id
     private String area_name;
     private String saToken;
+    private String saId;
 
-    public String getSaToken() {
-        return saToken;
-    }
-
-    public void setSaToken(String saToken) {
-        this.saToken = saToken;
-    }
-
-    public GenerateCodeJson(String qr_code, String url, int area_id, String area_name) {
+    public GenerateCodeJson(String qr_code, String url, long area_id, String area_name) {
         this.qr_code = qr_code;
         this.url = url;
         this.area_id = area_id;
@@ -38,11 +31,11 @@ public class GenerateCodeJson {
         this.url = url;
     }
 
-    public int getArea_id() {
+    public long getArea_id() {
         return area_id;
     }
 
-    public void setArea_id(int area_id) {
+    public void setArea_id(long area_id) {
         this.area_id = area_id;
     }
 
@@ -52,5 +45,21 @@ public class GenerateCodeJson {
 
     public void setArea_name(String area_name) {
         this.area_name = area_name;
+    }
+
+    public String getSaToken() {
+        return saToken;
+    }
+
+    public void setSaToken(String saToken) {
+        this.saToken = saToken;
+    }
+
+    public String getSaId() {
+        return saId;
+    }
+
+    public void setSaId(String saId) {
+        this.saId = saId;
     }
 }

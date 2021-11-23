@@ -3,11 +3,14 @@ package com.yctc.zhiting.activity.presenter;
 
 import com.app.main.framework.baseview.BasePresenterImpl;
 import com.app.main.framework.httputil.RequestDataCallback;
+import com.app.main.framework.httputil.comfig.HttpConfig;
 import com.yctc.zhiting.activity.contract.AddDeviceContract;
 import com.yctc.zhiting.activity.contract.AddHCContract;
 import com.yctc.zhiting.activity.model.AddDeviceModel;
 import com.yctc.zhiting.activity.model.AddHCModel;
+import com.yctc.zhiting.entity.home.DeviceTypeListBean;
 import com.yctc.zhiting.entity.mine.CheckBindSaBean;
+import com.yctc.zhiting.entity.scene.PluginDetailBean;
 
 /**
  * 添加设备
@@ -31,6 +34,7 @@ public class AddDevicePresenter extends BasePresenterImpl<AddDeviceContract.View
      */
     @Override
     public void checkBindSa() {
+        HttpConfig.clearHear(HttpConfig.AREA_ID);
         model.checkBindSa(new RequestDataCallback<CheckBindSaBean>() {
             @Override
             public void onSuccess(CheckBindSaBean data) {
@@ -45,6 +49,55 @@ public class AddDevicePresenter extends BasePresenterImpl<AddDeviceContract.View
                 super.onFailed(errorCode, errorMessage);
                 if (mView != null) {
                     mView.checkBindSaFail(errorCode,errorMessage);
+                }
+            }
+        });
+    }
+
+    /**
+     * 获取设备分类列表
+     */
+    @Override
+    public void getDeviceType() {
+        model.getDeviceType(new RequestDataCallback<DeviceTypeListBean>() {
+            @Override
+            public void onSuccess(DeviceTypeListBean obj) {
+                super.onSuccess(obj);
+                if (mView != null) {
+                    mView.getDeviceTypeSuccess(obj);
+                }
+            }
+
+            @Override
+            public void onFailed(int errorCode, String errorMessage) {
+                super.onFailed(errorCode, errorMessage);
+                if (mView != null) {
+                    mView.getDeviceTypeFail(errorCode, errorMessage);
+                }
+            }
+        });
+    }
+
+    /**
+     * 插件详情
+     * @param id
+     */
+    @Override
+    public void getPluginDetail(String id) {
+        model.getPluginDetail(id, new RequestDataCallback<PluginDetailBean>() {
+            @Override
+            public void onSuccess(PluginDetailBean obj) {
+                super.onSuccess(obj);
+                if (mView != null) {
+                    mView.getPluginDetailSuccess(obj);
+                }
+            }
+
+            @Override
+            public void onFailed(int errorCode, String errorMessage) {
+                super.onFailed(errorCode, errorMessage);
+                if (mView != null) {
+                    mView.getPluginDetailFail(errorCode,errorMessage);
                 }
             }
         });

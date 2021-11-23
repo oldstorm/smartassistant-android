@@ -13,19 +13,24 @@ import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.app.main.framework.baseutil.LogUtil;
+import com.app.main.framework.baseutil.SpConstant;
+import com.app.main.framework.baseutil.SpUtil;
 import com.app.main.framework.baseutil.UiUtil;
 import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.MVPBaseActivity;
 import com.app.main.framework.gsonutils.GsonConverter;
+import com.app.main.framework.httputil.NameValuePair;
 import com.app.main.framework.httputil.comfig.HttpConfig;
 import com.google.gson.Gson;
 import com.king.zxing.util.CodeUtils;
@@ -41,19 +46,28 @@ import com.yctc.zhiting.dialog.CenterAlertDialog;
 import com.yctc.zhiting.dialog.EditBottomDialog;
 import com.yctc.zhiting.dialog.ListBottomDialog;
 import com.yctc.zhiting.dialog.QRCodeDialog;
+import com.yctc.zhiting.dialog.RemovedTipsDialog;
+import com.yctc.zhiting.dialog.VerificationCodeDialog;
+import com.yctc.zhiting.entity.FindSATokenBean;
 import com.yctc.zhiting.entity.GenerateCodeJson;
 import com.yctc.zhiting.entity.mine.HomeCompanyBean;
+import com.yctc.zhiting.entity.mine.IdBean;
 import com.yctc.zhiting.entity.mine.InvitationCodeBean;
 import com.yctc.zhiting.entity.mine.InvitationCodePost;
+import com.yctc.zhiting.entity.mine.LocationBean;
 import com.yctc.zhiting.entity.mine.MemberDetailBean;
 import com.yctc.zhiting.entity.mine.MembersBean;
 import com.yctc.zhiting.entity.mine.PermissionBean;
 import com.yctc.zhiting.entity.mine.RolesBean;
+import com.yctc.zhiting.event.DeviceDataEvent;
 import com.yctc.zhiting.event.RefreshHome;
 import com.yctc.zhiting.event.RefreshHomeList;
 import com.yctc.zhiting.fragment.HomeFragment;
+import com.yctc.zhiting.request.AddHCRequest;
+import com.yctc.zhiting.request.BooleanRequest;
 import com.yctc.zhiting.utils.AllRequestUtil;
 import com.yctc.zhiting.utils.CollectionUtil;
+import com.yctc.zhiting.utils.HomeUtil;
 import com.yctc.zhiting.utils.IntentConstant;
 import com.yctc.zhiting.utils.UserUtils;
 
@@ -97,6 +111,18 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     RelativeLayout rlName;
     @BindView(R.id.rlRoom)
     RelativeLayout rlRoom;
+    @BindView(R.id.rlInvalid)
+    RelativeLayout rlInvalid;
+    @BindView(R.id.tvTips)
+    TextView tvTips;
+    @BindView(R.id.ivGo)
+    ImageView ivGo;
+    @BindView(R.id.llHome)
+    LinearLayout llHome;
+    @BindView(R.id.rlVerificationCode)
+    RelativeLayout rlVerificationCode;
+
+    private final int ROOM_ACT_REQUEST_CODE = 100;
 
     private MemberAdapter memberAdapter;
     private MyHandler myHandler;
@@ -105,13 +131,24 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     private WeakReference<Context> mContext;
     private DBManager dbManager;
 
-    private int type = 1;// 类型 1. 自己创建
+    /**
+     * 1.家庭详情
+     * 2.角色列表
+     * 3.删除
+     * 4.修改名称
+     */
+    private int kind;
     private int userId;
     private long mLocalId;// 家庭本地id
+    private long mCurrentHomeLocalId;
+    private long mAreaId;//CurrentHome id
+    private boolean invalid; // 无效的SAToken
     private boolean isBindSa;//是否绑定sa
     private boolean isCreator;// 是否是创建者
     private boolean updateNamePermission;// 是否有修改家庭名称权限
     private boolean isLoadRole;//是否已经请求过角色列表
+    private boolean isExitFamily;
+
     private String updateName;// 修改的名称
     private String name;
     private String userName;
@@ -122,23 +159,6 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     private HomeCompanyBean mHomeBean;
     private HomeCompanyBean mTempHomeBean;
 
-    private long mCurrentHomeLocalId;
-
-    private int mAreaId;//CurrentHome id
-    private boolean mOriginBindSa;//CurrentHome 的 绑定sa情况
-    private String mSaLanAddress;
-    private String mSaToken;//CurrentHome 的token
-
-    /**
-     * 1.家庭详情
-     * 2.角色列表
-     * 3.删除
-     * 4.修改名称
-     */
-    private int kind;
-
-    private boolean isExitFamily;
-
     @Override
     protected int getLayoutId() {
         return R.layout.activity_h_c_detail;
@@ -148,12 +168,16 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     protected void onResume() {
         super.onResume();
         kind = 1;
+    }
+
+    private void initFirstData() {
         //已经绑定sa且在sa环境，或者登陆状态
         if (isBindSa || (UserUtils.isLogin() && userId > 0)) {
             checkUrl();
         } else {//否则，从本地获取
-            int cloudId = mHomeBean.getId();
+            long cloudId = mHomeBean.getId();
             if (UserUtils.isLogin() && cloudId > 0) { // 登录了
+                HttpConfig.addAreaIdHeader(HttpConfig.AREA_ID, String.valueOf(mHomeBean.getId()));
                 mPresenter.getDetail(cloudId);
             } else {
                 loadData();
@@ -190,12 +214,18 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
         mAreaId = CurrentHome.getId();
         CurrentHome = mHomeBean;
 
+        HttpConfig.clearHeader();
+        HttpConfig.addHeader(mHomeBean.getSa_user_token());
+        HttpConfig.addAreaIdHeader(HttpConfig.AREA_ID, String.valueOf(mHomeBean.getId()));
+        SpUtil.put(SpConstant.SA_TOKEN, mHomeBean.getSa_user_token());
+        SpUtil.put(SpConstant.IS_BIND_SA, mHomeBean.isIs_bind_sa());
+
+
         mLocalId = mHomeBean.getLocalId();
         userId = mHomeBean.getUser_id();
         isBindSa = mHomeBean.isIs_bind_sa();
         saUrl = mHomeBean.getSa_lan_address();
-//        mAreaId = mHomeBean.getId();
-        tvQuit.setText(type == 1 ? getResources().getString(R.string.mine_remove) : getResources().getString(R.string.mine_quit_family));
+
         isCreator = isBindSa ? false : true;
         myHandler = new MyHandler(this);
 
@@ -206,8 +236,17 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
         memberAdapter.setOnItemClickListener((adapter, view, position) -> {
             Intent intent = new Intent(HCDetailActivity.this, MemberDetailActivity.class);
             intent.putExtra(IntentConstant.ID, memberAdapter.getItem(position).getUser_id());
-            startActivity(intent);
+            startActivityForResult(intent, ROOM_ACT_REQUEST_CODE);
         });
+        initFirstData();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable @org.jetbrains.annotations.Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK && requestCode == ROOM_ACT_REQUEST_CODE) {
+            initFirstData();
+        }
     }
 
     /**
@@ -216,12 +255,13 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     private void checkUrl() {
         if (isBindSa && wifiInfo != null) {
             showLoadingView();
-            AllRequestUtil.checkUrl(CurrentHome.getSa_lan_address(), new AllRequestUtil.onCheckUrlListener() {
+            AllRequestUtil.checkUrl500(CurrentHome.getSa_lan_address(), new AllRequestUtil.onCheckUrlListener() {
                 @Override
                 public void onSuccess() {
                     LogUtil.e("checkUrl===onSuccess");
                     WifiInfo wifiInfo = Constant.wifiInfo;
-                    handleTipStatus(wifiInfo.getBSSID());
+                    if (!TextUtils.isEmpty(wifiInfo.getBSSID()))
+                        handleTipStatus(wifiInfo.getBSSID());
                 }
 
                 @Override
@@ -237,8 +277,8 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
 
     private void handleTipStatus(String macAddress) {
         hideLoadingView();
-        CurrentHome.setMac_address(macAddress);
-        //dbManager.updateHomeCompanyCloudId(CurrentHome.getLocalId(), CurrentHome.getId(), UserUtils.getCloudUserId());
+        if (TextUtils.isEmpty(CurrentHome.getMac_address()))
+            CurrentHome.setMac_address(macAddress);
         getData();
     }
 
@@ -246,18 +286,26 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
      * 获取数据
      */
     private void getData() {
-        boolean isEnabled = isBindSa && !isSAEnvironment() && !UserUtils.isLogin();
-        rlName.setEnabled(!isEnabled);
-        rlCode.setEnabled(!isEnabled);
-        rlRoom.setEnabled(!isEnabled);
-        tvQuit.setVisibility(View.GONE);
-        llTips.setVisibility(isEnabled ? View.VISIBLE : View.GONE);
-
-        HttpConfig.addHeader(CurrentHome.getSa_user_token());
-        mPresenter.getDetail(1);
-        mPresenter.getMembers();
-        mPresenter.getPermissions(userId);
-        mPresenter.getMemberDetail(userId);
+        boolean isEnabled = isBindSa && !isSAEnvironment();
+        UiUtil.runInMainThread(() -> {
+            if (!UserUtils.isLogin()) {
+                rlName.setEnabled(!isEnabled);
+                rlCode.setEnabled(!isEnabled);
+                rlRoom.setEnabled(!isEnabled);
+            }
+            tvQuit.setVisibility(View.GONE);
+            tvTips.setText(getResources().getString(R.string.home_connect_fail));
+            ivGo.setVisibility(View.GONE);
+            if (UserUtils.isLogin()) {
+                llTips.setVisibility(View.GONE);
+            } else {
+                llTips.setVisibility(isEnabled ? View.VISIBLE : View.GONE);
+            }
+        });
+        long areaId = mHomeBean.getArea_id();
+        HttpConfig.addHeader(mHomeBean.getSa_user_token());
+        HttpConfig.addAreaIdHeader(HttpConfig.AREA_ID, String.valueOf(mHomeBean.getId()));
+        mPresenter.getDetail(areaId > 0 ? areaId : mHomeBean.getId());
     }
 
     /**
@@ -276,6 +324,15 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     }
 
     /**
+     * 验证码生成
+     */
+    @OnClick(R.id.tvOpenCode)
+    public void onClickVerificationCode() {
+        mPresenter.getVerificationCode();
+
+    }
+
+    /**
      * 修改家庭名称
      */
     private void updateHcName() {
@@ -286,7 +343,7 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
         editBottomDialog.setClickSaveListener(content -> {
             updateName = content;
             if (mHomeBean.getId() > 0 || isBindSa) {
-                int homeId = getHomeId();
+                long homeId = getHomeId();
                 mPresenter.updateName(homeId, content);
                 editBottomDialog.dismiss();
             } else {
@@ -305,7 +362,7 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
         intent.putExtra(IntentConstant.IS_BIND_SA, isBindSa);
         intent.putExtra(IntentConstant.ID, mLocalId);
         intent.putExtra(IntentConstant.USER_ID, userId);
-        startActivity(intent);
+        startActivityForResult(intent, ROOM_ACT_REQUEST_CODE);
     }
 
     /**
@@ -314,14 +371,15 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     @OnClick(R.id.tvQuit)
     void onClickQuit() {
         kind = 3;
-        int homeId = getHomeId();
+        long homeId = getHomeId();
         centerAlertDialog = CenterAlertDialog.newInstance(
                 isCreator ? getResources().getString(R.string.common_confirm_del) : getResources().getString(R.string.common_confirm_exit),
-                isCreator ? getResources().getString(R.string.mine_room_del_tip) : getResources().getString(R.string.mine_room_exit_tip), true);
-        centerAlertDialog.setConfirmListener(() -> {
+                isCreator ? getResources().getString(R.string.mine_room_del_tip) : getResources().getString(R.string.mine_room_exit_tip), true, isCreator && isBindSa);
+        centerAlertDialog.setConfirmListener(del -> {
             if (isCreator) {  // 自己创建  暂时注释
                 if (isBindSa && isSAEnvironment() || (UserUtils.isLogin() && mHomeBean.getId() > 0)) {
-                    mPresenter.delHomeCompany(homeId);
+                    BooleanRequest booleanRequest = new BooleanRequest(del);
+                    mPresenter.delHomeCompany(homeId, booleanRequest.toString());
                 } else {
                     removeLocal(true);
                 }
@@ -332,14 +390,21 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
         centerAlertDialog.show(this);
     }
 
+    @OnClick(R.id.llTips)
+    void onClickTips() {
+        if (invalid) {
+            switchToActivity(FindSAGuideActivity.class);
+        }
+    }
+
     /**
      * 获取当前家庭的id
      *
      * @return
      */
-    private int getHomeId() {
+    private long getHomeId() {
         if (isBindSa) {
-            return 1;
+            return mHomeBean.getArea_id();
         } else {
             return mHomeBean.getId();
         }
@@ -365,6 +430,9 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
                     name = homeCompanyBean.getName();
                     tvName.setText(homeCompanyBean.getName());
                     tvRoom.setText(homeCompanyBean.getRoomAreaCount() + "");
+                    tvQuit.setText(getResources().getString(R.string.mine_remove));
+                    llHome.setVisibility(View.VISIBLE);
+                    tvQuit.setVisibility(View.VISIBLE);
                 });
             }
         });
@@ -382,13 +450,17 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
                 isExitFamily = true;
                 if (count > 0) {
                     if (CollectionUtil.isEmpty(homeList)) {//删除最后一个，创建一个家庭
-                        createFamily();
+                        if (mHomeBean.getId() > 0 && !mHomeBean.isIs_bind_sa()) {//虚拟SA
+                            AddHCRequest addHCRequest = new AddHCRequest(getResources().getString(R.string.mine_home), new ArrayList<>());
+                            mPresenter.addScHome(addHCRequest);
+                        } else {
+                            HomeCompanyBean homeCompanyBean = new HomeCompanyBean(1, getResources().getString(R.string.mine_home));
+                            createFamily(homeCompanyBean);
+                        }
                     } else {
                         if (showTips) {
                             ToastUtil.show(UiUtil.getString(R.string.mine_remove_success));
                         }
-//                        EventBus.getDefault().post(new RefreshHome());
-
                         finish();
                     }
                 } else {
@@ -407,10 +479,9 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     /**
      * 删除最后一个需要创建一个家庭
      */
-    private void createFamily() {
+    private void createFamily(HomeCompanyBean homeCompanyBean) {
         UiUtil.starThread(() -> {
-            HomeCompanyBean homeCompanyBean = new HomeCompanyBean(1, getResources().getString(R.string.mine_home));
-            dbManager.insertHomeCompany(homeCompanyBean, null);
+            dbManager.insertHomeCompany(homeCompanyBean, null, false);
             UiUtil.runInMainThread(() -> {
                 switchToActivity(MainActivity.class);
                 finish();
@@ -435,7 +506,7 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
         super.hasPermissionTodo();
         if (isLoadRole) {
             showRoleDialog();
-        } else {
+        } else if (isBindSa || CurrentHome.getId() > 0) {//yjj
             isLoadRole = true;
             mPresenter.getRoleList();
         }
@@ -456,10 +527,10 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
                     ids.add(bottomBean.getId());
                 }
                 InvitationCodePost invitationCodePost = new InvitationCodePost();
-                invitationCodePost.setArea_id(1);
+                invitationCodePost.setArea_id(mHomeBean.getArea_id());
                 invitationCodePost.setRole_ids(ids);
                 String body = new Gson().toJson(invitationCodePost);
-                mPresenter.generateCode(1, body);
+                mPresenter.generateCode(mHomeBean.getUser_id(), body);
                 mListBottomDialog.dismiss();
             });
         }
@@ -478,10 +549,18 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     @Override
     public void getDataSuccess(HomeCompanyBean homeCompanyBean) {
         if (homeCompanyBean != null) {
+            showInvalid(false);
             name = homeCompanyBean.getName();
             tvName.setText(homeCompanyBean.getName());
             tvRoom.setText(homeCompanyBean.getLocation_count() + "");
             updateName(homeCompanyBean.getName(), true, null);
+            if (isBindSa || CurrentHome.getId() > 0) {//yjj,ios就这样
+                mPresenter.getMembers();
+                mPresenter.getPermissions(userId);
+                mPresenter.getMemberDetail(userId);
+            } else {
+                tvQuit.setVisibility(View.VISIBLE);
+            }
         }
     }
 
@@ -496,7 +575,8 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
         if (membersBean != null) {
             isCreator = membersBean.isIs_owner();
             tvQuit.setVisibility(View.VISIBLE);
-            tvQuit.setText(membersBean.isIs_owner() ? getResources().getString(R.string.mine_remove) : getResources().getString(R.string.mine_quit_family));
+            tvQuit.setText(isCreator ? getResources().getString(R.string.mine_remove) : getResources().getString(R.string.mine_quit_family));
+            rlVerificationCode.setVisibility(isCreator ? View.VISIBLE : View.GONE);
             if (CollectionUtil.isNotEmpty(membersBean.getUsers())) {
                 memberAdapter.setNewData(membersBean.getUsers());
                 tvMember.setText(String.format(getResources().getString(R.string.mine_mine_member_count), membersBean.getUsers().size()));
@@ -571,8 +651,7 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     @Override
     public void generateCodeSuccess(InvitationCodeBean invitationCodeBean) {
         if (invitationCodeBean != null) {
-            String url = !TextUtils.isEmpty(saUrl) ? saUrl : HttpUrlConfig.baseUrl;
-            GenerateCodeJson generateCodeJson = new GenerateCodeJson(invitationCodeBean.getQr_code(), url, mHomeBean.getId(), name);
+            GenerateCodeJson generateCodeJson = new GenerateCodeJson(invitationCodeBean.getQr_code(), saUrl, mHomeBean.getArea_id(), name);
             String json = GsonConverter.getGson().toJson(generateCodeJson);
             UiUtil.starThread(() -> {
                 Bitmap bitmap = CodeUtils.createQRCode(json, UiUtil.dip2px(167));
@@ -633,15 +712,131 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
         if (kind == 2) {
             showRoleDialog();
         } else if (kind == 3) {
-            ToastUtil.show(msg);
+            if (errorCode != 5012)
+                ToastUtil.show(msg);
             closeDialog();
+        } else {
+            if (errorCode != 5012)
+                ToastUtil.show(msg);
+        }
+    }
+
+    /**
+     * 家庭详情失败
+     *
+     * @param errorCode
+     * @param msg
+     */
+    @Override
+    public void getDetailFail(int errorCode, String msg) {
+        if (errorCode == 5012) {
+            if (UserUtils.isLogin()) { // 用户登录SC情况
+                NameValuePair nameValuePair = new NameValuePair("area_id", String.valueOf(CurrentHome.getId()));
+                List<NameValuePair> requestData = new ArrayList<>();
+                requestData.add(nameValuePair);
+                mPresenter.getSAToken(CurrentHome.getCloud_user_id(), requestData);  // sc的用户id, sc上的家庭id
+            } else {
+                removeLocalFamily();
+            }
+        } else if (errorCode == 3002 || errorCode == 5003) {//状态码3002，提示被管理员移除家庭
+            removeLocalFamily();
+        }
+    }
+
+    /**
+     * 通过sc找回sa的用户凭证成功
+     *
+     * @param findSATokenBean
+     */
+    @Override
+    public void getSATokenSuccess(FindSATokenBean findSATokenBean) {
+        if (findSATokenBean != null) {
+            String saToken = findSATokenBean.getSa_token();
+            if (!TextUtils.isEmpty(saToken)) {
+                HomeUtil.tokenIsInvalid = false;
+                CurrentHome.setSa_user_token(saToken);
+                HttpConfig.addAreaIdHeader(HttpConfig.TOKEN_KEY, saToken);
+                initFirstData();
+                getData();
+                UiUtil.starThread(() -> dbManager.updateSATokenByLocalId(CurrentHome.getLocalId(), saToken));
+            }
+        }
+    }
+
+    /**
+     * 通过sc找回sa的用户凭证是失败
+     *
+     * @param errorCode
+     * @param msg
+     */
+    @Override
+    public void getSATokenFail(int errorCode, String msg) {
+        if (errorCode == 2011 || errorCode == 2010) {    //凭证获取失败，状态码2011，无权限
+            invalid = true;
+            showInvalid(true);
+            llTips.setVisibility(View.VISIBLE);
+            ivGo.setVisibility(View.VISIBLE);
+            tvQuit.setVisibility(View.GONE);
+            tvTips.setText(getResources().getString(R.string.home_invalid_token));
+            EventBus.getDefault().post(new DeviceDataEvent(null));
+        } else if (errorCode == 3002) {  //状态码3002，提示被管理员移除家庭
+            removeLocalFamily();
         } else {
             ToastUtil.show(msg);
         }
     }
 
-    private static class MyHandler extends Handler {
+    @Override
+    public void addScHomeSuccess(IdBean data) {
+        HomeCompanyBean homeCompanyBean = new HomeCompanyBean(getResources().getString(R.string.mine_home));
+        homeCompanyBean.setId(data.getId());
+        homeCompanyBean.setCloud_user_id(UserUtils.getCloudUserId());
+        if (data != null && data.getCloud_sa_user_info() != null) {
+            int saUserId = data.getCloud_sa_user_info().getId();
+            String saToken = data.getCloud_sa_user_info().getToken();
+            homeCompanyBean.setUser_id(saUserId);
+            homeCompanyBean.setSa_user_token(saToken);
+        }
+        createFamily(homeCompanyBean);
+    }
 
+    @Override
+    public void addScHomeFail(int errorCode, String msg) {
+
+    }
+
+    @Override
+    public void onVerificationCodeSuccess(String code) {
+        VerificationCodeDialog dialog = VerificationCodeDialog.newInstance(code);
+        dialog.show(this);
+    }
+
+    @Override
+    public void onVerificationCodeFail(int errorCode, String msg) {
+
+    }
+
+    /**
+     * 显示satoken失效
+     *
+     * @param show
+     */
+    private void showInvalid(boolean show) {
+        rlInvalid.setVisibility(show ? View.VISIBLE : View.GONE);
+        llHome.setVisibility(show ? View.GONE : View.VISIBLE);
+    }
+
+    /**
+     * 移除本地家庭
+     */
+    private void removeLocalFamily() {
+        RemovedTipsDialog removedTipsDialog = new RemovedTipsDialog(CurrentHome.getName());
+        removedTipsDialog.setKnowListener(() -> finish());
+        removedTipsDialog.show(this);
+        dbManager.removeFamily(CurrentHome.getLocalId());
+    }
+
+    private static class MyHandler extends Handler {
         WeakReference<Activity> activityWeakReference;
 
         public MyHandler(Activity activity) {
@@ -675,21 +870,24 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
         }
     }
 
-
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (isExitFamily){  // 退出/删除
+    public void finish() {
+        if (isExitFamily) {  // 退出/删除
             if (mCurrentHomeLocalId == mLocalId) {// 如果该家庭是外面选中的家庭且做了删除或退出操作，外面选中的家庭置空
                 CurrentHome = null;
                 HomeFragment.homeLocalId = 0;
             }
             EventBus.getDefault().post(new RefreshHome());  // 通知首页刷新数据
-        }else {
+        } else {
             CurrentHome = mTempHomeBean;
+            SpUtil.put(SpConstant.SA_TOKEN, mTempHomeBean.getSa_user_token());
+            HttpConfig.addHeader(CurrentHome.getSa_user_token());
+            HttpConfig.addAreaIdHeader(HttpConfig.AREA_ID, String.valueOf(HomeUtil.getHomeId()));
+            SpUtil.put(SpConstant.IS_BIND_SA, CurrentHome.isIs_bind_sa());
             if (CurrentHome != null && CurrentHome.getLocalId() == mLocalId && !CurrentHome.isIs_bind_sa() && !UserUtils.isLogin() && !TextUtils.isEmpty(updateName)) {
                 CurrentHome.setName(updateName);
             }
         }
+        super.finish();
     }
 }

@@ -1,17 +1,11 @@
 package com.yctc.zhiting.activity.presenter;
 
-
 import com.app.main.framework.baseview.BasePresenterImpl;
-import com.app.main.framework.entity.BaseEntity;
 import com.app.main.framework.httputil.RequestDataCallback;
 import com.app.main.framework.httputil.request.Request;
-import com.yctc.zhiting.activity.contract.AddDeviceContract;
 import com.yctc.zhiting.activity.contract.SetDevicePositionContract;
-import com.yctc.zhiting.activity.model.AddDeviceModel;
 import com.yctc.zhiting.activity.model.SetDevicePositionModel;
 import com.yctc.zhiting.entity.mine.AreasBean;
-import com.yctc.zhiting.entity.mine.CheckBindSaBean;
-import com.yctc.zhiting.entity.mine.LocationsBean;
 import com.yctc.zhiting.request.AddRoomRequest;
 
 public class SetDevicePositionPresenter extends BasePresenterImpl<SetDevicePositionContract.View> implements SetDevicePositionContract.Presenter {

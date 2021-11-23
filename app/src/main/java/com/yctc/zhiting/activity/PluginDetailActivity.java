@@ -24,9 +24,11 @@ import com.yctc.zhiting.adapter.SupportedDeviceAdapter;
 import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.dialog.CenterAlertDialog;
 import com.yctc.zhiting.entity.home.ScanResultBean;
+import com.yctc.zhiting.entity.mine.OperatePluginBean;
 import com.yctc.zhiting.entity.mine.PluginsBean;
 import com.yctc.zhiting.entity.scene.PluginDetailBean;
 import com.yctc.zhiting.entity.scene.PluginOperateBean;
+import com.yctc.zhiting.request.AddOrUpdatePluginRequest;
 import com.yctc.zhiting.utils.CollectionUtil;
 import com.yctc.zhiting.utils.IntentConstant;
 import com.yctc.zhiting.websocket.IWebSocketListener;
@@ -82,6 +84,9 @@ public class PluginDetailActivity extends MVPBaseActivity<PluginDetailContract.V
     private PluginsBean pluginsBean;
     private Map<Long, PluginOperateBean> map = new HashMap<>();
 
+    private int type;
+    private String brand = "";
+
     @Override
     protected int getLayoutId() {
         return R.layout.activity_plugin_detail;
@@ -92,15 +97,15 @@ public class PluginDetailActivity extends MVPBaseActivity<PluginDetailContract.V
         super.initUI();
         setTitleCenter(getResources().getString(R.string.mine_mine_plugin_detail));
         initRv();
-        initWebSocket();
+//        initWebSocket();
     }
 
     @Override
     protected void initIntent(Intent intent) {
         super.initIntent(intent);
         pluginsBean = (PluginsBean) intent.getSerializableExtra(IntentConstant.BEAN);
-        setData();
-//        mPresenter.getDetail(id);  插件状态要与插件列表保持一致，不调接口
+//        setData();
+        mPresenter.getDetail(pluginsBean.getId());  // 插件状态要与插件列表保持一致，不调接口
     }
 
     @Override
@@ -221,12 +226,16 @@ public class PluginDetailActivity extends MVPBaseActivity<PluginDetailContract.V
                 CenterAlertDialog centerAlertDialog = CenterAlertDialog.newInstance(getResources().getString(R.string.mine_mine_plugin_del_tips_1), null);
                 centerAlertDialog.setConfirmListener(new CenterAlertDialog.OnConfirmListener() {
                     @Override
-                    public void onConfirm() {
-                        pluginOperateBean.setService(Constant.REMOVE);
-                        operatePlugins(pluginOperateBean);
-                        pluginsBean.setIs_newest(false);
-                        pluginsBean.setIs_added(false);
-                        EventBus.getDefault().post(pluginsBean);
+                    public void onConfirm(boolean del) {
+//                        operatePlugin(Constant.REMOVE);
+//                        pluginsBean.setIs_newest(false);
+//                        pluginsBean.setIs_added(false);
+//                        EventBus.getDefault().post(pluginsBean);
+                        List<String> pluginIds = new ArrayList<>();
+                        pluginIds.add(pluginsBean.getId());
+                        AddOrUpdatePluginRequest addOrUpdatePluginRequest = new AddOrUpdatePluginRequest(pluginIds);
+                        mPresenter.removePlugins(addOrUpdatePluginRequest, brand, 0);
+                        setRingProgressBar();
                         centerAlertDialog.dismiss();
                     }
                 });
@@ -235,21 +244,29 @@ public class PluginDetailActivity extends MVPBaseActivity<PluginDetailContract.V
                 break;
 
             case R.id.tvUpdate:  // 更新
-                pluginOperateBean.setService(Constant.UPDATE);
-                operatePlugins(pluginOperateBean);
-                setRingProgressBar();
-                break;
+//                operatePlugin(Constant.UPDATE);
 
             case R.id.tvAdd:  // 添加
-                pluginOperateBean.setService(Constant.INSTALL);
-                operatePlugins(pluginOperateBean);
+//                operatePlugin(Constant.INSTALL);
+                List<String> pluginIds = new ArrayList<>();
+                pluginIds.add(pluginsBean.getId());
+                AddOrUpdatePluginRequest addOrUpdatePluginRequest = new AddOrUpdatePluginRequest(pluginIds);
+                mPresenter.addOrUpdatePlugins(addOrUpdatePluginRequest, brand, 0);
                 setRingProgressBar();
                 break;
+
         }
+
+    }
+
+
+    private void operatePlugin(String service){
+        PluginOperateBean pluginOperateBean = new PluginOperateBean(SupportBrandActivity.pId, Constant.PLUGIN, new PluginOperateBean.ServiceDataBean(pluginsBean.getId()));
+        pluginOperateBean.setService(service);
+        operatePlugins(pluginOperateBean);
+        setRingProgressBar();
         map.put(SupportBrandActivity.pId, pluginOperateBean);
         SupportBrandActivity.pId++;
-
-
     }
 
     /**
@@ -273,6 +290,7 @@ public class PluginDetailActivity extends MVPBaseActivity<PluginDetailContract.V
                 tvName.setText(pluginsBean.getName());
                 tvVersion.setText( getResources().getString(R.string.brand_versionCode) + pluginsBean.getVersion());
                 tvDesc.setText(pluginsBean.getInfo());
+                brand = pluginsBean.getBrand();
                 boolean isNew = pluginsBean.isIs_newest();
                 boolean isAdded = pluginsBean.isIs_added();
                 tvDel.setVisibility(isAdded ? View.VISIBLE : View.GONE);
@@ -293,6 +311,37 @@ public class PluginDetailActivity extends MVPBaseActivity<PluginDetailContract.V
      */
     @Override
     public void getDetailFail(int errorCode, String msg) {
+        ToastUtil.show(msg);
+    }
+
+    @Override
+    public void addOrUpdatePluginsSuccess(OperatePluginBean operatePluginBean, int position) {
+        pluginsBean.setIs_added(true);
+        pluginsBean.setIs_newest(true);
+        pluginsBean.setUpdating(false);
+        EventBus.getDefault().post(pluginsBean);
+    }
+
+    @Override
+    public void addOrUpdatePluginsFail(int errorCode, String msg, int position) {
+        pluginsBean.setUpdating(false);
+        EventBus.getDefault().post(pluginsBean);
+        ToastUtil.show(msg);
+    }
+
+    @Override
+    public void removePluginsSuccess(OperatePluginBean operatePluginBean, int position) {
+        pluginsBean.setUpdating(false);
+        pluginsBean.setIs_added(false);
+        pluginsBean.setIs_newest(false);
+        EventBus.getDefault().post(pluginsBean);
+        ToastUtil.show(UiUtil.getString(R.string.mine_remove_success));
+    }
+
+    @Override
+    public void removePluginsFail(int errorCode, String msg, int position) {
+        pluginsBean.setUpdating(false);
+        EventBus.getDefault().post(pluginsBean);
         ToastUtil.show(msg);
     }
 

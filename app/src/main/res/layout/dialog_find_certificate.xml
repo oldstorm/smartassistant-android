@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="@dimen/dp_300"
+    android:layout_height="wrap_content"
+    android:background="@drawable/shape_white_c10">
+
+    <LinearLayout
+        android:id="@+id/llContent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingLeft="@dimen/dp_20"
+        android:paddingTop="@dimen/dp_20"
+        android:paddingRight="@dimen/dp_20"
+        android:paddingBottom="@dimen/dp_16"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/home_find_user_certificate"
+            android:textColor="#ff3f4663"
+            android:textSize="@dimen/textSize16"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="left"
+            android:layout_marginTop="@dimen/dp_12"
+            android:text="@string/home_find_certificate_tip"
+            android:textColor="#ff3f4663"
+            android:textSize="@dimen/textSize14" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/clAllow"
+            android:layout_gravity="left"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_25">
+
+            <CheckBox
+                android:enabled="false"
+                android:id="@+id/cbAllowFind"
+                android:layout_width="@dimen/dp_19"
+                android:layout_height="@dimen/dp_19"
+                android:background="@drawable/selector_find_certificate"
+                android:button="@null"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/tv_allow_find"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/dp_10"
+                android:text="@string/home_allow_find"
+                android:textColor="#ff3f4663"
+                android:textSize="@dimen/textSize14"
+                android:textStyle="bold"
+                app:layout_constraintLeft_toRightOf="@id/cbAllowFind"
+                app:layout_constraintTop_toTopOf="@id/cbAllowFind" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dp_8"
+                android:text="@string/home_allow_find_tip"
+                android:textColor="#ff94a5be"
+                android:textSize="@dimen/textSize11"
+                app:layout_constraintLeft_toLeftOf="@id/tv_allow_find"
+                app:layout_constraintTop_toBottomOf="@id/tv_allow_find" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/clNoAllow"
+            android:layout_gravity="left"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_25">
+
+            <CheckBox
+                android:enabled="false"
+                android:id="@+id/cbNoAllowFind"
+                android:layout_width="@dimen/dp_19"
+                android:layout_height="@dimen/dp_19"
+                android:background="@drawable/selector_find_certificate"
+                android:button="@null"
+                android:checked="true"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/tvNoAllowFind"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/dp_10"
+                android:text="@string/home_no_allow_find"
+                android:textColor="#ff3f4663"
+                android:textSize="@dimen/textSize14"
+                android:textStyle="bold"
+                app:layout_constraintLeft_toRightOf="@id/cbNoAllowFind"
+                app:layout_constraintTop_toTopOf="@id/cbNoAllowFind" />
+
+            <TextView
+                android:id="@+id/tvNoAllowFindTip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dp_8"
+                android:text="@string/home_no_allow_find_tip"
+                android:textColor="#ff94a5be"
+                android:textSize="@dimen/textSize11"
+                app:layout_constraintLeft_toLeftOf="@id/tvNoAllowFind"
+                app:layout_constraintTop_toBottomOf="@id/tvNoAllowFind" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <TextView
+            android:layout_marginLeft="@dimen/dp_29"
+            android:layout_gravity="left"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_25"
+            android:text="@string/home_find_certificate_warn_tip"
+            android:textColor="#ff94a5be"
+            android:textSize="@dimen/textSize11" />
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/viewLine"
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="0.5dp"
+        android:background="@color/color_DDDDDD"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/llContent" />
+
+    <LinearLayout
+        android:id="@+id/llBottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/viewLine">
+
+        <TextView
+            android:id="@+id/tvCancel"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/dp_50"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/common_cancel"
+            android:textColor="@color/color_94A5BE"
+            android:textSize="@dimen/textSize14"
+            android:visibility="gone" />
+
+        <View
+            android:layout_width="0.5dp"
+            android:layout_height="match_parent"
+            android:background="@color/color_DDDDDD" />
+
+        <LinearLayout
+            android:layout_width="@dimen/dp_0"
+            android:layout_height="@dimen/dp_50"
+            android:layout_weight="1"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/tvConfirm"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="@string/common_confirm"
+                android:textColor="@color/color_2da3f6"
+                android:textSize="@dimen/textSize14"
+                android:visibility="visible" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -13,7 +13,7 @@ import com.yctc.zhiting.request.BindCloudRequest;
  */
 public interface DeviceConnectContract {
     interface Model {
-        void sync(String body, RequestDataCallback<InvitationCheckBean> callback);
+        void sync(String body, String url, RequestDataCallback<InvitationCheckBean> callback);
 
         void addDevice(DeviceBean bean, RequestDataCallback<AddDeviceResponseBean> callback);
 
@@ -35,7 +35,7 @@ public interface DeviceConnectContract {
     }
 
     interface Presenter extends BasePresenter<View> {
-        void sync(String body);
+        void sync(String body, String url);
 
         void addDevice(DeviceBean bean);
 

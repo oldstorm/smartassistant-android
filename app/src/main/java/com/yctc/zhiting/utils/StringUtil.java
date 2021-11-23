@@ -1,8 +1,21 @@
 package com.yctc.zhiting.utils;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.TextPaint;
 import android.text.TextUtils;
+import android.text.style.ClickableSpan;
+import android.text.style.ForegroundColorSpan;
+import android.util.Base64;
+import android.view.View;
+import android.widget.TextView;
 
+import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
+
+import com.app.main.framework.baseutil.UiUtil;
 import com.yctc.zhiting.R;
 import com.yctc.zhiting.config.Constant;
 
@@ -173,5 +186,89 @@ public class StringUtil {
         String str = uuid.toString();
         String uuidStr=str.replace("-", "");
         return uuidStr;
+    }
+
+    public static String getSubString(String str, int start, int end){
+        return str.substring(start, end);
+    }
+
+    public static boolean isNotEmpty(String str){
+        return str!=null && str.length()>0;
+    }
+
+
+    /**
+     * 登录界面的用户协议和隐私政策文案样式
+     * @param content
+     * @param color
+     * @param agreementPolicyListener
+     * @return
+     */
+    public static SpannableStringBuilder setAgreementAndPolicyTextStyle(String content, @ColorInt int color, AgreementPolicyListener agreementPolicyListener){
+        SpannableStringBuilder spannableString = new SpannableStringBuilder();
+        spannableString.append(content);
+
+         ClickableSpan headClickableSpan = new ClickableSpan() {
+            @Override
+            public void onClick(@NonNull View widget) {
+                ((TextView) widget).setHighlightColor(UiUtil.getColor(R.color.white));
+               if (agreementPolicyListener!=null){
+                   agreementPolicyListener.onHead();
+               }
+            }
+            @Override
+            public void updateDrawState(@NonNull TextPaint ds) {
+                ds.setUnderlineText(false);
+                ds.setColor(UiUtil.getColor(R.color.color_94A5BE));
+            }
+        };
+
+
+        ClickableSpan agreementClickableSpan = new ClickableSpan() {
+            @Override
+            public void onClick(@NonNull View widget) {
+                ((TextView) widget).setHighlightColor(UiUtil.getColor(R.color.white));
+               if (agreementPolicyListener!=null){
+                   agreementPolicyListener.onAgreement();
+               }
+            }
+            @Override
+            public void updateDrawState(@NonNull TextPaint ds) {
+                ds.setUnderlineText(false);
+                ds.setColor(color);
+            }
+        };
+
+        ForegroundColorSpan policyColorSpan = new ForegroundColorSpan(color);
+        ClickableSpan policyClickableSpan = new ClickableSpan() {
+            @Override
+            public void onClick(@NonNull View widget) {
+                ((TextView) widget).setHighlightColor(UiUtil.getColor(R.color.white));
+                if (agreementPolicyListener!=null){
+                    agreementPolicyListener.onPolicy();
+                }
+            }
+
+            @Override
+            public void updateDrawState(@NonNull TextPaint ds) {
+                ds.setUnderlineText(false);
+                ds.setColor(color);
+            }
+        };
+
+        int agreementEndIndex = content.indexOf("、");
+        int agreementBeginIndex = agreementEndIndex-4;
+        int policyBeginIndex = agreementEndIndex+1;
+        int policyEndIndex = content.length();
+
+
+        spannableString.setSpan(headClickableSpan, 0, 10, Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+
+        spannableString.setSpan(agreementClickableSpan, agreementBeginIndex, agreementEndIndex, Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+//        spannableString.setSpan(agreementColorSpan, agreementBeginIndex, agreementEndIndex, Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+
+        spannableString.setSpan(policyClickableSpan, policyBeginIndex, policyEndIndex, Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+//        spannableString.setSpan(policyColorSpan, policyBeginIndex, policyEndIndex, Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+        return spannableString;
     }
 }

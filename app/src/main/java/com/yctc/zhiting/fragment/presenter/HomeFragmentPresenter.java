@@ -4,7 +4,11 @@ import android.text.TextUtils;
 
 import com.app.main.framework.baseutil.LogUtil;
 import com.app.main.framework.baseview.BasePresenterImpl;
+import com.app.main.framework.httputil.NameValuePair;
 import com.app.main.framework.httputil.RequestDataCallback;
+import com.app.main.framework.httputil.request.Request;
+import com.yctc.zhiting.entity.AreaIdBean;
+import com.yctc.zhiting.entity.FindSATokenBean;
 import com.yctc.zhiting.entity.home.RoomDeviceListBean;
 import com.yctc.zhiting.entity.mine.HomeCompanyBean;
 import com.yctc.zhiting.entity.mine.HomeCompanyListBean;
@@ -77,6 +81,7 @@ public class HomeFragmentPresenter extends BasePresenterImpl<HomeFragmentContrac
             public void onFailed(int errorCode, String errorMessage) {
                 super.onFailed(errorCode, errorMessage);
                 if (mView != null) {
+                    mView.hideLoadingView();
                     mView.getDeviceFail(errorCode, errorMessage);
                 }
             }
@@ -89,7 +94,7 @@ public class HomeFragmentPresenter extends BasePresenterImpl<HomeFragmentContrac
      * @param id
      */
     @Override
-    public void getDetail(int id, boolean showLoading) {
+    public void getDetail(long id, boolean showLoading) {
         if (showLoading) {
             mView.showLoadingView();
         }
@@ -194,6 +199,7 @@ public class HomeFragmentPresenter extends BasePresenterImpl<HomeFragmentContrac
             public void onFailed(int errorCode, String errorMessage) {
                 super.onFailed(errorCode, errorMessage);
                 if (mView!=null) {
+                    mView.hideLoadingView();
                     mView.getHomeListFail(errorCode, errorMessage);
                 }
             }
@@ -206,12 +212,12 @@ public class HomeFragmentPresenter extends BasePresenterImpl<HomeFragmentContrac
      */
     @Override
     public void scBindSA(String body) {
-        model.scBindSA(body, new RequestDataCallback<Object>() {
+        model.scBindSA(body, new RequestDataCallback<AreaIdBean>() {
             @Override
-            public void onSuccess(Object obj) {
+            public void onSuccess(AreaIdBean obj) {
                 super.onSuccess(obj);
                 if (mView!=null){
-                    mView.scBindSASuccess();
+                    mView.scBindSASuccess(obj);
                 }
             }
 
@@ -220,6 +226,57 @@ public class HomeFragmentPresenter extends BasePresenterImpl<HomeFragmentContrac
                 super.onFailed(errorCode, errorMessage);
                 if (mView!=null){
                     mView.scBindSAFail(errorCode, errorMessage);
+                }
+            }
+        });
+    }
+
+    /**
+     * 通过sc找回sa的用户凭证
+     * @param userId
+     * @param requestData
+     */
+    @Override
+    public void getSAToken(int userId, List<NameValuePair> requestData) {
+        model.getSATokenBySC(userId, requestData, new RequestDataCallback<FindSATokenBean>() {
+            @Override
+            public void onSuccess(FindSATokenBean obj) {
+                super.onSuccess(obj);
+                if (mView!=null){
+                    mView.getSATokenSuccess(obj);
+                }
+            }
+
+            @Override
+            public void onFailed(int errorCode, String errorMessage) {
+                super.onFailed(errorCode, errorMessage);
+                if (mView!=null){
+                    mView.getSATokenFail(errorCode, errorMessage);
+                }
+            }
+        });
+    }
+
+    /**
+     * 找回凭证方式
+     * @param request
+     */
+    @Override
+    public void putFindCertificate(Request request) {
+        model.putFindCertificate(request, new RequestDataCallback<String>() {
+            @Override
+            public void onSuccess(String obj) {
+                super.onSuccess(obj);
+                if (mView!=null){
+                    mView.onCertificateSuccess();
+                }
+            }
+
+            @Override
+            public void onFailed(int errorCode, String errorMessage) {
+                super.onFailed(errorCode, errorMessage);
+                if (mView!=null){
+                    mView.onCertificateFail(errorCode, errorMessage);
                 }
             }
         });

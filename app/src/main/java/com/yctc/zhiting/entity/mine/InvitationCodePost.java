@@ -10,14 +10,14 @@ public class InvitationCodePost {
      * area_id : 1
      */
 
-    private int area_id;
+    private long area_id;
     private List<Integer> role_ids;
 
-    public int getArea_id() {
+    public long getArea_id() {
         return area_id;
     }
 
-    public void setArea_id(int area_id) {
+    public void setArea_id(long area_id) {
         this.area_id = area_id;
     }
 

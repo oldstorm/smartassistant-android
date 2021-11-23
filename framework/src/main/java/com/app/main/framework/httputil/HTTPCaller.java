@@ -1,29 +1,36 @@
 package com.app.main.framework.httputil;
 
-import android.app.Application;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
+import android.util.Base64;
 
+import androidx.fragment.app.FragmentActivity;
+
+import com.app.main.framework.R;
+import com.app.main.framework.baseutil.LibLoader;
 import com.app.main.framework.baseutil.LogUtil;
 import com.app.main.framework.baseutil.SpConstant;
 import com.app.main.framework.baseutil.SpUtil;
-import com.app.main.framework.baseview.BaseApplication;
-import com.app.main.framework.entity.BaseEntity;
+import com.app.main.framework.baseutil.toast.ToastUtil;
+import com.app.main.framework.dialog.CertificateDialog;
 import com.app.main.framework.gsonutils.GsonConverter;
 import com.app.main.framework.httputil.comfig.HttpConfig;
 import com.app.main.framework.httputil.cookie.CookieJarImpl;
 import com.app.main.framework.httputil.cookie.PersistentCookieStore;
+import com.app.main.framework.httputil.download.ResponseJsonBean;
 import com.app.main.framework.httputil.log.LoggerInterceptor;
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,6 +39,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.SSLPeerUnverifiedException;
 
 import io.github.lizhangqu.coreprogress.ProgressHelper;
 import io.github.lizhangqu.coreprogress.ProgressUIListener;
@@ -54,14 +63,15 @@ import okio.Okio;
  * HTTP请求发起和数据解析转换
  */
 public class HTTPCaller {
+
+    public static final String CLOUD_HOST_NAME = "scgz.zhitingtech.com";
     private static HTTPCaller _instance = null;
     private OkHttpClient client;//okhttp对象
     private Map<String, Call> requestHandleMap = null;//以URL为KEY存储的请求
     private CacheControl cacheControl = null;//缓存控制器
-
     private Gson gson = null;
-
     private HttpConfig httpConfig = new HttpConfig();//配置信息
+    private boolean hasDialog;
 
     private HTTPCaller() {
     }
@@ -90,12 +100,63 @@ public class HTTPCaller {
                 .writeTimeout(httpConfig.getWriteTimeout(), TimeUnit.SECONDS)
                 .readTimeout(httpConfig.getReadTimeout(), TimeUnit.SECONDS)
                 .addInterceptor(new LoggerInterceptor("ZhiTing", true))
+                .sslSocketFactory(SSLSocketClient.getSSLSocketFactory(), SSLSocketClient.getX509TrustManager())
+                .hostnameVerifier((hostname, session) -> {
+                    if (hostname.equals(CLOUD_HOST_NAME)) {  // SC直接访问
+                        return true;
+                    } else {
+                        if (session != null) {
+                            String cersCacheJson = SpUtil.get(hostname); // 根据主机名获取本地存储的数据
+                            try {
+                                Certificate[] certificates = session.getPeerCertificates();  // 证书
+                                String cersJson = byte2Base64String(certificates[0].getEncoded());  // 把证书转为base64存储
+                                if (!TextUtils.isEmpty(cersCacheJson)) {  // 如果之前存储过
+                                    String ccj = new String(cersCacheJson.getBytes(), "UTF-8");
+                                    String cj = new String(cersJson.getBytes(), "UTF-8");
+                                    boolean cer = cj.equals(ccj);
+                                    if (cer) {  // 之前存储过的证书和当前证书一样，直接访问
+                                        return true;
+                                    } else {// 之前存储过的证书和当前证书不一样，重新授权
+                                        showAlertDialog(LibLoader.getCurrentActivity().getString(R.string.whether_trust_this_certificate_again), hostname, cersJson);
+                                        return false;
+                                    }
+                                } else {// 之前没存储过，询问是否信任证书
+                                    showAlertDialog(LibLoader.getCurrentActivity().getString(R.string.whether_trust_this_certificate), hostname, cersJson);
+                                    return false;
+                                }
+                            } catch (SSLPeerUnverifiedException e) {
+                                e.printStackTrace();
+                            } catch (CertificateEncodingException e) {
+                                e.printStackTrace();
+                            } catch (UnsupportedEncodingException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        return false;
+                    }
+                })
                 .cookieJar(new CookieJarImpl(PersistentCookieStore.getInstance()))
                 .build();
 
         gson = new Gson();
         requestHandleMap = Collections.synchronizedMap(new WeakHashMap<>());
         cacheControl = new CacheControl.Builder().noCache().noStore().build();//不使用缓存
+    }
+
+    private void showAlertDialog(String tips, String hostName, String cerCache) {
+        FragmentActivity activity = (FragmentActivity) LibLoader.getCurrentActivity();
+        if (activity != null) {
+           if (!hasDialog) {
+               hasDialog = true;
+               CertificateDialog certificateDialog = CertificateDialog.newInstance(tips);
+               certificateDialog.setConfirmListener(() -> {
+                   SpUtil.put(hostName, cerCache);
+                   certificateDialog.dismiss();
+                   hasDialog = false;
+               });
+               certificateDialog.show(activity);
+           }
+        }
     }
 
     public <T> void get(Class<T> clazz, final String url, Header[] header, final RequestDataCallback<T> callback) {
@@ -111,16 +172,20 @@ public class HTTPCaller {
     }
 
     public <T> void get(final String url, List<NameValuePair> requestData, Type typeToken, final RequestDataCallback<T> callback) {
-        this.get(url, callback,  requestData, typeToken, false);
+        this.get(url, callback, requestData, typeToken, false);
     }
 
     public <T> void put(Class<T> clazz, final String url, String params, final RequestDataCallback<T> callback) {
         if (checkAgent()) {
             return;
         }
-        add(url, putBuilder(url, httpConfig.getHeaders(), params, new MyHttpResponseHandler(clazz, url, callback)), false);
+        TempChannelUtil.checkTemporaryUrl(url, new TempChannelUtil.OnTempChannelListener() {
+            @Override
+            public void onSuccess(String newUrl) {
+                add(newUrl, putBuilder(newUrl, httpConfig.getHeaders(), params, new MyHttpResponseHandler(clazz, newUrl, callback)), false);
+            }
+        });
     }
-
 
     /**
      * get请求
@@ -136,6 +201,18 @@ public class HTTPCaller {
         if (checkAgent()) {
             return;
         }
+        TempChannelUtil.checkTemporaryUrl(url, new TempChannelUtil.OnTempChannelListener() {
+            @Override
+            public void onSuccess(String newUrl) {
+                add(newUrl, getBuilder(newUrl, header, requestData, new MyHttpResponseHandler(clazz, newUrl, callback)), autoCancel);
+            }
+        });
+    }
+
+    public <T> void getChannel(final Class<T> clazz, final String url, Header[] header, List<NameValuePair> requestData, final RequestDataCallback<T> callback, boolean autoCancel) {
+        if (checkAgent()) {
+            return;
+        }
         add(url, getBuilder(url, header, requestData, new MyHttpResponseHandler(clazz, url, callback)), autoCancel);
     }
 
@@ -143,26 +220,40 @@ public class HTTPCaller {
         if (checkAgent()) {
             return;
         }
-        add(url, getBuilder(url, header, new MyHttpResponseHandler(clazz, url, callback)), autoCancel);
+        TempChannelUtil.checkTemporaryUrl(url, new TempChannelUtil.OnTempChannelListener() {
+            @Override
+            public void onSuccess(String newUrl) {
+                add(newUrl, getBuilder(newUrl, header, new MyHttpResponseHandler(clazz, newUrl, callback)), autoCancel);
+            }
+        });
     }
 
     public <T> void get(final String url, final RequestDataCallback<T> callback, Type typeToken, boolean autoCancel) {
         if (checkAgent()) {
             return;
         }
-        add(url, getBuilder(url, httpConfig.getHeaders(), new MyHttpResponseHandler(url, callback, typeToken)), autoCancel);
+        TempChannelUtil.checkTemporaryUrl(url, new TempChannelUtil.OnTempChannelListener() {
+            @Override
+            public void onSuccess(String newUrl) {
+                add(newUrl, getBuilder(newUrl, httpConfig.getHeaders(), new MyHttpResponseHandler(newUrl, callback, typeToken)), autoCancel);
+            }
+        });
     }
 
     public <T> void get(final String url, final RequestDataCallback<T> callback, List<NameValuePair> requestData, Type typeToken, boolean autoCancel) {
         if (checkAgent()) {
             return;
         }
-        add(url, getBuilder(url, httpConfig.getHeaders(),requestData, new MyHttpResponseHandler(url, callback, typeToken)), autoCancel);
+        TempChannelUtil.checkTemporaryUrl(url, new TempChannelUtil.OnTempChannelListener() {
+            @Override
+            public void onSuccess(String newUrl) {
+                add(newUrl, getBuilder(newUrl, httpConfig.getHeaders(), requestData, new MyHttpResponseHandler(newUrl, callback, typeToken)), autoCancel);
+            }
+        });
     }
 
-
     private Call getBuilder(String url, Header[] header, List<NameValuePair> requestData, HttpResponseHandler responseCallback) {
-//        url = Util.getMosaicParameter(url, httpConfig.getCommonField());//拼接公共参数
+        //url = Util.getMosaicParameter(url, httpConfig.getCommonField());//拼接公共参数
         if (requestData != null && requestData.size() > 0)
             url = Util.getMosaicParameter(url, requestData);//拼接公共参数
         Request.Builder builder = new Request.Builder();
@@ -209,7 +300,7 @@ public class HTTPCaller {
     /**
      * @param clazz    请求返回的对象
      * @param url      请求地址
-     * @param request     body对象
+     * @param request  body对象
      * @param callback 回掉
      * @param <T>
      */
@@ -226,7 +317,12 @@ public class HTTPCaller {
         if (checkAgent()) {
             return;
         }
-        add(url, deleteBuilder(url, header, json, new MyHttpResponseHandler(clazz, url, callback)), autoCancel);
+        TempChannelUtil.checkTemporaryUrl(url, new TempChannelUtil.OnTempChannelListener() {
+            @Override
+            public void onSuccess(String newUrl) {
+                add(newUrl, deleteBuilder(newUrl, header, json, new MyHttpResponseHandler(clazz, newUrl, callback)), autoCancel);
+            }
+        });
     }
 
     /**
@@ -242,14 +338,24 @@ public class HTTPCaller {
         if (checkAgent()) {
             return;
         }
-        add(url, postBuilder(url, header, params, new MyHttpResponseHandler(clazz, url, callback)), autoCancel);
+        TempChannelUtil.checkTemporaryUrl(url, new TempChannelUtil.OnTempChannelListener() {
+            @Override
+            public void onSuccess(String newUrl) {
+                add(newUrl, postBuilder(newUrl, header, params, new MyHttpResponseHandler(clazz, newUrl, callback)), autoCancel);
+            }
+        });
     }
 
     public <T> void post(final Class<T> clazz, final String url, Header[] header, final String json, final RequestDataCallback<T> callback, boolean autoCancel) {
         if (checkAgent()) {
             return;
         }
-        add(url, postBuilder(url, header, json, new MyHttpResponseHandler(clazz, url, callback)), autoCancel);
+        TempChannelUtil.checkTemporaryUrl(url, new TempChannelUtil.OnTempChannelListener() {
+            @Override
+            public void onSuccess(String newUrl) {
+                add(newUrl, postBuilder(newUrl, header, json, new MyHttpResponseHandler(clazz, newUrl, callback)), autoCancel);
+            }
+        });
     }
 
     public <T> void patch(final Class<T> clazz, final String url, String json, final RequestDataCallback<T> callback) {
@@ -260,7 +366,12 @@ public class HTTPCaller {
         if (checkAgent()) {
             return;
         }
-        add(url, patchBuilder(url, header, json, new MyHttpResponseHandler(clazz, url, callback)), autoCancel);
+        TempChannelUtil.checkTemporaryUrl(url, new TempChannelUtil.OnTempChannelListener() {
+            @Override
+            public void onSuccess(String newUrl) {
+                add(newUrl, patchBuilder(newUrl, header, json, new MyHttpResponseHandler(clazz, newUrl, callback)), autoCancel);
+            }
+        });
     }
 
     private Call postBuilder(String url, Header[] header, List<NameValuePair> form, HttpResponseHandler responseCallback) {
@@ -306,6 +417,29 @@ public class HTTPCaller {
             builder.url(url);
             builder.post(requestBody);
             return execute(builder, header, responseCallback);
+        } catch (Exception e) {
+            if (responseCallback != null)
+                responseCallback.onFailure(-1, e.getMessage().getBytes());
+        }
+        return null;
+    }
+
+    /**
+     * 带 okhttpClient
+     * @param url
+     * @param header
+     * @param json
+     * @param responseCallback
+     * @param okHttpClient
+     * @return
+     */
+    public Call postBuilder(String url, Header[] header, String json, OkHttpClient okHttpClient, HttpResponseHandler responseCallback) {
+        try {
+            RequestBody requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), json);
+            Request.Builder builder = new Request.Builder();
+            builder.url(url);
+            builder.post(requestBody);
+            return execute(builder, header, responseCallback, okHttpClient);
         } catch (Exception e) {
             if (responseCallback != null)
                 responseCallback.onFailure(-1, e.getMessage().getBytes());
@@ -439,22 +573,22 @@ public class HTTPCaller {
         add(url, postFile(url, header, name, fileName, fileContent, new MyHttpResponseHandler(clazz, url, callback), progressUIListener));
     }
 
-    public void downloadFile(String url, String saveFilePath, Header[] header, ProgressUIListener progressUIListener) {
-        downloadFile(url, saveFilePath, header, progressUIListener, false);
+    public void downloadFile(String url, String saveFilePath, String fileName, Header[] header, String errorTip, ProgressUIListener progressUIListener) {
+        downloadFile(url, saveFilePath, fileName, header, errorTip, progressUIListener, false);
     }
 
-    public void downloadFile(String url, String saveFilePath, Header[] header, ProgressUIListener progressUIListener, boolean autoCancel) {
+    public void downloadFile(String url, String saveFilePath, String fileName, Header[] header, String errorTip, ProgressUIListener progressUIListener, boolean autoCancel) {
         if (checkAgent()) {
             return;
         }
-        add(url, downloadFileSendRequest(url, saveFilePath, header, progressUIListener), autoCancel);
+        add(url, downloadFileSendRequest(url, saveFilePath,fileName, header, errorTip, progressUIListener), autoCancel);
     }
 
-    private Call downloadFileSendRequest(String url, final String saveFilePath, Header[] header, final ProgressUIListener progressUIListener) {
+    private Call downloadFileSendRequest(String url, final String saveFilePath, String fileName, Header[] header, String errorTip, final ProgressUIListener progressUIListener) {
         Request.Builder builder = new Request.Builder();
         builder.url(url);
         builder.get();
-        return execute(builder, header, new DownloadFileResponseHandler(url, saveFilePath, progressUIListener));
+        return execute(builder, header, new DownloadFileResponseHandler(url, saveFilePath,fileName, errorTip, progressUIListener));
     }
 
     private Call postFile(String url, Header[] header, List<NameValuePair> form, HttpResponseHandler responseCallback, ProgressUIListener progressUIListener) {
@@ -511,7 +645,7 @@ public class HTTPCaller {
 
             }
             List<NameValuePair> form = new ArrayList<>(2);
-//            form.addAll(httpConfig.getCommonField());//添加公共字段
+            //form.addAll(httpConfig.getCommonField());//添加公共字段
             form.addAll(params);//添加公共字段
             for (NameValuePair item : form) {
                 builder.addFormDataPart(item.getName(), item.getValue());
@@ -624,7 +758,6 @@ public class HTTPCaller {
         if (header == null) {
             builder.header("Connection", "close");
             builder.header("Accept", "*/*");
-
         } else {
             for (Header h : header) {
                 builder.header(h.getName(), h.getValue());
@@ -642,15 +775,57 @@ public class HTTPCaller {
         return call;
     }
 
+    /**
+     * 带 okhttpClient
+     * @param builder
+     * @param header
+     * @param responseCallback
+     * @param okHttpClient
+     * @return
+     */
+    private Call execute(Request.Builder builder, Header[] header, Callback responseCallback, OkHttpClient okHttpClient) {
+        boolean hasUa = false;
+        if (header == null) {
+            builder.header("Connection", "close");
+            builder.header("Accept", "*/*");
+        } else {
+            for (Header h : header) {
+                builder.header(h.getName(), h.getValue());
+                if (!hasUa && h.getName().equals("User-Agent")) {
+                    hasUa = true;
+                }
+            }
+        }
+        if (!hasUa && !TextUtils.isEmpty(httpConfig.getUserAgent())) {
+            builder.header("User-Agent", httpConfig.getUserAgent());
+        }
+        Request request = builder.cacheControl(cacheControl).build();
+        Call call = okHttpClient.newCall(request);
+        call.enqueue(responseCallback);
+        return call;
+    }
+
     public class DownloadFileResponseHandler implements Callback {
         private String saveFilePath;
+        private String fileName;
         private ProgressUIListener progressUIListener;
         private String url;
+        private String errorTip;
 
-        public DownloadFileResponseHandler(String url, String saveFilePath, ProgressUIListener progressUIListener) {
+        public DownloadFileResponseHandler(String url, String saveFilePath, String fileName, ProgressUIListener progressUIListener) {
             this.url = url;
+            this.fileName = fileName;
             this.saveFilePath = saveFilePath;
             this.progressUIListener = progressUIListener;
+        }
+
+        public DownloadFileResponseHandler(String url, String saveFilePath, String fileName, String errorTip, ProgressUIListener progressUIListener) {
+            this.url = url;
+            this.fileName = fileName;
+            this.saveFilePath = saveFilePath;
+            this.errorTip = errorTip;
+            this.progressUIListener = progressUIListener;
+
         }
 
         @Override
@@ -663,18 +838,39 @@ public class HTTPCaller {
         public void onResponse(Call call, Response response) throws IOException {
             printLog(url + " code:" + response.code());
             clear(url);
+            Response.Builder builder = response.newBuilder();
+            Response clone = builder.build();
+            int code = clone.code();
+            if (code == 200) {
+                ResponseBody body = clone.body();
+                if (body!=null) {
+                    String contentType = body.contentType().toString();
+                    if (contentType.contains("application/json")) {
+                        String json = response.body().toString();
+                        ResponseJsonBean responseJsonBean = new Gson().fromJson(json, ResponseJsonBean.class);
+                        ToastUtil.show(responseJsonBean.getReason());
+                    } else {
+                        ResponseBody responseBody = ProgressHelper.withProgress(response.body(), progressUIListener);
+                        BufferedSource source = responseBody.source();
 
-            ResponseBody responseBody = ProgressHelper.withProgress(response.body(), progressUIListener);
-            BufferedSource source = responseBody.source();
-
-            File outFile = new File(saveFilePath);
-            outFile.delete();
-            outFile.createNewFile();
-
-            BufferedSink sink = Okio.buffer(Okio.sink(outFile));
-            source.readAll(sink);
-            sink.flush();
-            source.close();
+//            File outFile = new File(saveFilePath);
+//            outFile.delete();
+//            outFile.createNewFile();
+                        File dirFile = new File(saveFilePath);
+                        if (!dirFile.exists()) {
+                            dirFile.mkdirs();
+                        }
+                        String suffix = url.substring(url.lastIndexOf(".") + 1);
+                        File outFile = new File(saveFilePath + fileName + "." + suffix);
+                        BufferedSink sink = Okio.buffer(Okio.sink(outFile));
+                        source.readAll(sink);
+                        sink.flush();
+                        source.close();
+                    }
+                }
+            }else {
+                ToastUtil.show(errorTip);
+            }
         }
     }
 
@@ -703,13 +899,13 @@ public class HTTPCaller {
                 clear(url);
                 datas = new String(data, StandardCharsets.UTF_8);
                 printLog(url + " " + status + " " + datas);
-                System.out.println("结果："+datas);
+                System.out.println("结果：" + datas);
                 T t = null;
                 String dataStr = "";
-                if (status!=-1) {
+                if (status != -1) {
                     JSONObject jsonObject = new JSONObject(datas);
-                     dataStr = jsonObject.getString("data");
-                     t = gson.fromJson(dataStr, clazz != null ? clazz : typeToken);
+                    dataStr = jsonObject.getString("data");
+                    t = gson.fromJson(dataStr, clazz != null ? clazz : typeToken);
                 }
                 sendCallback(status, t, data, callback);
                 LogUtil.e("HTTPCaller1=" + dataStr);
@@ -732,10 +928,10 @@ public class HTTPCaller {
                     JSONObject jsonObject = new JSONObject(str);
                     data = jsonObject.getString("data");
                     t = gson.fromJson(data, clazz != null ? clazz : typeToken);
-                    LogUtil.e("HTTPCaller1="+data);
+                    LogUtil.e("HTTPCaller1=" + data);
                 }
                 sendCallback(status, t, responseBody, callback);
-                LogUtil.e("HTTPCaller2="+str);
+                LogUtil.e("HTTPCaller2=" + str);
             } catch (Exception e) {
                 if (httpConfig.isDebug()) {
                     e.printStackTrace();
@@ -760,8 +956,7 @@ public class HTTPCaller {
     /**
      * 保存请求信息
      *
-     * @param url        请求url
-     * @param call       http请求call
+     * @param url        请求url     * @param call       http请求call
      * @param autoCancel 自动取消
      */
     private void add(String url, Call call, boolean autoCancel) {
@@ -857,5 +1052,10 @@ public class HTTPCaller {
                 callback.dataCallback(status, data, body);
             }
         }
+    }
+
+    public static String byte2Base64String(byte[] data) {
+        String base64String = new String(Base64.encodeToString(data, Base64.DEFAULT));
+        return base64String.replace("\n", "");
     }
 }

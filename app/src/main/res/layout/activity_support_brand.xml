@@ -44,7 +44,7 @@
             android:textColor="@color/color_3f4663"
             android:textSize="@dimen/textSize14"
             android:textStyle="bold"
-            android:visibility="gone"
+            android:visibility="visible"
             tools:visibility="visible"/>
     </RelativeLayout>
 

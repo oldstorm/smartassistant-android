@@ -40,6 +40,14 @@
 
     <string name="permission_apply">该App需要存储空间、位置信息和相机权限</string>
     <string name="storage_permission_apply">该功能需要存储空间权限</string>
+    <string name="access_fine_location_apply">该功能需要定位权限</string>
 
     <string name="title_save">保存</string>
+    <string name="confirm">确定</string>
+    <string name="cancel">取消</string>
+    <string name="whether_trust_this_certificate">是否信任此证书？</string>
+    <string name="whether_trust_this_certificate_again">证书认证失败，是否重新授权？</string>
+    <string name="unzip_file_exception">解压文件异常</string>
+
+    <string name="server_error">服务器异常</string>
 </resources>

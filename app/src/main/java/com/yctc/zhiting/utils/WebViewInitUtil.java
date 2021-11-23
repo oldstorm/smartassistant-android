@@ -85,6 +85,7 @@ public class WebViewInitUtil {
             super.onProgressChanged(view, newProgress);
         }
 
+
         @Override
         public boolean onJsAlert(WebView view, String url, String message,
                                  JsResult result) {

@@ -91,7 +91,7 @@ public abstract class BitBaseDialogFragment extends AppCompatDialogFragment {
      *
      * @param fragment 所依赖的 Fragment
      */
-    public BitBaseDialogFragment  show(Fragment fragment) {
+    public BitBaseDialogFragment show(Fragment fragment) {
         showWithAllow(fragment);
         return this;
     }
@@ -183,4 +183,10 @@ public abstract class BitBaseDialogFragment extends AppCompatDialogFragment {
         this.mAnim = CLOSE;
     }
 
+    @Override
+    public void dismiss() {
+        if (getDialog() != null) {
+            super.dismiss();
+        }
+    }
 }

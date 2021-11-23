@@ -1,23 +1,25 @@
 package com.yctc.zhiting.activity;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.graphics.Bitmap;
-import android.text.TextUtils;
+import android.net.http.SslError;
 import android.view.View;
 import android.webkit.JavascriptInterface;
-import android.webkit.WebChromeClient;
+import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
+import android.widget.RelativeLayout;
 
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.app.main.framework.baseutil.LogUtil;
 import com.app.main.framework.baseutil.UiUtil;
-import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.MVPBaseActivity;
 import com.google.gson.Gson;
 import com.yctc.zhiting.R;
@@ -26,27 +28,17 @@ import com.yctc.zhiting.activity.presenter.CommonWebPresenter;
 import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.config.HttpUrlConfig;
 import com.yctc.zhiting.entity.JsBean;
-import com.yctc.zhiting.entity.mine.HomeCompanyBean;
 import com.yctc.zhiting.event.FinishWebActEvent;
-import com.yctc.zhiting.event.HomeEvent;
-import com.yctc.zhiting.utils.UserUtils;
+import com.yctc.zhiting.utils.IntentConstant;
+import com.yctc.zhiting.utils.JsMethodConstant;
 import com.yctc.zhiting.utils.WebViewInitUtil;
 import com.yctc.zhiting.utils.statusbarutil.StatusBarUtil;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
-import org.json.JSONException;
-import org.json.JSONObject;
 
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLConnection;
 
 import butterknife.BindView;
-import butterknife.BindViews;
 import butterknife.OnClick;
 
 /**
@@ -54,12 +46,22 @@ import butterknife.OnClick;
  */
 public class CommonWebActivity extends MVPBaseActivity<CommonWebContract.View, CommonWebPresenter> implements CommonWebContract.View {
 
+    @BindView(R.id.clTop)
+    ConstraintLayout clTop;
+    @BindView(R.id.rlTitle)
+    RelativeLayout rlTitle;
+    @BindView(R.id.ivBack)
+    ImageView ivBack;
     @BindView(R.id.webView)
     WebView webView;
     @BindView(R.id.progressbar)
     ProgressBar progressbar;
 
-    private String webUrl = HttpUrlConfig.baseUrl+"#/";
+    private int webUrlType;
+    private String webUrl = HttpUrlConfig.baseSAUrl;
+    private final String thirdPartyUrl = "https://sc.zhitingtech.com/#/third-platform";
+
+//    private String webUrl = "http://192.168.22.91/doc/test.html";
     boolean flag;
 
     @Override
@@ -85,15 +87,45 @@ public class CommonWebActivity extends MVPBaseActivity<CommonWebContract.View, C
     @Override
     protected void initUI() {
         super.initUI();
-        StatusBarUtil.setStatusBarDarkTheme(this, false);
+
         WebViewInitUtil webViewInitUtil = new WebViewInitUtil(this);
         webViewInitUtil.initWebView(webView);
         webViewInitUtil.setProgressBar(progressbar);
         String ua = webView.getSettings().getUserAgentString();
-        webView.getSettings().setUserAgentString(ua + "; zhitingua");
-        webView.addJavascriptInterface(new JsInterface(), "zhitingApp");
+        webView.getSettings().setUserAgentString(ua + "; "+Constant.ZHITING_USER_AGENT);
+        webView.addJavascriptInterface(new JsInterface(), Constant.ZHITING_APP);
         webView.setWebViewClient(new MyWebViewClient());
-        webView.loadUrl(webUrl);
+
+    }
+
+
+    @Override
+    protected void initIntent(Intent intent) {
+        super.initIntent(intent);
+        webUrlType = intent.getIntExtra(IntentConstant.WEB_URL_TYPE, 0);
+        StatusBarUtil.setStatusBarDarkTheme(this, webUrlType == 1);
+        if (webUrlType == 1){ // 第三方平台
+            rlTitle.setVisibility(View.VISIBLE);
+            webView.loadUrl(thirdPartyUrl);
+        }else { // 专业版
+            clTop.setVisibility(View.VISIBLE);
+            webView.loadUrl(webUrl);
+        }
+    }
+
+    @OnClick(R.id.ivBack)
+    void clickBack(){
+        onBackPressed();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (webView.canGoBack()) {
+            webView.goBack();
+        }else {
+            super.onBackPressed();
+        }
+
     }
 
     class MyWebViewClient extends WebViewClient {
@@ -114,6 +146,11 @@ public class CommonWebActivity extends MVPBaseActivity<CommonWebContract.View, C
         @Override
         public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
             LogUtil.e(TAG + "onReceivedError=errorCode=" + errorCode + ",description=" + description + ",failingUrl=" + failingUrl);
+        }
+
+        @Override
+        public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+            handler.proceed();
         }
 
         @Override
@@ -149,6 +186,7 @@ public class CommonWebActivity extends MVPBaseActivity<CommonWebContract.View, C
         super.onDestroy();
         StatusBarUtil.setStatusBarDarkTheme(this, true);
         webView.clearCache(true);
+        webView.destroy();
     }
 
     /**
@@ -168,7 +206,6 @@ public class CommonWebActivity extends MVPBaseActivity<CommonWebContract.View, C
      */
     void networkType(JsBean jsBean) {
         String js = "zhiting.callBack('" + jsBean.getCallbackID() + "'," + "'{}')";
-        System.out.println("结果：" + js);
         runOnMainUi(js);
     }
 
@@ -179,7 +216,6 @@ public class CommonWebActivity extends MVPBaseActivity<CommonWebContract.View, C
      */
     void getUserInfo(JsBean jsBean) {
         String js = "zhiting.callBack('" + jsBean.getCallbackID() + "'," + "'{\"userId\":" + Constant.CurrentHome.getUser_id() + ",\"token\":\"" + Constant.CurrentHome.getSa_user_token() + "\"}')";
-        System.out.println("结果：" + js);
         runOnMainUi(js);
     }
 
@@ -190,7 +226,6 @@ public class CommonWebActivity extends MVPBaseActivity<CommonWebContract.View, C
      */
     void setTitle(JsBean jsBean) {
         String js = "zhiting.callBack('" + jsBean.getCallbackID() + "'," + "'{}')";
-        System.out.println("结果：" + js);
         runOnMainUi(js);
     }
 
@@ -201,7 +236,6 @@ public class CommonWebActivity extends MVPBaseActivity<CommonWebContract.View, C
      */
     void isProfession(JsBean jsBean) {
         String js = "zhiting.callBack('" + jsBean.getCallbackID() + "'," + "'{\"result\":true}')";
-        System.out.println("结果：" + js);
         runOnMainUi(js);
     }
 
@@ -219,23 +253,22 @@ public class CommonWebActivity extends MVPBaseActivity<CommonWebContract.View, C
         @SuppressLint("JavascriptInterface")
         @JavascriptInterface
         public void entry(String json) {
-            System.out.println("json结果：" + json);
             JsBean jsBean = new Gson().fromJson(json, JsBean.class);
             switch (jsBean.getFunc()) {
-                case "networkType":
+                case JsMethodConstant.NETWORK_TYPE:  // 网络类型
                     networkType(jsBean);
 
                     break;
 
-                case "getUserInfo":
+                case JsMethodConstant.GET_USER_INFO:  // 用户信息
                     getUserInfo(jsBean);
                     break;
 
-                case "setTitle":
+                case JsMethodConstant.SET_TITLE:  // 标题属性
                     setTitle(jsBean);
                     break;
 
-                case "isProfession":
+                case JsMethodConstant.IS_PROFESSION:  // 是否专业版
                     isProfession(jsBean);
                     break;
             }

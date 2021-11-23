@@ -1,6 +1,8 @@
 package com.yctc.zhiting.fragment;
 
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -9,34 +11,43 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.app.main.framework.baseutil.LogUtil;
+import com.app.main.framework.baseutil.SpUtil;
 import com.app.main.framework.baseutil.UiUtil;
 import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.MVPBaseFragment;
+import com.app.main.framework.event.TempChannelFailEvent;
+import com.app.main.framework.fileutil.BaseFileUtil;
 import com.app.main.framework.gsonutils.GsonConverter;
+import com.app.main.framework.httputil.HTTPCaller;
+import com.app.main.framework.httputil.Header;
+import com.app.main.framework.httputil.comfig.HttpConfig;
 import com.scwang.smart.refresh.layout.SmartRefreshLayout;
 import com.scwang.smart.refresh.layout.api.RefreshLayout;
 import com.scwang.smart.refresh.layout.listener.OnRefreshLoadMoreListener;
 import com.yctc.zhiting.R;
 import com.yctc.zhiting.activity.DeviceDetailActivity;
-import com.yctc.zhiting.activity.ScanDeviceActivity;
+import com.yctc.zhiting.activity.ScanDevice2Activity;
 import com.yctc.zhiting.adapter.HomeDeviceAdapter;
 import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.entity.home.DeviceMultipleBean;
 import com.yctc.zhiting.entity.home.SocketDeviceInfoBean;
 import com.yctc.zhiting.entity.home.SocketSwitchBean;
 import com.yctc.zhiting.entity.mine.LocationBean;
+import com.yctc.zhiting.entity.mine.PluginsBean;
+import com.yctc.zhiting.entity.scene.PluginDetailBean;
 import com.yctc.zhiting.event.DeviceDataEvent;
 import com.yctc.zhiting.event.HomeSelectedEvent;
 import com.yctc.zhiting.fragment.contract.HomeItemFragmentContract;
 import com.yctc.zhiting.fragment.presenter.HomeItemFragmentPresenter;
 import com.yctc.zhiting.utils.CollectionUtil;
+import com.yctc.zhiting.utils.HomeUtil;
 import com.yctc.zhiting.utils.IntentConstant;
 import com.yctc.zhiting.utils.SpacesItemDecoration;
+import com.yctc.zhiting.utils.ZipUtils;
 import com.yctc.zhiting.websocket.IWebSocketListener;
 import com.yctc.zhiting.websocket.WSocketManager;
 
@@ -44,16 +55,21 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.OnClick;
+import io.github.lizhangqu.coreprogress.ProgressUIListener;
 import okhttp3.Response;
 import okhttp3.WebSocket;
 
 import static com.yctc.zhiting.config.Constant.CurrentHome;
+import static com.yctc.zhiting.config.Constant.USER;
+import static com.yctc.zhiting.config.Constant.wifiInfo;
 
 public class HomeItemFragment extends MVPBaseFragment<HomeItemFragmentContract.View, HomeItemFragmentPresenter> implements
         HomeItemFragmentContract.View {
@@ -79,6 +95,7 @@ public class HomeItemFragment extends MVPBaseFragment<HomeItemFragmentContract.V
 
     private int pos;
     private int mSendId;//发送消息的id,自动自增
+    private DeviceMultipleBean mDeviceMultipleBean;
     private LocationBean locationBean;
     private HomeDeviceAdapter homeDeviceAdapter;
     private List<DeviceMultipleBean> data = new ArrayList<>();
@@ -131,7 +148,7 @@ public class HomeItemFragment extends MVPBaseFragment<HomeItemFragmentContract.V
             public void onOpen(WebSocket webSocket, Response response) {
                 super.onOpen(webSocket, response);
                 mSendId = 0;
-                initDeviceStatus(data);
+                setDeviceStatus();
                 LogUtil.e("HomeItemFragment=123=open");
             }
 
@@ -176,7 +193,7 @@ public class HomeItemFragment extends MVPBaseFragment<HomeItemFragmentContract.V
                     instances = deviceBean.getInstances();
                 if (CollectionUtil.isNotEmpty(instances)) {
                     for (int i = 0; i < instances.size(); i++) {
-                        if (instances.get(i).getType().equalsIgnoreCase("light_bulb")) {
+//                        if (instances.get(i).getType().equalsIgnoreCase("light_bulb")) {
                             attributes = instances.get(i).getAttributes();
                             if (CollectionUtil.isNotEmpty(attributes)) {
                                 for (int j = 0; j < attributes.size(); j++) {
@@ -188,7 +205,7 @@ public class HomeItemFragment extends MVPBaseFragment<HomeItemFragmentContract.V
                                         break;
                                     }
                                 }
-                            }
+//                            }
                             break;
                         }
                     }
@@ -230,7 +247,7 @@ public class HomeItemFragment extends MVPBaseFragment<HomeItemFragmentContract.V
     void onClickAdd() {
         Bundle bundle = new Bundle();
         bundle.putLong(IntentConstant.ID, CurrentHome.getLocalId());
-        switchToActivity(ScanDeviceActivity.class, bundle);
+        switchToActivity(ScanDevice2Activity.class, bundle);
     }
 
     /**
@@ -258,22 +275,20 @@ public class HomeItemFragment extends MVPBaseFragment<HomeItemFragmentContract.V
         recyclerView.setAdapter(homeDeviceAdapter);
         homeDeviceAdapter.setOnItemClickListener((adapter, view, position) -> {
             DeviceMultipleBean deviceMultipleBean = homeDeviceAdapter.getItem(position);
+            if (HomeUtil.notLoginAndSAEnvironment()){
+                return;
+            }
             switch (deviceMultipleBean.getItemType()) {
                 case DeviceMultipleBean.DEVICE:
-                    bundle.putInt(IntentConstant.ID, homeDeviceAdapter.getItem(position).getId());
-                    bundle.putBoolean(IntentConstant.IS_SA, homeDeviceAdapter.getItem(position).isIs_sa());
-                    bundle.putString(IntentConstant.NAME, homeDeviceAdapter.getItem(position).getName());
-                    bundle.putString(IntentConstant.LOGO_URL, homeDeviceAdapter.getItem(position).getLogo_url());
-                    bundle.putInt(IntentConstant.RA_ID, homeDeviceAdapter.getItem(position).getLocation_id());
-                    bundle.putString(IntentConstant.PLUGIN_URL, homeDeviceAdapter.getItem(position).getPlugin_url());
-                    bundle.putString(IntentConstant.RA_NAME, homeDeviceAdapter.getItem(position).getLocation_name());
-                    switchToActivity(DeviceDetailActivity.class, bundle);
+                    mDeviceMultipleBean = deviceMultipleBean;
+//                    mPresenter.getPluginDetail(mDeviceMultipleBean.getPlugin_id());
+                    toDeviceDetail("");
                     break;
 
                 case DeviceMultipleBean.ADD:
                     Bundle bundle = new Bundle();
                     bundle.putLong(IntentConstant.ID, CurrentHome.getLocalId());
-                    switchToActivity(ScanDeviceActivity.class);
+                    switchToActivity(ScanDevice2Activity.class);
                     break;
             }
         });
@@ -306,14 +321,25 @@ public class HomeItemFragment extends MVPBaseFragment<HomeItemFragmentContract.V
      * @param visible
      */
     private void setNullView(boolean visible) {
-        llEmpty.setVisibility(visible ? View.VISIBLE : View.GONE);
-        recyclerView.setVisibility(visible ? View.GONE : View.VISIBLE);
-        tvTips.setPadding(0, pos == 1 ? UiUtil.dip2px(11) : UiUtil.dip2px(5), 0, pos == 1 ? UiUtil.dip2px(37) : UiUtil.dip2px(49));
-        if (visible) {
-            if (!TextUtils.isEmpty(CurrentHome.getSa_user_token())) {
-                tvAdd.setVisibility(HomeFragment.addDeviceP ? View.VISIBLE : View.GONE);
-            } else {
-                tvAdd.setVisibility(View.VISIBLE);
+        refreshLayout.setEnableRefresh(!HomeUtil.tokenIsInvalid);
+        if (HomeUtil.tokenIsInvalid){  // satoken失效
+            recyclerView.setVisibility(View.GONE);
+            llEmpty.setVisibility(View.VISIBLE);
+            tvAdd.setVisibility(View.GONE);
+            ivTips.setImageResource(R.drawable.icon_invalid_token);
+            tvTips.setText(getResources().getString(R.string.home_invalid_token));
+        }else {
+            llEmpty.setVisibility(visible ? View.VISIBLE : View.GONE);
+            recyclerView.setVisibility(visible ? View.GONE : View.VISIBLE);
+            tvTips.setPadding(0, pos == 1 ? UiUtil.dip2px(11) : UiUtil.dip2px(5), 0, pos == 1 ? UiUtil.dip2px(37) : UiUtil.dip2px(49));
+            tvTips.setText(getResources().getString(R.string.home_no_device));
+            ivTips.setImageResource(R.drawable.icon_device_empty);
+            if (visible) {
+                if (!TextUtils.isEmpty(CurrentHome.getSa_user_token())) {
+                    tvAdd.setVisibility(HomeFragment.addDeviceP ? View.VISIBLE : View.GONE);
+                } else {
+                    tvAdd.setVisibility(View.VISIBLE);
+                }
             }
         }
     }
@@ -325,7 +351,7 @@ public class HomeItemFragment extends MVPBaseFragment<HomeItemFragmentContract.V
         if (CollectionUtil.isNotEmpty(event.getDevices())) {
             if (pos > 0) {
                 for (DeviceMultipleBean deviceMultipleBean : event.getDevices()) {
-                    if (deviceMultipleBean.getLocation_id() == locationBean.getLocationId()) {
+                    if (deviceMultipleBean.getLocation_id() == locationBean.getId()) {
                         data.add(deviceMultipleBean);
                     }
                 }
@@ -339,12 +365,38 @@ public class HomeItemFragment extends MVPBaseFragment<HomeItemFragmentContract.V
                     data.add(new DeviceMultipleBean(DeviceMultipleBean.ADD));
                 }
                 homeDeviceAdapter.setNewData(data);
-                initDeviceStatus(data);
+
+//                initDeviceStatus(data);
+                setDeviceStatus();
             } else {
                 setNullView(true);
             }
         } else {
             setNullView(true);
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(TempChannelFailEvent event) {
+        refreshLayout.finishRefresh();
+    }
+
+    /**
+     * 设置设备状态
+     */
+    private void setDeviceStatus(){
+//        if (CurrentHome.getMac_address() != null && wifiInfo !=null && CurrentHome.getMac_address().equals(wifiInfo.getBSSID())) {
+        if (CurrentHome.getArea_id() > 0 || CurrentHome.getId()>0) {
+            initDeviceStatus(data);
+        }else {
+            if (homeDeviceAdapter!=null) {
+                if (CollectionUtil.isNotEmpty(homeDeviceAdapter.getData())){
+                    for (DeviceMultipleBean deviceMultipleBean : homeDeviceAdapter.getData()){
+                        deviceMultipleBean.setOnline(false);
+                    }
+                    homeDeviceAdapter.notifyDataSetChanged();
+                }
+            }
         }
     }
 
@@ -368,5 +420,100 @@ public class HomeItemFragment extends MVPBaseFragment<HomeItemFragmentContract.V
                 }
             }
         });
+    }
+
+    /**
+     * 插件详情成功
+     *
+     * @param pluginDetailBean
+     */
+    @Override
+    public void getPluginDetailSuccess(PluginDetailBean pluginDetailBean) {
+        if (pluginDetailBean != null) {
+            PluginsBean pluginsBean = pluginDetailBean.getPlugin();
+            String pluginId = pluginsBean.getId();
+            String pluginFilePath = "";
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
+                pluginFilePath = getContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath()+"/plugins/" + pluginId;
+            }else {
+                pluginFilePath = Constant.PLUGIN_PATH + pluginId;
+            }
+            if (pluginsBean != null) {
+                String downloadUrl = pluginsBean.getDownload_url();
+                String cachePluginJson = SpUtil.get(pluginId);
+                PluginsBean cachePlugin = GsonConverter.getGson().fromJson(cachePluginJson, PluginsBean.class);
+                String cacheVersion = "";
+                if (cachePlugin!=null){
+                    cacheVersion = cachePlugin.getVersion();
+                }
+                String version = pluginsBean.getVersion();
+                if (mDeviceMultipleBean!=null && BaseFileUtil.isFileExist(pluginFilePath) &&
+                        !TextUtils.isEmpty(cacheVersion) && !TextUtils.isEmpty(version) && cacheVersion.equals(version)) {  // 如果缓存存在且版本相同
+                    String urlPath = "file://"+pluginFilePath+"/"+mDeviceMultipleBean.getControl();
+                    toDeviceDetail(urlPath);
+                } else {
+                    if (!TextUtils.isEmpty(downloadUrl)) {
+                        String suffix = downloadUrl.substring(downloadUrl.lastIndexOf(".") + 1);
+                        BaseFileUtil.deleteFolderFile(pluginFilePath, true);
+                        String fileZipPath = pluginFilePath+"."+suffix;
+                        File file = new File(fileZipPath);
+                        BaseFileUtil.deleteFile(file);
+                        List<Header> headers = new ArrayList<>();
+                        headers.add(new Header("Accept-Encoding", "identity"));
+                        headers.add(new Header(HttpConfig.TOKEN_KEY, HomeUtil.getSaToken()));
+                        String path = "";
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
+                            path = getContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath()+"/plugins/";
+                        }else {
+                            path = Constant.PLUGIN_PATH;
+                        }
+                        String finalPath = path;
+                        String finalPluginFilePath = pluginFilePath;
+                        HTTPCaller.getInstance().downloadFile(downloadUrl, path, pluginId, headers.toArray(new Header[headers.size()]), UiUtil.getString(R.string.home_download_plugin_package_fail), new ProgressUIListener() {
+                            @Override
+                            public void onUIProgressChanged(long numBytes, long totalBytes, float percent, float speed) {
+                                LogUtil.e("进度：" + percent);
+                                if (percent == 1) {
+                                    LogUtil.e("下载完成");
+                                    try {
+                                        ZipUtils.decompressFile(new File(fileZipPath), finalPath, true);
+                                        String pluginsBeanToJson = GsonConverter.getGson().toJson(pluginsBean);
+                                        SpUtil.put(pluginId, pluginsBeanToJson);
+                                        String urlPath = "file://"+ finalPluginFilePath +"/"+mDeviceMultipleBean.getControl();
+                                        toDeviceDetail(urlPath);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                        ToastUtil.show(UiUtil.getString(R.string.unzip_file_exception));
+                                    }
+
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 去设备详情界面
+     * @param urlPath
+     */
+    private void toDeviceDetail(String urlPath){
+        Bundle bundle = new Bundle();
+        bundle.putString(IntentConstant.PLUGIN_PATH, urlPath);
+        bundle.putSerializable(IntentConstant.BEAN, mDeviceMultipleBean);
+        switchToActivity(DeviceDetailActivity.class, bundle);
+    }
+
+    /**
+     * 插件详情失败
+     *
+     * @param errorCode
+     * @param msg
+     */
+    @Override
+    public void getPluginDetailFail(int errorCode, String msg) {
+        ToastUtil.show(msg);
     }
 }

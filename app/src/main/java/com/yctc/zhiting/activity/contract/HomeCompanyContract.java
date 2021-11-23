@@ -6,6 +6,7 @@ import com.app.main.framework.httputil.RequestDataCallback;
 import com.yctc.zhiting.entity.home.BrandBean;
 import com.yctc.zhiting.entity.mine.HomeCompanyBean;
 import com.yctc.zhiting.entity.mine.HomeCompanyListBean;
+import com.yctc.zhiting.entity.mine.IdBean;
 import com.yctc.zhiting.entity.mine.PermissionBean;
 
 import java.util.List;
@@ -17,6 +18,7 @@ public interface HomeCompanyContract {
     interface Model {
         void getHomeCompanyList(RequestDataCallback<HomeCompanyListBean> callback);
         void getPermissions(int id, RequestDataCallback<PermissionBean> callback);
+        void addHomeCompany(String body, RequestDataCallback<IdBean> callback);
     }
 
     interface View extends BaseView {
@@ -25,10 +27,13 @@ public interface HomeCompanyContract {
         void getHomeCompanyListFailed(String errorMessage);
         void getPermissionsSuccess(PermissionBean permissionBean);
         void getFail(int errorCode, String msg);
+        void addHomeCompanySuccess(IdBean idBean);
+        void addHomeCompanyFail(int errorCode, String msg);
     }
 
     interface Presenter extends BasePresenter<HomeCompanyContract.View> {
         void getHomeCompanyList(boolean showLoading);
         void getPermissions(int id);
+        void addHomeCompany(String body);
     }
 }

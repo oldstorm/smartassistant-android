@@ -46,6 +46,6 @@ public class RADetailModel implements RADetailContract.Model {
 
     @Override
     public void getPermissions(int id, RequestDataCallback<PermissionBean> callback) {
-        HTTPCaller.getInstance().get(PermissionBean.class, HttpUrlConfig.getPermissions(id), callback);
+        HTTPCaller.getInstance().get(PermissionBean.class, HttpUrlConfig.getPermissions1(id), callback);
     }
 }

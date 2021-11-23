@@ -1,6 +1,8 @@
 package com.yctc.zhiting.fragment.presenter;
 
 import com.app.main.framework.baseview.BasePresenterImpl;
+import com.app.main.framework.httputil.RequestDataCallback;
+import com.yctc.zhiting.entity.scene.PluginDetailBean;
 import com.yctc.zhiting.fragment.contract.HomeItemFragmentContract;
 import com.yctc.zhiting.fragment.model.HomeItemFragmentModel;
 
@@ -57,5 +59,30 @@ public class HomeItemFragmentPresenter extends BasePresenterImpl<HomeItemFragmen
 //                ToastUtil.toastLong("失败=code="+errorCode+"="+errorMessage);
 //            }
 //        });
+    }
+
+    /**
+     * 插件详情
+     * @param id
+     */
+    @Override
+    public void getPluginDetail(String id) {
+        model.getPluginDetail(id, new RequestDataCallback<PluginDetailBean>() {
+            @Override
+            public void onSuccess(PluginDetailBean obj) {
+                super.onSuccess(obj);
+                if (mView != null) {
+                    mView.getPluginDetailSuccess(obj);
+                }
+            }
+
+            @Override
+            public void onFailed(int errorCode, String errorMessage) {
+                super.onFailed(errorCode, errorMessage);
+                if (mView != null) {
+                    mView.getPluginDetailFail(errorCode,errorMessage);
+                }
+            }
+        });
     }
 }

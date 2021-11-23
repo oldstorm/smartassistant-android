@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -23,7 +24,6 @@ import com.yctc.zhiting.activity.presenter.RoomAreaPresenter;
 import com.yctc.zhiting.adapter.RoomAreaAdapter;
 import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.db.DBManager;
-import com.yctc.zhiting.db.DBThread;
 import com.yctc.zhiting.dialog.EditBottomDialog;
 import com.yctc.zhiting.entity.mine.LocationBean;
 import com.yctc.zhiting.entity.mine.PermissionBean;
@@ -59,6 +59,8 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
     @BindView(R.id.llAdd)
     LinearLayout llAdd;
 
+    private final int ROOM_DETAIL_ACT_REQUEST_CODE = 100;
+
     private long id; // 家庭/公司id
     private int userId;
     private boolean isEdit;
@@ -72,17 +74,13 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
     private ItemTouchHelper itemTouchHelper;
     private EditBottomDialog editBottomDialog;
     private WeakReference<Context> mContext;
+    private boolean needRefreshHC; // 是否需要刷新家庭详情
 
     @Override
     protected int getLayoutId() {
         return R.layout.activity_room_area;
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        refresh(true);
-    }
 
     @Override
     protected void initUI() {
@@ -91,6 +89,7 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
 
         id = getIntent().getLongExtra(IntentConstant.ID, -1);
         isBindSa = getIntent().getBooleanExtra(IntentConstant.IS_BIND_SA, false);
+        isBindSa = isBindSa || id > 0;
         userId = getIntent().getIntExtra(IntentConstant.USER_ID, -1);
         mContext = new WeakReference<>(this);
         dbManager = DBManager.getInstance(mContext.get());
@@ -102,8 +101,8 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
         roomAreaAdapter.setOnItemClickListener((adapter, view, position) -> {
             LocationBean roomAreaBean = roomAreaAdapter.getItem(position);
             if (!isEdit) {  // 非编辑
-                if (isBindSa){
-                    if (!isPermissionSeeRoom){  // 没有权限
+                if (isBindSa) {
+                    if (!isPermissionSeeRoom) {  // 没有权限
                         ToastUtil.show(UiUtil.getString(R.string.common_no_permission));
                         return;
                     }
@@ -114,13 +113,24 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
 
         itemTouchHelper = new ItemTouchHelper(new MyItemTouchHelper(roomAreaAdapter, false));
         refreshLayout.setOnRefreshListener(refreshLayout -> refresh(false));
+        refresh(true);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable @org.jetbrains.annotations.Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK && requestCode == ROOM_DETAIL_ACT_REQUEST_CODE){
+            needRefreshHC = true;
+            refresh(true);
+        }
     }
 
     /**
      * 去到房间详情
+     *
      * @param roomAreaBean
      */
-    private void toRoomDetail(LocationBean roomAreaBean){
+    private void toRoomDetail(LocationBean roomAreaBean) {
         Intent intent = new Intent(RoomAreaActivity.this, RADetailActivity.class);
         intent.putExtra(IntentConstant.ID, id);
         intent.putExtra(IntentConstant.RA_ID, roomAreaBean.getLocationId() > 0 ? roomAreaBean.getLocationId() : roomAreaBean.getId());
@@ -128,7 +138,7 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
         intent.putExtra(IntentConstant.RA_List, (Serializable) roomAreaAdapter.getData());
         intent.putExtra(IntentConstant.IS_BIND_SA, isBindSa);
         intent.putExtra(IntentConstant.USER_ID, userId);
-        startActivity(intent);
+        startActivityForResult(intent, ROOM_DETAIL_ACT_REQUEST_CODE);
     }
 
     /**
@@ -136,11 +146,11 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
      */
     private void refresh(boolean showLoading) {
         if (UserUtils.isLogin()) { // 登录了云端
-            if (isBindSa){
+            if (isBindSa) {
                 mPresenter.getPermissions(Constant.CurrentHome.getUser_id());
             }
             mPresenter.getRoomList(showLoading);
-        }else {  // 没登录云端
+        } else {  // 没登录云端
             if (isBindSa) {  // 已经绑定sa从服务器获取
                 mPresenter.getPermissions(userId);
                 mPresenter.getRoomList(showLoading);
@@ -165,24 +175,25 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
                     }
                 }
             }
-            if (UserUtils.isLogin()){  // 登录sc情况
+            if (UserUtils.isLogin()) {  // 登录sc情况
                 mPresenter.addRoom(content);
-            }else {  // 没登录sc情况
+            } else {  // 没登录sc情况
                 if (isBindSa) {  // 绑定sa从接口获取
                     mPresenter.addRoom(content);
                     editBottomDialog.dismiss();
                 } else { // 否则，从本地获取
-                    new DBThread(() -> {
+                    UiUtil.starThread(() -> {
                         LocationBean locationBean = new LocationBean();
                         locationBean.setName(content);
                         locationBean.setSort(1);
                         locationBean.setArea_id(id);
                         dbManager.insertLocation(locationBean);
-                        mainThreadHandler.post(() -> {
+
+                        UiUtil.runInMainThread(() -> {
                             loadData();
                             editBottomDialog.dismiss();
                         });
-                    }).start();
+                    });
                 }
             }
         });
@@ -193,9 +204,9 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
      * 从数据库查询数据
      */
     private void loadData() {
-        new DBThread(() -> {
+        UiUtil.starThread(() -> {
             List<LocationBean> list = dbManager.queryLocationList(id);
-            mainThreadHandler.post(() -> {
+            UiUtil.runInMainThread(() -> {
                 if (list.isEmpty()) {
                     setNullView(true);
                 } else {
@@ -205,39 +216,25 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
                 }
                 refreshLayout.finishRefresh();
             });
-        }).start();
+        });
     }
 
     private void setNullView(boolean visible) {
         viewNull.setVisibility(visible ? View.VISIBLE : View.GONE);
         rvRA.setVisibility(visible ? View.GONE : View.VISIBLE);
-        if (isBindSa){ // 绑了sa
-            if (isAdd_location){ // 有添加房间的权限
+        if (isBindSa) { // 绑了sa
+            if (isAdd_location) { // 有添加房间的权限
                 llAdd.setVisibility(visible ? View.GONE : View.VISIBLE);
-            }else {  // 没有添加房间的权限
+            } else {  // 没有添加房间的权限
                 llAdd.setVisibility(View.GONE);
             }
-        }else{
+        } else {
             llAdd.setVisibility(View.VISIBLE);
         }
 
-        if (!visible){
+        if (!visible) {
             setEdit(!isBindSa);
         }
-//        if (isBindSa) {
-//            llAdd.setVisibility(visible ? View.GONE : View.VISIBLE);
-//        }else{
-//            llAdd.setVisibility(View.VISIBLE);
-//        }
-//        if (visible) {  // 没有数据
-//            if (isBindSa) {
-//                tvTodo.setVisibility(isAdd_location ? View.VISIBLE : View.INVISIBLE);
-//            }else {
-//                tvTodo.setVisibility(View.VISIBLE);
-//            }
-//        } else {  // 有数据
-//            setEdit(!isBindSa);
-//        }
     }
 
     /**
@@ -255,12 +252,10 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
      * 切换位置
      */
     public void resetPos() {
-        new DBThread(() -> {
+        UiUtil.starThread(() -> {
             dbManager.updateLocationList(id, roomAreaAdapter.getData());
-            mainThreadHandler.post(() -> {
-                resetEdit();
-            });
-        }).start();
+            UiUtil.runInMainThread(() -> resetEdit());
+        });
     }
 
     /**
@@ -292,6 +287,7 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
         if (editBottomDialog != null && editBottomDialog.isShowing()) {
             editBottomDialog.dismiss();
         }
+        needRefreshHC = true;
         mPresenter.getRoomList(false);
     }
 
@@ -299,6 +295,16 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
     public void orderRoomSuccess() {
         ToastUtil.show(UiUtil.getString(R.string.common_sort_success));
         resetEdit();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (needRefreshHC){
+            setResult(RESULT_OK);
+            finish();
+        }else {
+            super.onBackPressed();
+        }
     }
 
     /**

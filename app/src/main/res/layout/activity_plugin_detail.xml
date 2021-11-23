@@ -32,7 +32,7 @@
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintRight_toLeftOf="@+id/llOperate"
-            android:text="显示插件包名称Xiaomi Gateway"
+            tools:text="显示插件包名称Xiaomi Gateway"
             android:textSize="@dimen/textSize14"
             android:textColor="@color/color_3f4663"
             android:textStyle="bold"/>
@@ -96,7 +96,7 @@
             app:layout_constraintTop_toBottomOf="@+id/tvName"
             app:layout_constraintLeft_toLeftOf="parent"
             android:layout_marginTop="@dimen/dp_6"
-            android:text="版本号：v1.2.3"
+            tools:text="版本号：v1.2.3"
             android:textColor="@color/color_94A5BE"
             android:textSize="@dimen/textSize12"
             android:textStyle="bold"/>
@@ -110,7 +110,7 @@
             android:layout_marginTop="@dimen/dp_8"
             android:paddingBottom="@dimen/dp_16"
             android:lineSpacingExtra="@dimen/dp_2"
-            android:text="该插件包括台灯的所有控制，如开关、色温等，添加插件后可控制yeelight台灯系列的所有的产品，支持的产品型号包括：A 123、B123、C123"
+            tools:text="该插件包括台灯的所有控制，如开关、色温等，添加插件后可控制yeelight台灯系列的所有的产品，支持的产品型号包括：A 123、B123、C123"
             android:textColor="@color/color_3f4663"
             android:textSize="@dimen/textSize12" />
     </androidx.constraintlayout.widget.ConstraintLayout>
@@ -131,5 +131,6 @@
         android:id="@+id/rvDevice"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/dp_10" />
+        android:layout_marginTop="@dimen/dp_10"
+        android:visibility="gone"/>
 </LinearLayout>

@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <declare-styleable name="RadarScanView">
+        <!--中心点的颜色-->
+        <attr name="cntDotColor" format="color" />
+        <!--扫描线的颜色-->
+        <attr name="lineColor" format="color" />
+        <!--扫描线的宽度-->
+        <attr name="lineWidth" format="integer" />
         <!--圆圈和交叉线的颜色-->
         <attr name="circleColor" format="color" />
         <!--圆圈的数量-->
@@ -47,4 +53,14 @@
     <declare-styleable name="MediumTextView">
         <attr name="strokeWidth" format="dimension" />
     </declare-styleable>
+
+    <declare-styleable name="CustomEditTextView">
+        <attr name="cet_count" format="integer" />
+        <attr name="cet_width" format="dimension|reference" />
+        <attr name="cet_text_color" format="color|reference" />
+        <attr name="cet_text_size" format="dimension|reference" />
+        <attr name="cet_bg" format="dimension|reference" />
+        <attr name="cet_spacing" format="dimension|reference" />
+    </declare-styleable>
+
 </resources>

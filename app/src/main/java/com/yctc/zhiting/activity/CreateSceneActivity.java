@@ -661,7 +661,7 @@ public class CreateSceneActivity extends MVPBaseActivity<CreateSceneContract.Vie
                     CenterAlertDialog centerAlertDialog = CenterAlertDialog.newInstance(getResources().getString(R.string.scene_back_tips), null);
                     centerAlertDialog.setConfirmListener(new CenterAlertDialog.OnConfirmListener() {
                         @Override
-                        public void onConfirm() {
+                        public void onConfirm(boolean del) {
                             centerAlertDialog.dismiss();
                             onBackPressed();
                         }
@@ -730,7 +730,7 @@ public class CreateSceneActivity extends MVPBaseActivity<CreateSceneContract.Vie
                 delDialog = CenterAlertDialog.newInstance(getResources().getString(R.string.scene_remove), null, true);
                 delDialog.setConfirmListener(new CenterAlertDialog.OnConfirmListener() {
                     @Override
-                    public void onConfirm() {
+                    public void onConfirm(boolean del) {
 //                        tvRemove.setVisibility(View.GONE);
 //                        rbDel.setVisibility(View.VISIBLE);
                         isDel = true;

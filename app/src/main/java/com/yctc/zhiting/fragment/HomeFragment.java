@@ -1,3 +1,4 @@
+
 package com.yctc.zhiting.fragment;
 
 import android.content.Context;
@@ -7,6 +8,8 @@ import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageView;
@@ -14,40 +17,51 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import androidx.annotation.Nullable;
 import androidx.viewpager.widget.ViewPager;
 
 import com.app.main.framework.baseutil.LogUtil;
+import com.app.main.framework.baseutil.NetworkUtil;
 import com.app.main.framework.baseutil.SpConstant;
 import com.app.main.framework.baseutil.SpUtil;
 import com.app.main.framework.baseutil.UiUtil;
 import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.BaseFragment;
 import com.app.main.framework.baseview.MVPBaseFragment;
+import com.app.main.framework.event.TempChannelFailEvent;
 import com.app.main.framework.gsonutils.GsonConverter;
+import com.app.main.framework.httputil.NameValuePair;
 import com.app.main.framework.httputil.comfig.HttpConfig;
+import com.app.main.framework.httputil.cookie.PersistentCookieStore;
 import com.app.main.framework.widget.StatusBarView;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.tabs.TabLayout;
 import com.yctc.zhiting.R;
 import com.yctc.zhiting.activity.CaptureNewActivity;
+import com.yctc.zhiting.activity.FindSAGuideActivity;
 import com.yctc.zhiting.activity.MainActivity;
-import com.yctc.zhiting.activity.ScanDeviceActivity;
+import com.yctc.zhiting.activity.ScanDevice2Activity;
 import com.yctc.zhiting.adapter.HomeFragmentPagerAdapter;
 import com.yctc.zhiting.config.Constant;
+import com.yctc.zhiting.config.HttpUrlConfig;
 import com.yctc.zhiting.db.DBManager;
+import com.yctc.zhiting.dialog.FindCertificateDialog;
 import com.yctc.zhiting.dialog.HomeSelectDialog;
 import com.yctc.zhiting.dialog.RemovedTipsDialog;
+import com.yctc.zhiting.entity.AreaIdBean;
+import com.yctc.zhiting.entity.FindCertificateBean;
+import com.yctc.zhiting.entity.FindSATokenBean;
 import com.yctc.zhiting.entity.home.DeviceMultipleBean;
 import com.yctc.zhiting.entity.home.RoomDeviceListBean;
 import com.yctc.zhiting.entity.mine.HomeCompanyBean;
 import com.yctc.zhiting.entity.mine.LocationBean;
 import com.yctc.zhiting.entity.mine.PermissionBean;
 import com.yctc.zhiting.entity.mine.RoomListBean;
+import com.yctc.zhiting.event.AddSAEvent;
 import com.yctc.zhiting.event.DeviceDataEvent;
 import com.yctc.zhiting.event.DeviceRefreshEvent;
 import com.yctc.zhiting.event.HomeEvent;
 import com.yctc.zhiting.event.HomeSelectedEvent;
+import com.yctc.zhiting.event.MineUserInfoEvent;
 import com.yctc.zhiting.event.PermissionEvent;
 import com.yctc.zhiting.event.RefreshHome;
 import com.yctc.zhiting.event.RefreshHomeList;
@@ -59,7 +73,9 @@ import com.yctc.zhiting.fragment.presenter.HomeFragmentPresenter;
 import com.yctc.zhiting.listener.IHomeView;
 import com.yctc.zhiting.receiver.WifiReceiver;
 import com.yctc.zhiting.request.BindCloudRequest;
+import com.yctc.zhiting.utils.AllRequestUtil;
 import com.yctc.zhiting.utils.AnimationUtil;
+import com.yctc.zhiting.utils.ChannelUtil;
 import com.yctc.zhiting.utils.CollectionUtil;
 import com.yctc.zhiting.utils.HomeUtil;
 import com.yctc.zhiting.utils.IntentConstant;
@@ -100,12 +116,16 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
     TextView tvTips;
     @BindView(R.id.tvMyHome)
     TextView tvMyHome;
+    @BindView(R.id.tvRefresh)
+    TextView tvRefresh;
     @BindView(R.id.ivAddDevice)
     ImageView ivAddDevice;
     @BindView(R.id.llTips)
     LinearLayout llTips;
     @BindView(R.id.ivRefresh)
     ImageView ivRefresh;
+    @BindView(R.id.ivGo)
+    ImageView ivGo;
 
     public static boolean addDeviceP = false; // 添加设备权限
     public static List<HomeCompanyBean> mHomeList = new ArrayList<>();
@@ -118,6 +138,12 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
     private boolean showRemoveDialog = true;
     public static long homeLocalId;  // 当前家庭本地id值
     private IWebSocketListener mWebSocketListener;
+    public boolean isRetryBindSC = true;//绑定sc如果失败是否重新再绑定一次
+    private boolean hasLoadHomeList = false; // 家庭列表是否加载过
+    private boolean needLoadIfWifiEnabled = true;  // 接收wifi广播连接是否需要加载数据set
+    private boolean needLoadIfWifiDisabled = true;  // 接收wifi广播断开是否需要加载数据
+    private int currentItem;
+    private boolean bindSc = false; // 是否在绑定云端
 
     @Override
     protected int getLayoutId() {
@@ -152,12 +178,7 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
         mWebSocketListener = new IWebSocketListener() {
             @Override
             public void onOpen(WebSocket webSocket, Response response) {
-                handleTipStatus(false);
-            }
-
-            @Override
-            public void onFailure(WebSocket webSocket, Throwable t, @Nullable Response response) {
-                //setCurrentHome(CurrentHome, false);
+                bindSaHomeHideTips();
             }
         };
         WSocketManager.getInstance().addWebSocketListener(mWebSocketListener);
@@ -175,18 +196,42 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
      * @param showTip
      */
     private void handleTipStatus(boolean showTip) {
-        //llTips.setVisibility(showTip ? View.VISIBLE : View.GONE);
-        //EventBus.getDefault().post(new SocketStatusEvent(showTip));
+        setTipsRefreshVisible(true);
+        if (!UserUtils.isLogin()) {
+            llTips.setVisibility(showTip ? View.VISIBLE : View.GONE);
+            EventBus.getDefault().post(new SocketStatusEvent(showTip));
+        } else {
+            llTips.setVisibility(View.GONE);
+            EventBus.getDefault().post(new SocketStatusEvent(false));
+        }
     }
 
     /**
      * 绑定SA&&不在SA环境&&没有登陆 显示
      */
     private void handleTipStatus1() {
+        setTipsRefreshVisible(true);
         LogUtil.e("handleTipStatus1=" + CurrentHome);
-        boolean isShowStatus = (HomeUtil.isBindSA() && !HomeUtil.isSAEnvironment() && !UserUtils.isLogin());
-        llTips.setVisibility(isShowStatus ? View.VISIBLE : View.GONE);
-        EventBus.getDefault().post(new SocketStatusEvent(isShowStatus));
+        if (!UserUtils.isLogin()) {
+            boolean isShowStatus = (HomeUtil.isHomeIdThanZero() && !HomeUtil.isSAEnvironment());
+            llTips.setVisibility(isShowStatus ? View.VISIBLE : View.GONE);
+            EventBus.getDefault().post(new SocketStatusEvent(isShowStatus));
+        } else {
+            llTips.setVisibility(View.GONE);
+            EventBus.getDefault().post(new SocketStatusEvent(false));
+        }
+        if (CurrentHome.isIs_bind_sa())
+            startConnectSocket();
+    }
+
+    /**
+     * 设置刷新是否可见
+     */
+    private void setTipsRefreshVisible(boolean showRefresh) {
+        tvTips.setText(showRefresh ? getResources().getString(R.string.home_connect_fail) : getResources().getString(R.string.home_invalid_token));
+        ivRefresh.setVisibility(showRefresh ? View.VISIBLE : View.GONE);
+        tvRefresh.setVisibility(showRefresh ? View.VISIBLE : View.GONE);
+        ivGo.setVisibility(showRefresh ? View.GONE : View.VISIBLE);
     }
 
     /**
@@ -221,14 +266,37 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
                 if (info.getState().equals(NetworkInfo.State.DISCONNECTED)) {
                     wifiInfo = null;
                     LogUtil.e(TAG, "网络=wifi断开");
-                    handleTipStatus(true);
-                    handleDisconnect("");
+                    if (CurrentHome != null)
+                        handleTipStatus(CurrentHome.isIs_bind_sa());
+//                    if (needLoadIfWifiDisabled) {
+//                        needLoadIfWifiDisabled = false;
+//                        handleDisconnect("");
+//                    }
+//                    needLoadIfWifiEnabled = true;
+                    handleDisconnect("", false);
                 } else if (info.getState().equals(NetworkInfo.State.CONNECTED)) {
                     if (info.getType() == ConnectivityManager.TYPE_WIFI) {
                         WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
                         wifiInfo = wifiManager.getConnectionInfo();
+//                        if (needLoadIfWifiEnabled) {
+//                            needLoadIfWifiEnabled = false;
+//                            if (CurrentHome != null && !TextUtils.isEmpty(CurrentHome.getSa_lan_address())) {
+//                                if (!TextUtils.isEmpty(CurrentHome.getMac_address())) {
+//                                    bindSaHomeHideTips();
+//                                }
+//                                if (hasLoadHomeList)
+//                                    mPresenter.checkInterfaceEnable(CurrentHome.getSa_lan_address());
+//                            }
+//                        }
                         if (CurrentHome != null && !TextUtils.isEmpty(CurrentHome.getSa_lan_address())) {
-                            mPresenter.checkInterfaceEnable(CurrentHome.getSa_lan_address());
+                            if (!TextUtils.isEmpty(CurrentHome.getMac_address())) {
+                                bindSaHomeHideTips();
+                            }
+                            if (hasLoadHomeList) {
+//                                mPresenter.checkInterfaceEnable(CurrentHome.getSa_lan_address());
+
+                                checkInterfaceEnabled();
+                            }
                         }
                         //获取当前wifi名称
                         LogUtil.e(TAG, "网络=连接到网络1 " + wifiInfo.getSSID());
@@ -236,6 +304,7 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
                         LogUtil.e(TAG, "网络=连接到网络3 " + wifiInfo.getBSSID());
                         LogUtil.e(TAG, "网络=连接到网络4 " + wifiInfo.getMacAddress());
                     }
+                    needLoadIfWifiDisabled = true;
                 }
                 if (isFirstInit) {
                     isFirstInit = false;
@@ -246,13 +315,42 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
     };
 
     /**
+     * 隐藏显示连接sa
+     */
+    private void bindSaHomeHideTips() {
+        if (CurrentHome != null && wifiInfo != null && !TextUtils.isEmpty(CurrentHome.getMac_address()) && !TextUtils.isEmpty(wifiInfo.getBSSID())) {
+            boolean showTips = CurrentHome.isIs_bind_sa() ? !CurrentHome.getMac_address().equals(wifiInfo.getBSSID()) : false;
+            handleTipStatus(showTips);
+        }
+    }
+
+    /**
      * wifi断开就不是SA环境了
      */
-    private void handleDisconnect(String address) {
+    private void handleDisconnect(String address, boolean bindScToSa) {
         if (CurrentHome != null) {
-            CurrentHome.setMac_address(address);
+            String macAddress = CurrentHome.getMac_address();
+            if (wifiInfo != null) {
+                if (TextUtils.isEmpty(macAddress)) {
+                    if (!TextUtils.isEmpty(address)) {
+                        CurrentHome.setMac_address(address);
+                        dbManager.updateHomeMacAddress(CurrentHome.getLocalId(), address);
+                    }
+                } else {
+                    if (!macAddress.equals(wifiInfo.getBSSID()))
+                        CurrentHome.setMac_address("");
+                }
+            }
+            // 需要绑sa且云id和said不同
+//            if (bindScToSa && CurrentHome.getId()>0 &&CurrentHome.getArea_id()>0 && CurrentHome.getId() != CurrentHome.getArea_id())
+//            scBindSa();
             getRoomList(false);
-            handleTipStatus1();
+            if (!TextUtils.isEmpty(address)) {
+                handleTipStatus1();
+            } else {
+                handleTipStatus(CurrentHome.isIs_bind_sa());
+            }
+            EventBus.getDefault().post(new UpdateProfessionStatusEvent());
             startConnectSocket();
         }
     }
@@ -270,7 +368,7 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
         }
     }
 
-    @OnClick({R.id.ivScan, R.id.ivAddDevice, R.id.tvMyHome, R.id.ivRefresh, R.id.tvRefresh})
+    @OnClick({R.id.ivScan, R.id.ivAddDevice, R.id.tvMyHome, R.id.ivRefresh, R.id.tvRefresh, R.id.llTips})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.ivScan:  // 扫码
@@ -278,7 +376,7 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
                 break;
             case R.id.ivAddDevice:  // 添加设备
                 bundle.putLong(IntentConstant.ID, CurrentHome.getLocalId());
-                switchToActivity(ScanDeviceActivity.class, bundle);
+                switchToActivity(ScanDevice2Activity.class, bundle);
                 break;
             case R.id.tvMyHome:  // 我的家
                 showSelectHomeDialog();
@@ -286,6 +384,11 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
             case R.id.ivRefresh:
             case R.id.tvRefresh:  // 刷新
                 refreshSocketConnect();
+                break;
+            case R.id.llTips:
+                if (HomeUtil.tokenIsInvalid) {
+                    switchToActivity(FindSAGuideActivity.class);
+                }
                 break;
         }
     }
@@ -295,9 +398,14 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
      */
     private void showSelectHomeDialog() {
         addDeviceP = false;
+        if (CollectionUtil.isNotEmpty(mHomeList)) {
+            for (HomeCompanyBean home : mHomeList) {
+                home.setSelected(home.getLocalId() == CurrentHome.getLocalId());
+            }
+        }
         HomeSelectDialog homeSelectDialog = new HomeSelectDialog(mHomeList);
         homeSelectDialog.setClickItemListener(homeCompanyBean -> {
-            setCurrentHome(homeCompanyBean, true);
+            setCurrentHome(homeCompanyBean, true, false);
             homeSelectDialog.dismiss();
         });
         homeSelectDialog.show(this);
@@ -339,9 +447,9 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
             }
         });
         setCustomTabIcons(titles);
-        setSelectTab(0, true);
+        setSelectTab(currentItem, true);
         loadDevice();
-        if (HomeUtil.isBindSA()){
+        if (HomeUtil.isHomeIdThanZero()) {
             HttpConfig.addHeader(CurrentHome.getSa_user_token());
             mPresenter.getDeviceList(needLoading);
         }
@@ -353,17 +461,21 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
      */
     private void setSelectTab(int position, boolean select) {
         if (tabLayout != null && tabLayout.getTabCount() > 0) {
-            RelativeLayout view = (RelativeLayout) tabLayout.getTabAt(position).getCustomView();
-            if (view != null) {
-                TextView tvText = view.findViewById(R.id.tvText);
-                View indicator = view.findViewById(R.id.indicator);
-                if (select) {
-                    tabLayout.getTabAt(position).select();
-                    indicator.setVisibility(View.VISIBLE);
-                    tvText.setTextColor(UiUtil.getColor(R.color.appPurple));
-                } else {
-                    indicator.setVisibility(View.INVISIBLE);
-                    tvText.setTextColor(UiUtil.getColor(R.color.color_94a5be));
+            TabLayout.Tab tab = tabLayout.getTabAt(position);
+            if (tab!=null) {
+                RelativeLayout view = (RelativeLayout) tab.getCustomView();
+                if (view != null) {
+                    TextView tvText = view.findViewById(R.id.tvText);
+                    View indicator = view.findViewById(R.id.indicator);
+                    if (select) {
+                        tabLayout.getTabAt(position).select();
+                        currentItem = position;
+                        indicator.setVisibility(View.VISIBLE);
+                        tvText.setTextColor(UiUtil.getColor(R.color.appPurple));
+                    } else {
+                        indicator.setVisibility(View.INVISIBLE);
+                        tvText.setTextColor(UiUtil.getColor(R.color.color_94a5be));
+                    }
                 }
             }
         }
@@ -398,6 +510,9 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
     public void onDestroy() {
         super.onDestroy();
         homeLocalId = 0;
+        CurrentHome = null;
+        hasLoadHomeList = false;
+        HomeUtil.tokenIsInvalid = false;
         unRegisterWifiReceiver();
         if (mWebSocketListener != null) {
             WSocketManager.getInstance().removeWebSocketListener(mWebSocketListener);
@@ -419,9 +534,24 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
      * 获取本地数据
      */
     private void loadLocalData() {
+        loadLocalData(false);
+    }
+
+    /**
+     * 加载本地家庭
+     *
+     * @param isFailed
+     */
+    private void loadLocalData(boolean isFailed) {
         UiUtil.starThread(() -> {
             List<HomeCompanyBean> homeList = dbManager.queryHomeCompanyList();
-            handleHomeList(homeList, false);
+            if (CollectionUtil.isEmpty(homeList)) {// 本地没有家庭，则创建一个
+                HomeCompanyBean homeCompanyBean = new HomeCompanyBean(getResources().getString(R.string.main_my_home));
+                homeCompanyBean.setSelected(true);
+                dbManager.insertHomeCompany(homeCompanyBean, null, false);
+                homeList.add(homeCompanyBean);
+            }
+            handleHomeList(homeList, false, isFailed);
         });
     }
 
@@ -431,7 +561,7 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
      * @param homeList      家庭列表
      * @param isRefreshData 重新刷新数据
      */
-    private void handleHomeList(List<HomeCompanyBean> homeList, boolean isRefreshData) {
+    private synchronized void handleHomeList(List<HomeCompanyBean> homeList, boolean isRefreshData, boolean isFailed) {
         if (CollectionUtil.isNotEmpty(homeList)) {
             mHomeList.clear();
             mHomeList.addAll(homeList);
@@ -445,13 +575,13 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
                 }
                 List<HomeCompanyBean> userHomeCompanyList = dbManager.queryHomeCompanyListByCloudUserId(cloudUserId);
                 // 用于存储本地已绑云的数据
-                List<Integer> cloudIdList = new ArrayList<>();
+                List<Long> cloudIdList = new ArrayList<>();
                 for (HomeCompanyBean hcb : userHomeCompanyList) {
                     cloudIdList.add(hcb.getId());
                 }
 
                 // 用于存储从服务获取的数据
-                List<Integer> serverIdList = new ArrayList<>();
+                List<Long> serverIdList = new ArrayList<>();
                 // 遍历从云端获取的数据是否已存在本地
                 unBindHomes.clear();
                 for (HomeCompanyBean area : homeList) {
@@ -463,15 +593,19 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
                     if (cloudIdList.contains(area.getId())) {
                         dbManager.updateHomeCompanyByCloudId(area.getId(), area.getName());
                     } else { // 不存在，插入
+                        if (area.isIs_bind_sa()) {
+                            area.setArea_id(area.getId());
+                        }
                         dbManager.insertCloudHomeCompany(area);
                     }
                 }
 
                 // 移除sc已删除的数据
-                for (Integer id : cloudIdList) {
+                for (Long id : cloudIdList) {
                     if (serverIdList.contains(id)) {  // 如果云端数据还在，继续
                         continue;
                     } else { // 如果云端数据不在，则删除本地数据
+                        if (id>0)
                         dbManager.removeFamilyByCloudId(id);
                     }
                 }
@@ -499,7 +633,7 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
                 }
             }
             CurrentHome = tempHome;
-            setCurrentHome(tempHome, true);
+            setCurrentHome(tempHome, true, isFailed);
             if (getActivity() != null) {
                 ((MainActivity) getActivity()).toAuth();
             }
@@ -512,58 +646,137 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
      * @param home
      * @param isReconnect 是否重新连接
      */
-    public void setCurrentHome(HomeCompanyBean home, boolean isReconnect) {
+    public void setCurrentHome(HomeCompanyBean home, boolean isReconnect, boolean isFailed) {
+        hasLoadHomeList = true;
         if (home == null) return;
+        HomeUtil.tokenIsInvalid = false;
+        currentItem = 0;
         UiUtil.runInMainThread(() -> {
             CurrentHome = home;
+            if (!TextUtils.isEmpty(home.getSa_lan_address())) {
+                System.out.println("sa的地址：" + home.getSa_lan_address());
+                HttpUrlConfig.baseSAUrl = home.getSa_lan_address();
+                HttpUrlConfig.apiSAUrl = HttpUrlConfig.baseSAUrl + HttpUrlConfig.API;
+            }
             homeLocalId = CurrentHome.getLocalId();
+
+            if (UserUtils.isLogin() && CurrentHome.getArea_id()>0 && CurrentHome.getId() == 0){
+                System.out.println("绑定云：第一次");
+                AllRequestUtil.bindCloudWithoutCreateHome(CurrentHome, null);
+            }
+
+            HttpConfig.clearHeader();
             HttpConfig.addHeader(CurrentHome.getSa_user_token());
             SpUtil.put(SpConstant.SA_TOKEN, home.getSa_user_token());
-            EventBus.getDefault().post(new HomeSelectedEvent());
+            SpUtil.put(SpConstant.AREA_ID, String.valueOf(home.getId()));
+            SpUtil.put(SpConstant.IS_BIND_SA, home.isIs_bind_sa());
+
+            EventBus.getDefault().postSticky(new HomeSelectedEvent());
+            ChannelUtil.reSaveChannel();//重新获取临时通道
 
             //先显示缓存数据
             queryRooms(CurrentHome.getLocalId());
-            handleTipStatus(home.isIs_bind_sa());
-            if (home.isIs_bind_sa() && isReconnect) {//需要绑定SA才检查接口
-                mPresenter.checkInterfaceEnable(home.getSa_lan_address());
+            if (isFailed) return;
+            String homeMacAddress = CurrentHome.getMac_address();
+            if (wifiInfo != null) {
+                handleTipStatus(home.isIs_bind_sa() && (TextUtils.isEmpty(homeMacAddress) ? true : !homeMacAddress.equals(wifiInfo.getBSSID())));
+            } else {
+                handleTipStatus(home.isIs_bind_sa());
+            }
+
+            if (home.isIs_bind_sa() && CurrentHome.getArea_id() > 0 && CurrentHome.getId() == CurrentHome.getArea_id() && TextUtils.isEmpty(CurrentHome.getMac_address()) && isReconnect) {//需要绑定SA才检查接口
+//                handleDisconnect("", false);
+//                mPresenter.checkInterfaceEnable(home.getSa_lan_address());
+                LogUtil.e("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+                checkInterfaceEnabled();
+
+//                AllRequestUtil.bindCloudWithoutCreateHome(home, null);
             } else {//如果没有
                 handleTipStatus1();
+                LogUtil.e("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb");
                 getRoomList(false);
             }
         });
     }
 
-    // sc绑sa
-    private void scBindSa() {
-        // 如果本地家庭已绑sa，云端家庭没绑sa，则绑云端sa
-        LogUtil.e("开始绑定云sa1");
-        if (UserUtils.isLogin() && CurrentHome != null && HomeUtil.isSAEnvironment() && CollectionUtil.isNotEmpty(unBindHomes)) {
-            for (HomeCompanyBean unbindHome : unBindHomes) {
-                if (CurrentHome.getId() == unbindHome.getId()) {
-                    LogUtil.e("开始绑定云sa2");
-                    BindCloudRequest request = new BindCloudRequest();
-                    request.setCloud_area_id(CurrentHome.getId());
-                    request.setCloud_user_id(CurrentHome.getCloud_user_id());
-                    mPresenter.scBindSA(request.toString());
-                    unbindHome.setIs_bind_sa(true);
-                    break;
-                }
-            }
-        }
+    private void checkInterfaceEnabled(){
+        if (CurrentHome!=null && !TextUtils.isEmpty(CurrentHome.getSa_lan_address()))
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        AllRequestUtil.checkUrl500(CurrentHome.getSa_lan_address(), new AllRequestUtil.onCheckUrlListener() {// 检查地址是否可以连接
+                            @Override
+                            public void onSuccess() {  // 可以连接上
+                                LogUtil.e("checkUrl===onSuccess");
+                                String madAddress = "";
+                                if (Constant.wifiInfo != null && Constant.wifiInfo.getBSSID() != null)
+                                    madAddress = Constant.wifiInfo.getBSSID();
+                                handleDisconnect(madAddress, true);
+                            }
+
+                            @Override
+                            public void onError() {  // 连接失败
+                                LogUtil.e("checkUrl===onError");
+                                hideLoadingView();
+                                bindSc = false;
+                                if (UserUtils.isLogin()){
+                                    getRoomList(false);
+                                }
+                            }
+                        });
+                    }
+                }, 500);
+
+
+    }
+
+    // 如果本地家庭已绑sa，云端家庭没绑sa，则绑云端sa
+    private synchronized void scBindSa() {
+//        if (CurrentHome != null && wifiInfo != null && CurrentHome.getMac_address() != null && wifiInfo.getBSSID() != null && !CurrentHome.getMac_address().equals(wifiInfo.getBSSID()))
+//            return;
+                if (bindSc)
+                UiUtil.postDelayed(() -> {
+                    LogUtil.e("开始绑定云sa1");
+//                    if (UserUtils.isLogin() && CurrentHome != null && HomeUtil.isSAEnvironment() && CollectionUtil.isNotEmpty(unBindHomes)) {
+//                        for (HomeCompanyBean unbindHome : unBindHomes) {
+//                            if (CurrentHome.getId() == unbindHome.getId()) {
+//                                LogUtil.e("开始绑定云sa2");
+//                                BindCloudRequest request = new BindCloudRequest();
+//                                request.setCloud_area_id(String.valueOf(CurrentHome.getId()));
+//                                request.setCloud_user_id(CurrentHome.getCloud_user_id());
+//                                HttpConfig.clearHear(HttpConfig.AREA_ID);
+//                                mPresenter.scBindSA(request.toString());
+//                                unbindHome.setIs_bind_sa(true);
+//                                break;
+//                            }
+//                        }
+
+//                    }
+                    if (CurrentHome.isIs_bind_sa()){
+                        CurrentHome.setCloud_user_id(UserUtils.getCloudUserId());
+                        System.out.println("绑定云：第二次");
+                        AllRequestUtil.bindCloudWithoutCreateHome(CurrentHome, null);
+                        bindSc = false;
+                    }
+                }, 500);
+
+
     }
 
     /**
      * 查房间
      */
     private void queryRooms(long id) {
-        UiUtil.starThread(() -> {
-            List<LocationBean> roomList = dbManager.queryLocationList(id);
-            LocationBean defaultRoom = new LocationBean(0, UiUtil.getString(R.string.home_all));
-            roomList.add(0, defaultRoom);
-            UiUtil.runInMainThread(() -> {
-                initTabLayout(roomList);
+        if (dbManager.isOpen()) {
+            UiUtil.starThread(() -> {
+                List<LocationBean> roomList = dbManager.queryLocationList(id);
+                LocationBean defaultRoom = new LocationBean(0, UiUtil.getString(R.string.home_all));
+                roomList.add(0, defaultRoom);
+                UiUtil.runInMainThread(() -> {
+                    initTabLayout(roomList);
+                });
             });
-        });
+        }
     }
 
     /**
@@ -585,7 +798,7 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
                 }
             }
         }
-        setCurrentHome(tempHome, true);
+        setCurrentHome(tempHome, true, false);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -602,9 +815,9 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(RefreshHome event) {
-        if (UserUtils.isLogin()){
+        if (UserUtils.isLogin()) {
             mPresenter.getHomeList();
-        }else {
+        } else {
             loadLocalData();
         }
     }
@@ -621,9 +834,26 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
             tvMyHome.setText(name);
         }
         mHomeList = dbManager.queryHomeCompanyList();
-        if (!UserUtils.isLogin()){
+        if (!UserUtils.isLogin()) {
             queryRooms(CurrentHome.getLocalId());
         }
+    }
+
+    /**
+     * 成功添加SA
+     *
+     * @param event
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(AddSAEvent event) {
+        FindCertificateDialog dialog = FindCertificateDialog.newInstance();
+        dialog.setDialogListener((isAllow) -> {
+            FindCertificateBean.FindCertificateItemBean bean =
+                    new FindCertificateBean.FindCertificateItemBean();
+            bean.setUser_credential_found(isAllow);
+            mPresenter.putFindCertificate(bean);
+        });
+        dialog.show(this);
     }
 
     /**
@@ -632,15 +862,17 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
     private void getRoomList(boolean showLoading) {
         if (CurrentHome == null) return;
         needLoading = showLoading;
-        if (HomeUtil.isBindSA()) {//satoken不为空
+        if (HomeUtil.isHomeIdThanZero()) {//satoken不为空
             HttpConfig.addHeader(CurrentHome.getSa_user_token());
-            mPresenter.getPermissions(CurrentHome.getUser_id());
-            mPresenter.getDetail(1, showLoading);
+            long areaId = CurrentHome.getArea_id();
+            if (NetworkUtil.isNetworkAvailable()) {
+                mPresenter.getDetail(HomeUtil.isSAEnvironment() ? areaId : CurrentHome.getId(), showLoading);
+            }
         } else {
             HttpConfig.clearHeader();
             if (UserUtils.isLogin() && HomeUtil.getHomeId() > 0) {//登录了，从接口获取
                 mPresenter.getRoomList(false);
-            }else if (!UserUtils.isLogin()){
+            } else if (!UserUtils.isLogin()) {
                 queryRooms(CurrentHome.getLocalId());
             }
         }
@@ -706,6 +938,7 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
      */
     @Override
     public void requestFail(int errorCode, String msg) {
+        EventBus.getDefault().post(new TempChannelFailEvent());
     }
 
     /**
@@ -716,12 +949,14 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
      */
     @Override
     public void getDeviceFail(int errorCode, String msg) {
-        ToastUtil.show(msg);
+        if (errorCode != 5012)
+            ToastUtil.show(msg);
         if (errorCode == -1) {
             loadDevice();
         } else if (errorCode == 5012) {
             EventBus.getDefault().post(new DeviceDataEvent(null));
         }
+        EventBus.getDefault().post(new TempChannelFailEvent());
     }
 
     /**
@@ -734,6 +969,9 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
         if (homeCompanyBean == null) return;
         HttpConfig.addHeader(CurrentHome.getSa_user_token());
         tvMyHome.setText(homeCompanyBean.getName());
+        if (HomeUtil.isHomeIdThanZero()) {
+            mPresenter.getPermissions(CurrentHome.getUser_id());
+        }
         mPresenter.getRoomList(false);
         CurrentHome.setName(homeCompanyBean.getName());
         for (HomeCompanyBean hc : mHomeList) {
@@ -743,7 +981,7 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
                     break;
                 }
         }
-        if (UserUtils.isLogin() && HomeUtil.isBindSA()) {
+        if (UserUtils.isLogin() && HomeUtil.isHomeIdThanZero()) {
             EventBus.getDefault().post(new UpdateSaUserNameEvent());
         }
         UiUtil.starThread(() -> dbManager.updateHCNameByToken(CurrentHome.getSa_user_token(), homeCompanyBean.getName()));
@@ -758,15 +996,34 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
     @Override
     public void getDetailFail(int errorCode, String msg) {
         if (errorCode == 5012) {
-            if (showRemoveDialog) {
-                RemovedTipsDialog removedTipsDialog = new RemovedTipsDialog(CurrentHome.getName());
-                removedTipsDialog.setKnowListener(() -> showRemoveDialog = true);
-                removedTipsDialog.show(this);
+            if (UserUtils.isLogin()) { // 用户登录SC情况
+                NameValuePair nameValuePair = new NameValuePair("area_id", String.valueOf(HomeUtil.isSAEnvironment() ? CurrentHome.getArea_id() : CurrentHome.getId()));
+                List<NameValuePair> requestData = new ArrayList<>();
+                requestData.add(nameValuePair);
+                mPresenter.getSAToken(CurrentHome.getCloud_user_id(), requestData);  // sc的用户id, sc上的家庭id
+            } else {
+                removeLocalFamily();
             }
-            showRemoveDialog = false;
-            dbManager.removeFamilyByToken(CurrentHome.getSa_user_token());
-            loadLocalData();
+        }else if (errorCode == 5003){  // 被移除家庭
+            removeLocalFamily();
+        }else {
+//            loadLocalData(true);
         }
+        EventBus.getDefault().post(new TempChannelFailEvent());
+    }
+
+    /**
+     * 移除本地家庭
+     */
+    private void removeLocalFamily() {
+        if (showRemoveDialog) {
+            RemovedTipsDialog removedTipsDialog = new RemovedTipsDialog(CurrentHome.getName());
+            removedTipsDialog.setKnowListener(() -> showRemoveDialog = true);
+            removedTipsDialog.show(this);
+        }
+        showRemoveDialog = false;
+        dbManager.removeFamily(CurrentHome.getLocalId());
+        loadLocalData();
     }
 
     /**
@@ -777,8 +1034,8 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
         String madAddress = "";
         if (Constant.wifiInfo != null && Constant.wifiInfo.getBSSID() != null)
             madAddress = Constant.wifiInfo.getBSSID();
-        handleDisconnect(madAddress);
-        scBindSa();
+        handleDisconnect(madAddress, true);
+
     }
 
     /**
@@ -786,7 +1043,7 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
      */
     @Override
     public void checkFail(int errorCode, String msg) {
-        handleDisconnect("");
+        handleDisconnect("", false);
     }
 
     /**
@@ -797,7 +1054,13 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
      */
     @Override
     public void getHomeListFail(int errorCode, String msg) {
-        ToastUtil.show(msg);
+        if (errorCode == 2008) {  // 用户未登录/登录失效
+            UserUtils.saveUser(null);
+            PersistentCookieStore.getInstance().removeAll();
+            EventBus.getDefault().post(new MineUserInfoEvent(false));
+        } else {
+            ToastUtil.show(msg);
+        }
         loadLocalData();
     }
 
@@ -809,7 +1072,7 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
     @Override
     public void getHomeListSuccess(List<HomeCompanyBean> areas) {
         if (CollectionUtil.isNotEmpty(areas)) {
-            UiUtil.starThread(() -> handleHomeList(areas, true));
+            UiUtil.starThread(() -> handleHomeList(areas, true, false));
         } else {
             loadLocalData();
         }
@@ -819,8 +1082,11 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
      * sc绑sa成功
      */
     @Override
-    public void scBindSASuccess() {
+    public void scBindSASuccess(AreaIdBean areaIdBean) {
         LogUtil.e("scBindSASuccess===========成功");
+        if (areaIdBean != null) {
+            UiUtil.starThread(() -> dbManager.updateHCAreaId(CurrentHome.getLocalId(), areaIdBean.getArea_id(), true));
+        }
     }
 
     /**
@@ -829,6 +1095,62 @@ public class HomeFragment extends MVPBaseFragment<HomeFragmentContract.View, Hom
     @Override
     public void scBindSAFail(int errorCode, String msg) {
         LogUtil.e("scBindSAFail" + msg);
+        bindSc = false;
+        CurrentHome.setMac_address("");
+        if (isRetryBindSC) {
+            isRetryBindSC = false;
+//            scBindSa();
+        }
+    }
+
+    /**
+     * 通过sc找回sa的用户凭证成功
+     *
+     * @param findSATokenBean
+     */
+    @Override
+    public void getSATokenSuccess(FindSATokenBean findSATokenBean) {
+        if (findSATokenBean != null) {
+            String saToken = findSATokenBean.getSa_token();
+            if (!TextUtils.isEmpty(saToken)) {
+                HomeUtil.tokenIsInvalid = false;
+                CurrentHome.setSa_user_token(saToken);
+                HttpConfig.addHeader(CurrentHome.getSa_user_token());
+                mPresenter.getDetail(CurrentHome.getId(), false);
+                UiUtil.starThread(() -> dbManager.updateSATokenByLocalId(CurrentHome.getLocalId(), saToken));
+            }
+        }
+    }
+
+    /**
+     * 通过sc找回sa的用户凭证是失败
+     *
+     * @param errorCode
+     * @param msg
+     */
+    @Override
+    public void getSATokenFail(int errorCode, String msg) {
+        if (errorCode == 2011 || errorCode == 2010) {    //凭证获取失败，状态码2011，无权限
+            HomeUtil.tokenIsInvalid = true;
+            setTipsRefreshVisible(false);
+            llTips.setVisibility(View.VISIBLE);
+            tvTips.setText(getResources().getString(R.string.home_invalid_token));
+            EventBus.getDefault().post(new DeviceDataEvent(null));
+        } else if (errorCode == 3002) {  //状态码3002，提示被管理员移除家庭
+            removeLocalFamily();
+        } else {
+            ToastUtil.show(msg);
+        }
+    }
+
+    @Override
+    public void onCertificateSuccess() {
+
+    }
+
+    @Override
+    public void onCertificateFail(int errorCode, String msg) {
+
     }
 
     /**

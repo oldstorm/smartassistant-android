@@ -1,13 +1,10 @@
 package com.yctc.zhiting.activity;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.content.Intent;
-import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.View;
 import android.widget.TextView;
+
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.app.main.framework.baseutil.AndroidUtil;
 import com.app.main.framework.baseutil.LibLoader;
@@ -16,9 +13,7 @@ import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.MVPBaseActivity;
 import com.app.main.framework.httputil.request.Request;
 import com.yctc.zhiting.R;
-import com.yctc.zhiting.activity.contract.SetDevicePositionContract;
 import com.yctc.zhiting.activity.contract.UpdateDeviceLocationContract;
-import com.yctc.zhiting.activity.presenter.SetDevicePositionPresenter;
 import com.yctc.zhiting.activity.presenter.UpdateDeviceLocationPresenter;
 import com.yctc.zhiting.adapter.PositionAdapter;
 import com.yctc.zhiting.config.Constant;
@@ -26,7 +21,6 @@ import com.yctc.zhiting.dialog.EditBottomDialog;
 import com.yctc.zhiting.entity.mine.AreasBean;
 import com.yctc.zhiting.entity.mine.LocationBean;
 import com.yctc.zhiting.entity.mine.PermissionBean;
-import com.yctc.zhiting.event.DeviceRefreshEvent;
 import com.yctc.zhiting.event.LocationEvent;
 import com.yctc.zhiting.request.AddRoomRequest;
 import com.yctc.zhiting.request.ModifyDeviceRequest;

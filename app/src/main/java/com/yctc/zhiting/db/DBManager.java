@@ -17,6 +17,7 @@ import com.yctc.zhiting.entity.mine.LocationBean;
 import com.yctc.zhiting.entity.mine.RoomAreaBean;
 import com.yctc.zhiting.entity.mine.UserInfoBean;
 import com.yctc.zhiting.utils.CollectionUtil;
+import com.yctc.zhiting.utils.UserUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -53,7 +54,7 @@ public class DBManager {
     }
 
     /**
-     * 关闭数据库，请调用YexinSdk.releaseResource()一起释放资源
+     * 关闭数据库
      */
     public void closeDb() {
         if (db.isOpen()) {
@@ -112,12 +113,14 @@ public class DBManager {
      * user_id 用户id
      * cloud_id 云端家庭id
      * cloud_user_id 云端用户id
+     * area_id sa家庭id
+     * sa_id sa设备id
      */
     private void checkHomeCompanyTable() {
         try {
             String createRecentContactTableSqlStr = "create table if not exists " + DBConfig.TABLE_HOME_COMPANY
                     + "(h_id INTEGER primary key AUTOINCREMENT," +
-                    "name text, sa_user_token text, sa_user_id integer, sa_lan_address text, is_bind_sa bool, user_id integer,ss_id text,mac_address text, cloud_id integer, cloud_user_id integer)";
+                    "name text, sa_user_token text, sa_user_id integer, sa_lan_address text, is_bind_sa bool, user_id integer,ss_id text,mac_address text, cloud_id integer, cloud_user_id integer, area_id integer, sa_id text)";
             db.execSQL(createRecentContactTableSqlStr);
         } catch (Exception e) {
             e.printStackTrace();
@@ -180,8 +183,9 @@ public class DBManager {
                 roomCursor = db.rawQuery(sql, null);
                 homeCompanyBean.setRoomAreaCount(roomCursor.getCount());
 
-                homeCompanyBean.setId(getIntFromCursor(cursor, "cloud_id"));
+                homeCompanyBean.setId(getLongFromCursor(cursor, "cloud_id"));
                 homeCompanyBean.setCloud_user_id(getIntFromCursor(cursor, "cloud_user_id"));
+                homeCompanyBean.setArea_id(getLongFromCursor(cursor, "area_id"));
                 roomCursor.close();
                 cursor.close();
             }
@@ -192,6 +196,39 @@ public class DBManager {
                 cursor.close();
             if (roomCursor != null)
                 roomCursor.close();
+        }
+        return homeCompanyBean;
+    }
+
+    /**
+     * 通过sa家庭id查家庭
+     *
+     * @return
+     */
+    public HomeCompanyBean queryHomeCompanyByAreaId(long areaId) {
+        checkIfDBIsOk();
+        checkHomeCompanyTable();
+        HomeCompanyBean homeCompanyBean = null;
+        Cursor cursor = null;
+        try {
+            String sql = "select * from " + DBConfig.TABLE_HOME_COMPANY + " where area_id = " + areaId;
+            cursor = db.rawQuery(sql, null);
+            if (cursor != null && cursor.getCount() > 0) {
+                cursor.moveToFirst();
+                String name = cursor.getString(cursor.getColumnIndex("name"));
+                homeCompanyBean = new HomeCompanyBean();
+                homeCompanyBean.setLocalId(getIntFromCursor(cursor, "h_id"));
+                homeCompanyBean.setName(name);
+                homeCompanyBean.setId(getLongFromCursor(cursor, "cloud_id"));
+                homeCompanyBean.setCloud_user_id(getIntFromCursor(cursor, "cloud_user_id"));
+                homeCompanyBean.setArea_id(getLongFromCursor(cursor, "area_id"));
+                cursor.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null)
+                cursor.close();
         }
         return homeCompanyBean;
     }
@@ -243,13 +280,15 @@ public class DBManager {
                     item.setLocalId(getLongFromCursor(cursor, "h_id"));
                     item.setSa_user_token(getStringFromCursor(cursor, "sa_user_token"));
                     item.setName(getStringFromCursor(cursor, "name"));
-                    item.setUser_id(cursor.getInt(cursor.getColumnIndex("user_id")));
+                    item.setUser_id(cursor.getInt(cursor.getColumnIndex("sa_user_id")));
                     item.setIs_bind_sa(getBooleanFromCursor(cursor, "is_bind_sa"));
                     item.setSs_id(getStringFromCursor(cursor, "ss_id"));
                     item.setMac_address(getStringFromCursor(cursor, "mac_address"));
                     item.setCloud_user_id(getIntFromCursor(cursor, "cloud_user_id"));
-                    item.setId(getIntFromCursor(cursor, "cloud_id"));
+                    item.setId(getLongFromCursor(cursor, "cloud_id"));
                     item.setSa_lan_address(getStringFromCursor(cursor, "sa_lan_address"));
+                    item.setArea_id(getLongFromCursor(cursor, "area_id"));
+                    item.setSa_id(getStringFromCursor(cursor, "sa_id"));
                     homeCompanyList.add(item);
                 }
             }
@@ -281,12 +320,14 @@ public class DBManager {
                     item.setLocalId(getLongFromCursor(cursor, "h_id"));
                     item.setSa_user_token(getStringFromCursor(cursor, "sa_user_token"));
                     item.setName(getStringFromCursor(cursor, "name"));
-                    item.setUser_id(cursor.getInt(cursor.getColumnIndex("user_id")));
+                    item.setUser_id(cursor.getInt(cursor.getColumnIndex("sa_user_id")));
                     item.setIs_bind_sa(getBooleanFromCursor(cursor, "is_bind_sa"));
                     item.setSs_id(getStringFromCursor(cursor, "ss_id"));
                     item.setMac_address(getStringFromCursor(cursor, "mac_address"));
                     item.setCloud_user_id(getIntFromCursor(cursor, "cloud_user_id"));
-                    item.setId(getIntFromCursor(cursor, "cloud_id"));
+                    item.setId(getLongFromCursor(cursor, "cloud_id"));
+                    item.setArea_id(getLongFromCursor(cursor, "area_id"));
+                    item.setSa_id(getStringFromCursor(cursor, "sa_id"));
                     homeCompanyList.add(item);
                 }
             }
@@ -318,12 +359,15 @@ public class DBManager {
                     item.setLocalId(getLongFromCursor(cursor, "h_id"));
                     item.setSa_user_token(getStringFromCursor(cursor, "sa_user_token"));
                     item.setName(getStringFromCursor(cursor, "name"));
-                    item.setUser_id(cursor.getInt(cursor.getColumnIndex("user_id")));
+                    item.setUser_id(cursor.getInt(cursor.getColumnIndex("sa_user_id")));
                     item.setIs_bind_sa(getBooleanFromCursor(cursor, "is_bind_sa"));
                     item.setSs_id(getStringFromCursor(cursor, "ss_id"));
                     item.setMac_address(getStringFromCursor(cursor, "mac_address"));
                     item.setCloud_user_id(getIntFromCursor(cursor, "cloud_user_id"));
-                    item.setId(getIntFromCursor(cursor, "cloud_id"));
+                    item.setId(getLongFromCursor(cursor, "cloud_id"));
+                    item.setArea_id(getLongFromCursor(cursor, "area_id"));
+                    item.setSa_id(getStringFromCursor(cursor, "sa_id"));
+                    item.setSa_lan_address(getStringFromCursor(cursor, "sa_lan_address"));
                     homeCompanyList.add(item);
                 }
             }
@@ -372,7 +416,7 @@ public class DBManager {
      * @param name
      * @return
      */
-    public int updateHomeCompanyByCloudId(int id, String name) {
+    public int updateHomeCompanyByCloudId(long id, String name) {
         int count = 0;
         try {
             ContentValues contentValues = new ContentValues();
@@ -415,11 +459,35 @@ public class DBManager {
             contentValues.put("name", homeCompanyBean.getName());
             contentValues.put("is_bind_sa", homeCompanyBean.isIs_bind_sa());
             contentValues.put("user_id", homeCompanyBean.getUser_id());
-            if (Constant.wifiInfo != null) {
-                contentValues.put("ss_id", Constant.wifiInfo.getSSID());
-                contentValues.put("mac_address", Constant.wifiInfo.getBSSID());
-            }
+//            if (Constant.wifiInfo != null) {
+//                contentValues.put("ss_id", Constant.wifiInfo.getSSID());
+//                contentValues.put("mac_address", Constant.wifiInfo.getBSSID());
+//            }
             count = db.update(DBConfig.TABLE_HOME_COMPANY, contentValues, "sa_user_token=?", new String[]{homeCompanyBean.getSa_user_token()});
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return count;
+    }
+
+    /**
+     * 通过sa area_id修改家庭信息
+     *
+     * @return
+     */
+    public int updateHomeCompanyByAreaId(HomeCompanyBean homeCompanyBean) {
+        int count = 0;
+        try {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put("name", homeCompanyBean.getName());
+            contentValues.put("is_bind_sa", homeCompanyBean.isIs_bind_sa());
+            contentValues.put("user_id", homeCompanyBean.getUser_id());
+            contentValues.put("sa_user_token", homeCompanyBean.getSa_user_token());
+//            if (Constant.wifiInfo != null) {
+//                contentValues.put("ss_id", Constant.wifiInfo.getSSID());
+//                contentValues.put("mac_address", Constant.wifiInfo.getBSSID());
+//            }
+            count = db.update(DBConfig.TABLE_HOME_COMPANY, contentValues, "area_id=?", new String[]{String.valueOf(homeCompanyBean.getArea_id())});
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -441,6 +509,7 @@ public class DBManager {
             contentValues.put("sa_lan_address", homeCompanyBean.getSa_lan_address());
             contentValues.put("user_id", homeCompanyBean.getUser_id());
             contentValues.put("is_bind_sa", homeCompanyBean.isIs_bind_sa());
+            contentValues.put("area_id", homeCompanyBean.getArea_id());
             if (Constant.wifiInfo != null) {
                 contentValues.put("ss_id", Constant.wifiInfo.getSSID());
                 contentValues.put("mac_address", Constant.wifiInfo.getBSSID());
@@ -453,16 +522,78 @@ public class DBManager {
     }
 
     /**
+     * 更新家庭areaId
+     * @param localId
+     * @param areaId
+     * @return
+     */
+    public int updateHCAreaId(long localId, long areaId, boolean bindWifi){
+        int count = 0;
+        try {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put("cloud_id", areaId);
+            if (Constant.wifiInfo != null) {
+                contentValues.put("ss_id", Constant.wifiInfo.getSSID());
+                if (bindWifi)
+                contentValues.put("mac_address", Constant.wifiInfo.getBSSID());
+            }
+            contentValues.put("cloud_user_id", UserUtils.getCloudUserId());
+            count = db.update(DBConfig.TABLE_HOME_COMPANY, contentValues, "h_id=?", new String[]{String.valueOf(localId)});
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return count;
+    }
+
+    /**
      * 修改家庭cloud_id
      *
      * @return
      */
-    public int updateHomeCompanyCloudId(long localId, int cloudId, int cloudUserId) {
+    public int updateHomeCompanyCloudId(long localId, long cloudId, int cloudUserId, int userId, String saToken) {
         int count = 0;
         try {
             ContentValues contentValues = new ContentValues();
             contentValues.put("cloud_id", cloudId);
             contentValues.put("cloud_user_id", cloudUserId);
+            contentValues.put("sa_user_id", userId);
+            contentValues.put("sa_user_token", saToken);
+            count = db.update(DBConfig.TABLE_HOME_COMPANY, contentValues, "h_id=?", new String[]{String.valueOf(localId)});
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return count;
+    }
+
+    /**
+     * 修改家庭macAddress
+     * @param localId
+     * @param macAddress
+     * @return
+     */
+    public int updateHomeMacAddress(long localId, String macAddress){
+        int count = 0;
+        try {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put("mac_address", macAddress);
+            count = db.update(DBConfig.TABLE_HOME_COMPANY, contentValues, "h_id=?", new String[]{String.valueOf(localId)});
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return count;
+    }
+
+    /**
+     * 修改SAToken
+     * @param localId
+     * @param saToken
+     * @return
+     */
+    public int updateSATokenByLocalId(long localId, String saToken){
+        int count = 0;
+        try {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put("sa_user_token", saToken);
             count = db.update(DBConfig.TABLE_HOME_COMPANY, contentValues, "h_id=?", new String[]{String.valueOf(localId)});
         } catch (Exception e) {
             e.printStackTrace();
@@ -556,7 +687,7 @@ public class DBManager {
      * @param cloudId
      * @return
      */
-    public int removeFamilyByCloudId(int cloudId){
+    public int removeFamilyByCloudId(long cloudId){
         int count = 0;
         try {
             count = db.delete(DBConfig.TABLE_HOME_COMPANY, "cloud_id = ?", new String[]{String.valueOf(cloudId)});
@@ -599,7 +730,7 @@ public class DBManager {
      *
      * @param item
      */
-    public long insertHomeCompany(HomeCompanyBean item, List<LocationBean> roomAreas) {
+    public long insertHomeCompany(HomeCompanyBean item, List<LocationBean> roomAreas, boolean insertWifiInfo) {
         long count = 0;
         checkIfDBIsOk();
         checkHomeCompanyTable();
@@ -610,14 +741,17 @@ public class DBManager {
             contentValues.put("name", item.getName());
             contentValues.put("sa_user_token", item.getSa_user_token());
             contentValues.put("sa_lan_address", item.getSa_lan_address());
-            contentValues.put("user_id", item.getUser_id());
+            contentValues.put("sa_user_id", item.getUser_id());
             contentValues.put("is_bind_sa", item.isIs_bind_sa());
-            if (Constant.wifiInfo != null) {
+            if (Constant.wifiInfo != null && !TextUtils.isEmpty(item.getSa_user_token()) && insertWifiInfo) {
+                System.out.println("进来这里哦");
                 contentValues.put("ss_id", Constant.wifiInfo.getSSID());
                 contentValues.put("mac_address", Constant.wifiInfo.getBSSID());
             }
             contentValues.put("cloud_id", item.getId());
             contentValues.put("cloud_user_id", item.getCloud_user_id());
+            contentValues.put("area_id", item.getArea_id());
+            contentValues.put("sa_id", item.getSa_id());
             //使用replace，不使用insert，为了实现存在就更新，不存在就插入
             count = db.replace(tableName, null, contentValues);
             if (roomAreas != null && roomAreas.size() > 0) {
@@ -645,10 +779,13 @@ public class DBManager {
             contentValues.put("name", item.getName());
             contentValues.put("sa_user_token", item.getSa_user_token());
             contentValues.put("sa_lan_address", item.getSa_lan_address());
+            contentValues.put("sa_user_id", item.getUser_id());
             contentValues.put("user_id", item.getUser_id());
             contentValues.put("is_bind_sa", item.isIs_bind_sa());
             contentValues.put("cloud_id", item.getId());
             contentValues.put("cloud_user_id", item.getCloud_user_id());
+            contentValues.put("area_id", item.getArea_id());
+            contentValues.put("sa_id", item.getSa_id());
             //使用replace，不使用insert，为了实现存在就更新，不存在就插入
             count = db.replace(tableName, null, contentValues);
         } catch (Exception e) {
@@ -716,6 +853,10 @@ public class DBManager {
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }finally {
+            if (cursor!=null){
+                cursor.close();
+            }
         }
         return null;
     }

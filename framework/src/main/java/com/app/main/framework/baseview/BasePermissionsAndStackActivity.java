@@ -21,6 +21,7 @@ public class BasePermissionsAndStackActivity extends AppCompatActivity implement
     /*权限相关*/
     public final int BASE_PERMISSION_REQUEST = 100;
     public final int WRITE_STORAGE_PERMISSION_REQUEST = 200;
+    public final int WRITE_ACCESS_FINE_LOCATION_PERMISSION_REQUEST = 300;
     protected String[] permissions = {
             android.Manifest.permission.ACCESS_FINE_LOCATION,
             android.Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -30,6 +31,7 @@ public class BasePermissionsAndStackActivity extends AppCompatActivity implement
     };
 
     protected String[] STORAGE = {android.Manifest.permission.READ_EXTERNAL_STORAGE,android.Manifest.permission.READ_EXTERNAL_STORAGE};
+    protected String[] ACCESS_FINE_LOCATION = {android.Manifest.permission.ACCESS_FINE_LOCATION};
 
 
     protected boolean checkPermissions() {
@@ -91,7 +93,7 @@ public class BasePermissionsAndStackActivity extends AppCompatActivity implement
     }
 
     @AfterPermissionGranted(BASE_PERMISSION_REQUEST)
-    public void locationAndContactsTask() {
+    public void checkPermissionTask() {
         if (hasPermissions()) {
             // Have permissions, do the thing!
             hasPermissionTodo();
@@ -116,6 +118,21 @@ public class BasePermissionsAndStackActivity extends AppCompatActivity implement
                     this,
                     getResources().getString(R.string.storage_permission_apply),
                     WRITE_STORAGE_PERMISSION_REQUEST,
+                    STORAGE);
+        }
+    }
+
+    @AfterPermissionGranted(WRITE_ACCESS_FINE_LOCATION_PERMISSION_REQUEST)
+    public void accessFineLocationTask() {
+        if (hasWriteStoragePermission()) {
+            // Have permissions, do the thing!
+            hasPermissionTodo();
+        } else {
+            // Ask for ACCESS_FINE_LOCATION permissions
+            EasyPermissions.requestPermissions(
+                    this,
+                    getResources().getString(R.string.access_fine_location_apply),
+                    WRITE_ACCESS_FINE_LOCATION_PERMISSION_REQUEST,
                     STORAGE);
         }
     }

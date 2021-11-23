@@ -54,6 +54,7 @@ public class MemberDetailActivity extends MVPBaseActivity<MemberDetailContract.V
     private List<MemberDetailBean.RoleInfosBean> roleData = new ArrayList<>();
 
     private CenterAlertDialog centerAlertDialog;
+    private boolean needRefresh;
 
     /**
      * 1. 详情
@@ -144,7 +145,7 @@ public class MemberDetailActivity extends MVPBaseActivity<MemberDetailContract.V
             kind = 3;
             if (hasDelMember) {
                 centerAlertDialog = CenterAlertDialog.newInstance(getResources().getString(R.string.mine_member_del_confirm), null, true);
-                centerAlertDialog.setConfirmListener(() -> {
+                centerAlertDialog.setConfirmListener((del) -> {
                     mPresenter.delMember(id);
                 });
                 centerAlertDialog.show(this);
@@ -200,7 +201,6 @@ public class MemberDetailActivity extends MVPBaseActivity<MemberDetailContract.V
             hasChangeRole = permissionBean.getPermissions().isUpdate_area_member_role();
             hasDelMember = permissionBean.getPermissions().isDelete_area_member();
             mPresenter.getMemberDetail(id);
-//            tvDel.setVisibility(permissionBean.getPermissions().isDelete_area_member() ? View.VISIBLE : View.GONE);
         }
     }
 
@@ -266,6 +266,7 @@ public class MemberDetailActivity extends MVPBaseActivity<MemberDetailContract.V
                 }
             }
         }
+        needRefresh = true;
         tvRole.setText(sb.toString());
     }
 
@@ -287,6 +288,15 @@ public class MemberDetailActivity extends MVPBaseActivity<MemberDetailContract.V
         }
     }
 
+    @Override
+    public void onBackPressed() {
+        if (needRefresh){
+            finishResult();
+        }else {
+            super.onBackPressed();
+        }
+    }
+
     /**
      * 删除成员
      */
@@ -294,6 +304,12 @@ public class MemberDetailActivity extends MVPBaseActivity<MemberDetailContract.V
     public void delMemberSuccess() {
         ToastUtil.show(getResources().getString(R.string.mine_remove_success));
         closeDialog();
+        needRefresh = true;
+        finishResult();
+    }
+
+    private void finishResult(){
+        setResult(RESULT_OK);
         finish();
     }
 

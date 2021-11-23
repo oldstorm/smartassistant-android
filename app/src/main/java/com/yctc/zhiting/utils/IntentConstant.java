@@ -50,4 +50,11 @@ public class IntentConstant {
 
     public static final String NEED_PERMISSION = "need_permission";
     public static final String APP_NAME = "app_name";
+    public static final String INSTANCE_ID = "instance_id";
+    public static final String PLUGIN_PATH = "plugin_path";
+    public static final String WEB_URL_TYPE = "web_url_type";
+    public static final String HOMEKIT_CODE = "homekit_code";
+    public static final String HOMEKIT_CODE_ERROR = "homekit_code_error";
+    public static final String URL = "url";
+    public static final String BEAN_LIST = "bean_list";
 }

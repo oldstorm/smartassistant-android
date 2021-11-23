@@ -42,7 +42,7 @@ public class HomeDeviceAdapter extends BaseMultiItemQuickAdapter<DeviceMultipleB
                 } else {
                     boolean select = (item.getPower() != null && item.getPower().equalsIgnoreCase(Constant.PowerType.TYPE_ON));
                     ivSwitch.setSelected(select);
-                    ivSwitch.setVisibility(item.isIs_permit() ? View.VISIBLE : View.GONE);
+                    ivSwitch.setVisibility(item.isIs_permit() && item.isOnline() ? View.VISIBLE : View.GONE);
                     helper.setVisible(R.id.tvStatus, !item.isOnline());
                 }
                 break;

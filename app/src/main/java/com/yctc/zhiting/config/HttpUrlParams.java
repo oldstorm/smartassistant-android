@@ -36,5 +36,16 @@ public interface HttpUrlParams {
     String scopes = "scopes"; //获取 SCOPE 列表 sa
     String scopes_token = "scopes/token"; //获取 SCOPE Token sa
     String transfer_owner = "owner"; // 转移拥有者
+    String sa_token = "sa_token";  // 通过sc找回sa的用户凭证
+    String upload_plugins = "plugins"; //插件详情sa/sc
+    String device_types = "device/types"; // 设备型号列表（按分类分组）
+    String plugin_detail = "plugins"; // 插件详情
+    String device_access_token = "oauth2/access_token"; // 获取设备access_token
+    String find_certificate = "setting";//找回凭证配置
+    String verification_code = "verification/code";//获取第三方绑定验证码
+    String software_version = "supervisor/update";//获取更新版本信息
+    String upgrade_software = "supervisor/update";//升级软件
+    String current_version = "check";//当前版本
+    String create_plugin = "plugins";//插件列表
 
 }

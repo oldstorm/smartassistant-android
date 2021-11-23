@@ -95,7 +95,7 @@ public class SceneAdapter extends BaseQuickAdapter<SceneBean, BaseViewHolder> {
         rbPerform.setVisibility(type == 0 && item.isPerforming() ? View.VISIBLE : View.GONE);
 
         // 执行按钮
-        tvPerform.setEnabled( connected);
+        tvPerform.setEnabled(connected);
         tvPerform.setBackgroundResource((connected && item.isControl_permission()) ? R.drawable.shape_f1f4fc_c4 : R.drawable.shape_eeeeee_c4);
         tvPerform.setTextColor((connected && item.isControl_permission()) ? UiUtil.getColor(R.color.color_2da3f6) : UiUtil.getColor(R.color.white));
 

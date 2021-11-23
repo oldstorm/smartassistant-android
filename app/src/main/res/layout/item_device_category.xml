@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingBottom="@dimen/dp_14"
+    xmlns:tools="http://schemas.android.com/tools">
+    <TextView
+        android:id="@+id/tvName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/selector_shape_2da3f6_white_c30"
+        android:gravity="center"
+        android:padding="@dimen/dp_10"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:text="电源开关"
+        android:textSize="@dimen/textSize12"
+        android:textColor="@color/color_white_3f4663"/>
+</LinearLayout>

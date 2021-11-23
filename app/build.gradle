@@ -10,10 +10,10 @@ android {
 
     defaultConfig {
         applicationId "com.yctc.zhiting"
-        minSdkVersion 21
+        minSdkVersion 23
         targetSdkVersion 30
-        versionCode 1
-        versionName "1.3.0"
+        versionCode 5
+        versionName "1.5.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -43,6 +43,10 @@ android {
             signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            resValue "string", "proof_of_possesion", "abcd1234"
+        }
+        debug{
+            resValue "string", "proof_of_possesion", "abcd1234"
         }
     }
 
@@ -87,5 +91,12 @@ dependencies {
     implementation 'com.tencent.bugly:nativecrashreport:latest.release'
     //其中latest.release指代最新Bugly NDK版本号，也可以指定明确的版本号，例如3.0
 
+    // softAP
+    implementation project(path: ':provisioning')
+    // blufi
+    implementation 'com.github.EspressifApp:lib-blufi-android:2.3.4'
+
+    // https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk16 pcks7padding加解密要用
+    implementation 'org.bouncycastle:bcprov-jdk16:1.46'
 
 }

@@ -97,6 +97,38 @@
                     android:id="@+id/viewEmpty"
                     layout="@layout/layout_scene_empty"
                     android:visibility="gone" />
+                <RelativeLayout
+                    android:id="@+id/rlInvalid"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:layout_marginLeft="@dimen/dp_15"
+                    android:layout_marginTop="@dimen/dp_10"
+                    android:layout_marginRight="@dimen/dp_15"
+                    android:layout_marginBottom="@dimen/dp_16"
+                    android:background="@drawable/shape_white_c10"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+                    <ImageView
+                        android:id="@+id/ivEmpty"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/dp_147"
+                        android:layout_centerHorizontal="true"
+                        android:src="@drawable/icon_invalid_token" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_centerHorizontal="true"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_below="@id/ivEmpty"
+                        android:layout_marginTop="@dimen/dp_8"
+                        android:text="@string/home_invalid_token"
+                        android:textColor="@color/color_94A5BE"
+                        android:textSize="@dimen/textSize14" />
+
+
+                </RelativeLayout>
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
 

@@ -1,9 +1,6 @@
 package com.yctc.zhiting.activity;
 
 import android.content.Context;
-import android.database.Cursor;
-import android.os.Handler;
-import android.os.Looper;
 import android.text.TextUtils;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -14,10 +11,12 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.app.main.framework.baseutil.UiUtil;
 import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.MVPBaseActivity;
+import com.app.main.framework.httputil.comfig.HttpConfig;
 import com.yctc.zhiting.R;
 import com.yctc.zhiting.activity.contract.AddHCContract;
 import com.yctc.zhiting.activity.presenter.AddHCPresenter;
 import com.yctc.zhiting.adapter.AddHCAdapter;
+import com.yctc.zhiting.config.HttpUrlConfig;
 import com.yctc.zhiting.db.DBManager;
 import com.yctc.zhiting.dialog.EditBottomDialog;
 import com.yctc.zhiting.entity.home.SynPost;
@@ -27,8 +26,8 @@ import com.yctc.zhiting.entity.mine.LocationBean;
 import com.yctc.zhiting.entity.mine.LocationTmpl;
 import com.yctc.zhiting.entity.mine.LocationsBean;
 import com.yctc.zhiting.event.RefreshHome;
+import com.yctc.zhiting.request.AddHCRequest;
 import com.yctc.zhiting.utils.CollectionUtil;
-import com.yctc.zhiting.utils.HomeUtil;
 import com.yctc.zhiting.utils.UserUtils;
 
 import org.greenrobot.eventbus.EventBus;
@@ -56,7 +55,6 @@ public class AddHCActivity extends MVPBaseActivity<AddHCContract.View, AddHCPres
     private AddHCAdapter addHCAdapter;
     private WeakReference<Context> mContext;
     private DBManager dbManager;
-    private Handler mainThreadHandler;
     private List<LocationTmpl> data = new ArrayList<>();
 
     @Override
@@ -74,7 +72,6 @@ public class AddHCActivity extends MVPBaseActivity<AddHCContract.View, AddHCPres
         super.initUI();
         mContext = new WeakReference<>(this);
         dbManager = DBManager.getInstance(mContext.get());
-        mainThreadHandler = new Handler(Looper.getMainLooper());
         addHCAdapter = new AddHCAdapter();
 
         data.add(new LocationTmpl(getResources().getString(R.string.mine_livingroom), true));
@@ -87,6 +84,7 @@ public class AddHCActivity extends MVPBaseActivity<AddHCContract.View, AddHCPres
         data.add(new LocationTmpl(getResources().getString(R.string.mine_r_d_department), false));
         data.add(new LocationTmpl(getResources().getString(R.string.mine_president_office), false));
 
+        addHCAdapter.setNewData(data);
         rvRoom.setLayoutManager(new LinearLayoutManager(this));
         rvRoom.setAdapter(addHCAdapter);
         addHCAdapter.setOnItemClickListener((adapter, view, position) -> {
@@ -110,7 +108,7 @@ public class AddHCActivity extends MVPBaseActivity<AddHCContract.View, AddHCPres
         if (UserUtils.isLogin()) {
             createSCHome();
         } else {
-            createLocalHome(0);
+            createLocalHome(0L, null);
         }
     }
 
@@ -118,40 +116,28 @@ public class AddHCActivity extends MVPBaseActivity<AddHCContract.View, AddHCPres
      * 创建一个本地家庭
      * id 家庭id
      */
-    private void createLocalHome(Integer id) {
+    private void createLocalHome(Long id, IdBean data) {
         UiUtil.starThread(() -> {
-            int localId = getLocalId();
             String homeName = etName.getText().toString().trim();
             HomeCompanyBean homeCompanyBean = new HomeCompanyBean(homeName);
-//            homeCompanyBean.setLocalId(localId);
             ArrayList<LocationBean> roomAreas = getRoomAreas();
-            if (id!=null && id>0){
+            if (id != null && id > 0) {
                 homeCompanyBean.setId(id);
-                homeCompanyBean.setCloud_user_id(UserUtils.getCloudUserId());
             }
-            dbManager.insertHomeCompany(homeCompanyBean, roomAreas);
-            mainThreadHandler.post(() -> {
+            homeCompanyBean.setCloud_user_id(UserUtils.getCloudUserId());
+            if (data != null && data.getCloud_sa_user_info() != null) {
+                int saUserId = data.getCloud_sa_user_info().getId();
+                String saToken = data.getCloud_sa_user_info().getToken();
+                homeCompanyBean.setUser_id(saUserId);
+                homeCompanyBean.setSa_user_token(saToken);
+            }
+            dbManager.insertHomeCompany(homeCompanyBean, roomAreas, false);
+            UiUtil.runInMainThread(() -> {
                 EventBus.getDefault().post(new RefreshHome());
                 ToastUtil.show(getResources().getString(R.string.mine_add_success));
                 finish();
             });
         });
-    }
-
-    /**
-     * 获取本地id
-     *
-     * @return
-     */
-    private int getLocalId() {
-        int localId = 1;
-        Cursor cursor = dbManager.getLastHomeCompany();
-        if (cursor != null && cursor.getCount() > 0) {
-            cursor.moveToLast();
-            localId = cursor.getInt(cursor.getColumnIndex("h_id"));
-            localId++;
-        }
-        return localId;
     }
 
     /**
@@ -167,6 +153,7 @@ public class AddHCActivity extends MVPBaseActivity<AddHCContract.View, AddHCPres
                 id++;
                 LocationBean roomAreaBean = new LocationBean(id, locationTmpl.getName(), id);
                 roomAreaBean.setLocationId(-1);
+                roomAreaBean.setSa_user_token(null);
                 roomAreas.add(roomAreaBean);
             }
         }
@@ -178,9 +165,16 @@ public class AddHCActivity extends MVPBaseActivity<AddHCContract.View, AddHCPres
      */
     private void createSCHome() {
         List<LocationBean> roomList = getRoomAreas();//房间
+        List<String> locations = new ArrayList<>();
+        for (LocationBean locationBean : roomList){
+            locations.add(locationBean.getName());
+        }
         String homeName = etName.getText().toString().trim();
-        SynPost.AreaBean areaBean = new SynPost.AreaBean(homeName, roomList);//家庭
-        mPresenter.postCreateSCHome(areaBean);
+//        SynPost.AreaBean areaBean = new SynPost.AreaBean(homeName, locations);//家庭
+        AddHCRequest addHCRequest = new AddHCRequest(homeName, locations);
+        HttpConfig.clearHear(HttpConfig.AREA_ID);
+        HttpConfig.clearHear(HttpConfig.TOKEN_KEY);
+        mPresenter.addScHome(addHCRequest);
     }
 
     /**
@@ -231,13 +225,34 @@ public class AddHCActivity extends MVPBaseActivity<AddHCContract.View, AddHCPres
 
     @Override
     public void onCreateSCHomeSuccess(IdBean data) {
-        if (data!=null) {
-            createLocalHome(data.getId());
+        if (data != null) {
+            createLocalHome(data.getId(), data);
         }
     }
 
     @Override
     public void onCreateSCHomeFail(String msg) {
         ToastUtil.show(msg);
+    }
+
+    /**
+     * 添加云端家庭成功
+     * @param idBean
+     */
+    @Override
+    public void addScHomeSuccess(IdBean idBean) {
+        if (idBean != null) {
+            createLocalHome(idBean.getId(), idBean);
+        }
+    }
+
+    /**
+     * 添加云端家庭成功
+     * @param errorCode
+     * @param msg
+     */
+    @Override
+    public void addScHomeFail(int errorCode, String msg) {
+
     }
 }

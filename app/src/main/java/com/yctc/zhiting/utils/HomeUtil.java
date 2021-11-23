@@ -13,6 +13,8 @@ import com.yctc.zhiting.entity.mine.HomeCompanyBean;
 public class HomeUtil {
     private static HomeCompanyBean mHome = new HomeCompanyBean();
 
+    public static boolean tokenIsInvalid; // saToken是否失效
+
     //获取家庭名字
     public static String getHomeName() {
         mHome = Constant.CurrentHome;
@@ -23,7 +25,7 @@ public class HomeUtil {
     }
 
     //获取家庭id
-    public static int getHomeId() {
+    public static long getHomeId() {
         mHome = Constant.CurrentHome;
         if (mHome != null) {
             return mHome.getId();
@@ -38,6 +40,18 @@ public class HomeUtil {
             return mHome.getSa_user_token();
         }
         return "";
+    }
+
+    /**
+     * 判断家庭是否有id,云端有虚拟sa
+     *
+     * @return
+     */
+    public static boolean isHomeIdThanZero() {
+        mHome = Constant.CurrentHome;
+        if (mHome == null)
+            return false;
+        return (mHome.getId() > 0 && UserUtils.isLogin()) || mHome.isIs_bind_sa();
     }
 
     /**
@@ -66,8 +80,12 @@ public class HomeUtil {
 
     //判断当前的家庭是否SA环境
     public static boolean isSAEnvironment() {
+        return isSAEnvironment(Constant.CurrentHome);
+    }
+
+    //判断当前的家庭是否SA环境
+    public static boolean isSAEnvironment(HomeCompanyBean home) {
         WifiInfo wifiInfo = Constant.wifiInfo;
-        HomeCompanyBean home = Constant.CurrentHome;
         if (home != null && wifiInfo != null && home.getMac_address() != null && wifiInfo.getBSSID() != null &&
                 home.getMac_address().equalsIgnoreCase(wifiInfo.getBSSID())) {
             return true;
@@ -75,14 +93,11 @@ public class HomeUtil {
         return false;
     }
 
-    //判断当前的家庭是否SA环境
-    public static boolean isHomeSAEnvironment(HomeCompanyBean homeCompanyBean) {
-        WifiInfo wifiInfo = Constant.wifiInfo;
-        HomeCompanyBean home = Constant.CurrentHome;
-        if (homeCompanyBean != null && wifiInfo != null && homeCompanyBean.getMac_address() != null && wifiInfo.getBSSID() != null &&
-                homeCompanyBean.getMac_address().equalsIgnoreCase(wifiInfo.getBSSID())) {
-            return true;
+    public static boolean notLoginAndSAEnvironment() {
+        if (UserUtils.isLogin()) { // 登录了
+            return false;
+        } else { // 没登录
+            return !HomeUtil.isSAEnvironment(); // 是否在sa
         }
-        return false;
     }
 }

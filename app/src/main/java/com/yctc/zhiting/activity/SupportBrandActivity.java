@@ -1,8 +1,9 @@
 package com.yctc.zhiting.activity;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
@@ -16,8 +17,11 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.app.main.framework.baseutil.LogUtil;
 import com.app.main.framework.baseutil.UiUtil;
+import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.MVPBaseActivity;
+import com.app.main.framework.fileutil.BaseFileUtil;
 import com.app.main.framework.gsonutils.GsonConverter;
 import com.app.main.framework.httputil.NameValuePair;
 import com.chad.library.adapter.base.BaseQuickAdapter;
@@ -31,10 +35,12 @@ import com.yctc.zhiting.adapter.SupportBrandAdapter;
 import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.dialog.UploadPluginDialog;
 import com.yctc.zhiting.entity.home.ScanResultBean;
+import com.yctc.zhiting.entity.mine.OperatePluginBean;
 import com.yctc.zhiting.entity.mine.BrandListBean;
 import com.yctc.zhiting.entity.mine.BrandsBean;
 import com.yctc.zhiting.entity.mine.PluginsBean;
 import com.yctc.zhiting.entity.scene.PluginOperateBean;
+import com.yctc.zhiting.request.AddOrUpdatePluginRequest;
 import com.yctc.zhiting.utils.CollectionUtil;
 import com.yctc.zhiting.utils.IntentConstant;
 import com.yctc.zhiting.websocket.IWebSocketListener;
@@ -90,6 +96,7 @@ public class SupportBrandActivity extends MVPBaseActivity<SupportBrandContract.V
     private IWebSocketListener mIWebSocketListener;
     public static long pId = 1;
     private Map<Integer, List<Long>> positionMap = new HashMap<>();  // 用于存supportBrandAdapter的位置和对应 更新/添加 发送websokcet的id
+    private UploadPluginDialog uploadPluginDialog;
 
     @Override
     protected int getLayoutId() {
@@ -101,6 +108,7 @@ public class SupportBrandActivity extends MVPBaseActivity<SupportBrandContract.V
         super.initUI();
         ivEmpty.setImageResource(R.drawable.icon_empty_data);
         tvEmpty.setText(getResources().getString(R.string.common_no_content));
+        initUploadPluginDialog();
         refreshLayout.setOnRefreshLoadMoreListener(new OnRefreshLoadMoreListener() {
             @Override
             public void onRefresh(@NonNull RefreshLayout refreshLayout) {
@@ -112,7 +120,7 @@ public class SupportBrandActivity extends MVPBaseActivity<SupportBrandContract.V
 
             }
         });
-        supportBrandAdapter = new SupportBrandAdapter();
+        supportBrandAdapter = new SupportBrandAdapter(false);
         rvBrand.setLayoutManager(new LinearLayoutManager(this));
         rvBrand.setAdapter(supportBrandAdapter);
         supportBrandAdapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
@@ -124,44 +132,99 @@ public class SupportBrandActivity extends MVPBaseActivity<SupportBrandContract.V
             }
         });
         supportBrandAdapter.setOnItemChildClickListener((adapter, view, position) -> {
-            BrandsBean brandsBean = supportBrandAdapter.getItem(position);
-            if (view.getId() == R.id.tvUpdate) {
-                List<Long> pIds = new ArrayList<>();
-                if (brandsBean.isIs_added()) {  // 已添加，则是更新
-
-                    for (int i = 0; i < brandsBean.getPlugins().size(); i++) {
-                        PluginsBean pluginsBean = brandsBean.getPlugins().get(i);
-                        if (!pluginsBean.isIs_newest() && pluginsBean.isIs_added()) {
-                            PluginOperateBean pluginOperateBean = new PluginOperateBean(pId, Constant.PLUGIN, Constant.UPDATE, new PluginOperateBean.ServiceDataBean(pluginsBean.getId()));
-                            pluginsBean.setPid(pId);
-                            pluginsBean.setUpdating(true);
-                            pIds.add(pId);
-                            pId++;
-                            operatePlugins(pluginOperateBean);
-                        }
-                    }
-
-                } else {  // 为添加，则添加
-                    for (int i = 0; i < brandsBean.getPlugins().size(); i++) {
-                        PluginsBean pluginsBean = brandsBean.getPlugins().get(i);
-                        if (!pluginsBean.isIs_added()) {
-                            PluginOperateBean pluginOperateBean = new PluginOperateBean(pId, Constant.PLUGIN, Constant.INSTALL, new PluginOperateBean.ServiceDataBean(pluginsBean.getId()));
-                            pluginsBean.setPid(pId);
-                            pluginsBean.setUpdating(true);
-                            pIds.add(pId);
-                            pId++;
-                            operatePlugins(pluginOperateBean);
-                        }
-                    }
-                }
-                positionMap.put(position, pIds);
-                brandsBean.setUpdating(true);
-                supportBrandAdapter.notifyItemChanged(position);
-            }
+//            operatePluginByWebSocket(view, position);
+            operatePluginByHttp(view, position);
         });
         setKeyListener();
         initWebSocket();
         getData(true);
+    }
+
+    /**
+     * 通过http操作插件
+     * @param view
+     * @param position
+     */
+    private void operatePluginByHttp(View view, int position){
+        BrandsBean brandsBean = supportBrandAdapter.getItem(position);
+        if (view.getId() == R.id.tvUpdate) {
+            List<Long> pIds = new ArrayList<>();
+            List<String> plugins = new ArrayList<>();
+            for (int i = 0; i < brandsBean.getPlugins().size(); i++) {
+                PluginsBean pluginsBean = brandsBean.getPlugins().get(i);
+                plugins.add(pluginsBean.getId());
+            }
+            AddOrUpdatePluginRequest addOrUpdatePluginRequest = new AddOrUpdatePluginRequest(plugins);
+            brandsBean.setUpdating(true);
+            mPresenter.addOrUpdatePlugins(addOrUpdatePluginRequest, brandsBean.getName(), position);
+            supportBrandAdapter.notifyItemChanged(position);
+        }
+    }
+
+    /**
+     * 用websocket方式操作插件
+     * @param view
+     * @param position
+     */
+    @Deprecated
+    private void operatePluginByWebSocket(View view, int position){
+        BrandsBean brandsBean = supportBrandAdapter.getItem(position);
+        if (view.getId() == R.id.tvUpdate) {
+            List<Long> pIds = new ArrayList<>();
+            if (brandsBean.isIs_added()) {  // 已添加，则是更新
+
+                for (int i = 0; i < brandsBean.getPlugins().size(); i++) {
+                    PluginsBean pluginsBean = brandsBean.getPlugins().get(i);
+                    if (!pluginsBean.isIs_newest() && pluginsBean.isIs_added()) {
+                        PluginOperateBean pluginOperateBean = new PluginOperateBean(pId, Constant.PLUGIN, Constant.UPDATE, new PluginOperateBean.ServiceDataBean(pluginsBean.getId()));
+                        pluginsBean.setPid(pId);
+                        pluginsBean.setUpdating(true);
+                        pIds.add(pId);
+                        pId++;
+                        operatePlugins(pluginOperateBean);
+                    }
+                }
+
+            } else {  // 为添加，则添加
+                for (int i = 0; i < brandsBean.getPlugins().size(); i++) {
+                    PluginsBean pluginsBean = brandsBean.getPlugins().get(i);
+                    if (!pluginsBean.isIs_added()) {
+                        PluginOperateBean pluginOperateBean = new PluginOperateBean(pId, Constant.PLUGIN, Constant.INSTALL, new PluginOperateBean.ServiceDataBean(pluginsBean.getId()));
+                        pluginsBean.setPid(pId);
+                        pluginsBean.setUpdating(true);
+                        pIds.add(pId);
+                        pId++;
+                        operatePlugins(pluginOperateBean);
+                    }
+                }
+            }
+            positionMap.put(position, pIds);
+            brandsBean.setUpdating(true);
+            supportBrandAdapter.notifyItemChanged(position);
+        }
+    }
+
+    /**
+     * 上传插件弹窗
+     */
+    private void initUploadPluginDialog(){
+        uploadPluginDialog = new UploadPluginDialog();
+        uploadPluginDialog.setClickUploadListener(new UploadPluginDialog.OnClickUploadListener() {
+            @Override
+            public void onUpload() {
+                selectOtherFile();
+            }
+
+            @Override
+            public void onConfirm(String filePath) {
+
+            }
+
+            @Override
+            public void onClear() {
+
+            }
+        });
     }
 
     /**
@@ -233,8 +296,46 @@ public class SupportBrandActivity extends MVPBaseActivity<SupportBrandContract.V
      */
     @OnClick(R.id.tvAdd)
     void onClickAdd() {
-        UploadPluginDialog uploadPluginDialog = new UploadPluginDialog();
-        uploadPluginDialog.show(this);
+        if (uploadPluginDialog!=null && !uploadPluginDialog.isShowing()) {
+            uploadPluginDialog.show(this);
+        }
+    }
+
+    /**
+     * 打开其他文件
+     */
+    private void selectOtherFile() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");//设置类型，这里是任意类型，任意后缀的可以这样写。
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        startActivityForResult(intent, 1);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable @org.jetbrains.annotations.Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1 && resultCode == RESULT_OK) {
+            Uri uri = data.getData();
+            String filePath = BaseFileUtil.getFilePathByUri(this, uri);
+            if (!filePath.endsWith(".zip")){
+                ToastUtil.show(UiUtil.getString(R.string.only_zip));
+                return;
+            }
+            uploadPlugin(filePath);
+            LogUtil.e("onActivityResult=filePath:" + filePath);
+        }
+    }
+
+    /**
+     * 上传插件
+     * @param filePath
+     */
+    private void uploadPlugin(String filePath){
+        NameValuePair nameValuePair = new NameValuePair("file", filePath, true);
+        List<NameValuePair> requestData = new ArrayList<>();
+        requestData.add(nameValuePair);
+        uploadPluginDialog.resetUploadStatus(1);
+        mPresenter.uploadPlugin(requestData);
     }
 
     /**
@@ -336,6 +437,53 @@ public class SupportBrandActivity extends MVPBaseActivity<SupportBrandContract.V
     @Override
     public void getBrandListFail(int errorCode, String msg) {
         setFinish();
+    }
+
+    /**
+     * 上传插件成功
+     * @param object
+     */
+    @Override
+    public void uploadPluginSuccess(Object object) {
+        uploadPluginDialog.resetUploadStatus(2);
+        getData(true);
+    }
+
+    /**
+     * 上传插件失败
+     * @param errorCode
+     * @param msg
+     */
+    @Override
+    public void uploadPluginFail(int errorCode, String msg) {
+        uploadPluginDialog.resetUploadStatus(3);
+    }
+
+    /**
+     * 添加更新插件成功
+     * @param operatePluginBean
+     * @param position
+     */
+    @Override
+    public void addOrUpdatePluginsSuccess(OperatePluginBean operatePluginBean, int position) {
+        BrandsBean brandsBean = supportBrandAdapter.getItem(position);
+        brandsBean.setUpdating(false);
+        brandsBean.setIs_added(true);
+        brandsBean.setIs_newest(true);
+        supportBrandAdapter.notifyItemChanged(position);
+    }
+
+    /**
+     * 添加更新插件失败
+     * @param errorCode
+     * @param msg
+     * @param position
+     */
+    @Override
+    public void addOrUpdatePluginsFail(int errorCode, String msg, int position) {
+        BrandsBean brandsBean = supportBrandAdapter.getItem(position);
+        brandsBean.setUpdating(false);
+        supportBrandAdapter.notifyItemChanged(position);
     }
 
     private void setFinish() {

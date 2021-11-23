@@ -15,5 +15,10 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
+
+        <meta-data
+            android:name="com.app.main.framework.imageutil.MyAppGlideModule"
+            android:value="AppGlideModule"/>
+
     </application>
 </manifest>

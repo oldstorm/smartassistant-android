@@ -3,7 +3,6 @@ package com.yctc.zhiting.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,11 +26,13 @@ import com.yctc.zhiting.fragment.SceneFragment;
 import com.yctc.zhiting.listener.IHomeView;
 import com.yctc.zhiting.listener.IMinView;
 import com.yctc.zhiting.listener.ISceneView;
+import com.yctc.zhiting.request.GetDeviceInfoRequest;
+import com.yctc.zhiting.utils.AESUtil;
 import com.yctc.zhiting.utils.FastUtil;
 import com.yctc.zhiting.utils.IntentConstant;
 
 /**
- * App主页 dev1.3.0
+ * App 主页dev 1.5.0
  */
 public class MainActivity extends MVPBaseActivity<MainContract.View, MainPresenter> implements MainContract.View {
 
@@ -68,6 +69,13 @@ public class MainActivity extends MVPBaseActivity<MainContract.View, MainPresent
     @Override
     protected void initIntent(Intent intent) {
         super.initIntent(intent);
+        long id = 0;
+        String method = "get_prop.info";
+        GetDeviceInfoRequest deviceInfoBean = new GetDeviceInfoRequest(id, method);
+//        String deviceStr = new Gson().toJson(deviceInfoBean);
+        String deviceStr = "{\"method\":\"get_prop.info\",\"params\":[],\"id\":0}";
+        AESUtil.encryptAES(deviceStr.getBytes(), "b343c28cb9b3a04c9434198adc9ff2b3", "AES/CBC/PKCS7Padding");
+
         type = intent.getStringExtra(IntentConstant.TYPE);
         needPermissions = intent.getStringExtra(IntentConstant.NEED_PERMISSION);
         appName = intent.getStringExtra(IntentConstant.APP_NAME);

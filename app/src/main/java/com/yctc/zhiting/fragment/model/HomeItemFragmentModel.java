@@ -1,9 +1,12 @@
 package com.yctc.zhiting.fragment.model;
 
+import com.app.main.framework.httputil.HTTPCaller;
 import com.app.main.framework.httputil.RequestDataCallback;
+import com.yctc.zhiting.config.HttpUrlConfig;
 import com.yctc.zhiting.entity.home.BrandBean;
 import com.yctc.zhiting.entity.home.DeviceBean;
 import com.yctc.zhiting.entity.home.RequestAddDeviceBean;
+import com.yctc.zhiting.entity.scene.PluginDetailBean;
 import com.yctc.zhiting.fragment.contract.HomeItemFragmentContract;
 
 public class HomeItemFragmentModel implements HomeItemFragmentContract.Model {
@@ -18,5 +21,10 @@ public class HomeItemFragmentModel implements HomeItemFragmentContract.Model {
 //        String url = "http://192.168.0.110:8088/devices";
 //        HTTPCaller.getInstance().post(DeviceBean.class,url,bean.toString(),callback);
 //        HTTPCaller.getInstance().post(DeviceBean.class, HttpUrlConfig.getAddDeviceUrl(),new Gson().toJson(bean),callback);
+    }
+
+    @Override
+    public void getPluginDetail(String id, RequestDataCallback<PluginDetailBean> callback) {
+        HTTPCaller.getInstance().get(PluginDetailBean.class, HttpUrlConfig.getPluginsDetail()+"/"+id, callback);
     }
 }

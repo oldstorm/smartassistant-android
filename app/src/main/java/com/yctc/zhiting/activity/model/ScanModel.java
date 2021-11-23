@@ -14,7 +14,6 @@ import com.yctc.zhiting.entity.home.SynPost;
 import com.yctc.zhiting.entity.mine.IdBean;
 import com.yctc.zhiting.entity.mine.InvitationCheckBean;
 import com.yctc.zhiting.request.BindCloudRequest;
-import com.yctc.zhiting.utils.AllRequestUtil;
 import com.yctc.zhiting.utils.UserUtils;
 
 import java.util.ArrayList;
@@ -26,11 +25,11 @@ import java.util.List;
 public class ScanModel implements ScanContract.Model {
 
     @Override
-    public void invitationCheck(String body, GenerateCodeJson qrCode, RequestDataCallback<InvitationCheckBean> callback) {
+    public void invitationCheck(String body, GenerateCodeJson qrCode,  String tempChannelUrl, RequestDataCallback<InvitationCheckBean> callback) {
         Header[] headers = getHeaders(qrCode);
-        String requestUrl = HttpUrlConfig.getInvitationCheck();
-        if (UserUtils.isLogin() && qrCode.getArea_id() > 0)
-            requestUrl = HttpUrlConfig.baseSCUrl + HttpUrlParams.invitationCheck;
+        String requestUrl = TextUtils.isEmpty(tempChannelUrl) ? HttpUrlConfig.getInvitationCheck() : tempChannelUrl+HttpUrlConfig.API+HttpUrlParams.invitationCheck;
+//        if (UserUtils.isLogin() && qrCode.getArea_id() > 0)
+//            requestUrl = HttpUrlConfig.apiSCUrl + HttpUrlParams.invitationCheck;
         HTTPCaller.getInstance().post(InvitationCheckBean.class, requestUrl, headers, body, callback, false);
     }
 
@@ -58,6 +57,7 @@ public class ScanModel implements ScanContract.Model {
         //如果是云家庭并且登陆，添加area_id
         if (qrCode.getArea_id() > 0 && UserUtils.isLogin()) {
             headers.add(new Header(HttpConfig.AREA_ID, qrCode.getArea_id() + ""));
+            headers.add(new Header(HttpConfig.SA_ID, qrCode.getSaId() + ""));
         }
         return headers.toArray(new Header[headers.size()]);
     }

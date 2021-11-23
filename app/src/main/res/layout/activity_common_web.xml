@@ -10,10 +10,12 @@
     tools:context=".activity.SupportBrandActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/clTop"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#3F4663"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:visibility="gone">
 
         <com.app.main.framework.widget.StatusBarView
             android:id="@+id/sbView"
@@ -74,6 +76,39 @@
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <RelativeLayout
+        android:id="@+id/rlTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:visibility="gone">
+        <com.app.main.framework.widget.StatusBarView
+            android:id="@+id/sbv"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <ImageView
+            android:id="@+id/ivBack"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dp_44"
+            android:layout_below="@id/sbv"
+            android:src="@mipmap/m_back"
+            android:paddingStart="@dimen/dp_16"
+            android:paddingEnd="@dimen/dp_8"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:maxWidth="@dimen/dp_200"
+            android:layout_height="@dimen/dp_44"
+            android:layout_below="@id/sbv"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:layout_centerHorizontal="true"
+            android:gravity="center"
+            android:text="@string/mine_third_party"
+            android:textColor="@color/color_3F466"
+            android:textSize="@dimen/textSize18"
+            android:textStyle="bold"/>
+    </RelativeLayout>
 
     <ProgressBar
         android:id="@+id/progressbar"

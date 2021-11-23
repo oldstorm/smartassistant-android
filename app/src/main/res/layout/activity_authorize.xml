@@ -32,7 +32,7 @@
         android:layout_marginRight="@dimen/dp_30"
         android:ellipsize="end"
         android:maxLines="1"
-        android:text="管******"
+        tools:text="管******"
         android:textColor="@color/color_1A2734"
         android:textSize="@dimen/textSize20"
         android:textStyle="bold"
@@ -56,20 +56,46 @@
         app:layout_constraintLeft_toRightOf="@+id/ivLogo"
         app:layout_constraintRight_toRightOf="parent" />
 
+    <LinearLayout
+        android:id="@+id/llHome"
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="wrap_content"
+        app:layout_constraintLeft_toLeftOf="@+id/ivLogo"
+        app:layout_constraintRight_toRightOf="@+id/tvJoin"
+        app:layout_constraintTop_toBottomOf="@+id/ivLogo"
+        android:layout_marginTop="@dimen/dp_39"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/tvHome"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableRight="@drawable/icon_black_down_triangle"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="@string/please_select_home"
+            android:textColor="@color/color_1A2734"
+            android:textSize="@dimen/textSize18"
+            android:textStyle="bold"/>
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:layout_marginTop="@dimen/dp_8"
+            android:background="@color/eeeeee"/>
+    </LinearLayout>
+
     <com.yctc.zhiting.widget.MediumTextView
         android:id="@+id/tvTips"
         android:layout_width="@dimen/dp_0"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/dp_64"
+        android:layout_marginTop="@dimen/dp_27"
         android:layout_marginRight="@dimen/dp_30"
         android:lineSpacingExtra="@dimen/dp_2"
         android:text="同意将智汀家庭云（管******）的以下信息授权给智汀家庭云盘"
         android:textColor="@color/color_1A2734"
         android:textSize="@dimen/textSize14"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="@+id/ivLogo"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/ivLogo"
+        app:layout_constraintTop_toBottomOf="@+id/llHome"
         app:strokeWidth="0.5dp" />
 
     <androidx.recyclerview.widget.RecyclerView
@@ -78,6 +104,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/dp_2"
         android:layout_marginRight="@dimen/dp_30"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="@+id/ivLogo"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvTips" />
@@ -88,14 +115,34 @@
         android:layout_height="wrap_content"
         android:layout_marginLeft="@dimen/dp_50"
         android:layout_marginRight="@dimen/dp_50"
-        android:layout_marginBottom="@dimen/dp_78"
-        android:background="@drawable/shape_427aed"
+        android:layout_marginBottom="@dimen/dp_20"
+        android:background="@drawable/shape_427aed_c4"
         android:gravity="center"
         android:padding="@dimen/dp_18"
         android:text="@string/main_confirm_auth"
         android:textColor="@color/white"
         android:textSize="@dimen/textSize14"
-        app:layout_constraintBottom_toTopOf="@+id/tvAgreement" />
+        app:layout_constraintBottom_toTopOf="@+id/tvCancel"
+        android:enabled="false"/>
+
+    <TextView
+        android:id="@+id/tvCancel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginLeft="@dimen/dp_50"
+        android:layout_marginRight="@dimen/dp_50"
+        android:layout_marginBottom="@dimen/dp_61"
+        android:paddingTop="@dimen/dp_19"
+        android:paddingBottom="@dimen/dp_19"
+        android:background="@drawable/shape_stroke_989ea6_c4"
+        android:gravity="center"
+        android:text="@string/home_cancel"
+        android:textColor="@color/color_1A2734"
+        android:textSize="@dimen/textSize14"
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/tvAgreement"
@@ -107,6 +154,7 @@
         android:textSize="@dimen/textSize11"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent" />
+        app:layout_constraintRight_toRightOf="parent"
+        android:visibility="gone"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

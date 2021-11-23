@@ -16,19 +16,44 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/tvName"
-        android:layout_width="0dp"
+    <LinearLayout
+        android:id="@+id/llName"
+        android:layout_width="@dimen/dp_0"
         android:layout_height="wrap_content"
         android:layout_marginLeft="@dimen/dp_16"
         android:layout_marginRight="@dimen/dp_15"
-        android:textColor="@color/color_3f4663"
-        android:textSize="@dimen/textSize14"
         app:layout_constraintBottom_toBottomOf="@+id/ivCover"
         app:layout_constraintLeft_toRightOf="@+id/ivCover"
         app:layout_constraintRight_toLeftOf="@+id/tvTodo"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="米家台灯1S" />
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/tvName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="@color/color_3f4663"
+            android:textSize="@dimen/textSize14"
+            tools:text="米家台灯1S" />
+        <TextView
+            android:id="@+id/tvTag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_7"
+            android:paddingLeft="@dimen/dp_7"
+            android:paddingRight="@dimen/dp_7"
+            android:paddingTop="@dimen/dp_1"
+            android:paddingBottom="@dimen/dp_1"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:background="@drawable/shape_1a07b5a3_c30"
+            tools:text="智汀科技 zhiting tech"
+            android:textColor="@color/color_07B5A3"
+            android:textSize="@dimen/textSize10"/>
+
+    </LinearLayout>
+
 
     <TextView
         android:id="@+id/tvTodo"

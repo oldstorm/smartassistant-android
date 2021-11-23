@@ -2,6 +2,7 @@ package com.yctc.zhiting.config;
 
 import android.text.TextUtils;
 
+import com.app.main.framework.baseutil.LogUtil;
 import com.app.main.framework.httputil.comfig.HttpConfig;
 import com.yctc.zhiting.utils.HomeUtil;
 import com.yctc.zhiting.utils.UserUtils;
@@ -21,37 +22,56 @@ public class HttpUrlConfig {
     //public static String baseUrl = "http://192.168.0.82:8088/";//测试服务SA2 ip
     //public static String baseSAUrl = "http://sa.zhitingtech.com/";//测试服务器SA1 域名
 
-    public static String baseUrl = "http://192.168.0.123:9020/";//测试服务器SA
-    public static String baseSCUrl = "https://sc.zhitingtech.com/api/";//测试服务SC
-    public static String baseSAUrl = baseUrl + "api/";//测试服务器SA api
+    public static String baseSAUrl = "http://192.168.22.123:9020";//测试服务器SA
+    public static String baseSCUrl = "https://scgz.zhitingtech.com";//测试服务SC
+//    public static String baseSAUrl = "http://192.168.22.106:37965";//测试服务器SA
+//    public static String baseSCUrl = "http://192.168.22.76:9097";//测试服务SC
+    public static final String API = "/api/";
+    public static String apiSCUrl = baseSCUrl +API;//测试服务SC api
+    public static String apiSAUrl = baseSAUrl +API;//测试服务器SA api
+
+
 
     //只走SA
     private static String getSAServerUrl(String url) {
         if (!TextUtils.isEmpty(HomeUtil.getSaToken())) {
             HttpConfig.addAreaIdHeader(HttpConfig.TOKEN_KEY, HomeUtil.getSaToken());
         }
-        return baseSAUrl + url;
+        if (url.contains(Constant.NO_AREA_ID)) {//不需要添加area_id接口
+            url = url.replace(Constant.NO_AREA_ID, "");
+            HttpConfig.clearHear(HttpConfig.AREA_ID);
+        }else{
+            long homeId = HomeUtil.getHomeId();
+            HttpConfig.addAreaIdHeader(HttpConfig.AREA_ID, String.valueOf(homeId));
+        }
+        return apiSAUrl + url;
     }
 
     //只走SC
     private static String getSCServerUrl(String url) {
-        int homeId = HomeUtil.getHomeId();
-        if (UserUtils.isLogin() && homeId > 0) {
-            HttpConfig.addAreaIdHeader(HttpConfig.AREA_ID, String.valueOf(homeId));
-        } else {//移除
+        LogUtil.e("getSCServerUrl=" + url);
+        if (url.contains(Constant.NO_AREA_ID)) {//不需要添加area_id接口
+            url = url.replace(Constant.NO_AREA_ID, "");
             HttpConfig.clearHear(HttpConfig.AREA_ID);
+        } else {
+            long homeId = HomeUtil.getHomeId();
+            if (UserUtils.isLogin() && homeId > 0) {
+                HttpConfig.addAreaIdHeader(HttpConfig.AREA_ID, String.valueOf(homeId));
+            } else {//移除
+                HttpConfig.clearHear(HttpConfig.AREA_ID);
+            }
+            if (!TextUtils.isEmpty(HomeUtil.getSaToken())) {
+                HttpConfig.addAreaIdHeader(HttpConfig.TOKEN_KEY, HomeUtil.getSaToken());
+            } else {//移除
+                HttpConfig.clearHear(HttpConfig.TOKEN_KEY);
+            }
         }
-        if (!TextUtils.isEmpty(HomeUtil.getSaToken())) {
-            HttpConfig.addAreaIdHeader(HttpConfig.TOKEN_KEY, HomeUtil.getSaToken());
-        } else {//移除
-            HttpConfig.clearHear(HttpConfig.TOKEN_KEY);
-        }
-        return baseSCUrl + url;
+        return apiSCUrl + url;
     }
 
-    public static String getSCServerNeedBindIdUrl(String url){
-        int homeId = HomeUtil.getHomeId();
-        if (UserUtils.isLogin() && HomeUtil.isBindSA() && homeId > 0) {
+    public static String getSCServerNeedBindIdUrl(String url) {
+        long homeId = HomeUtil.getHomeId();
+        if (UserUtils.isLogin() && HomeUtil.isHomeIdThanZero() && homeId > 0) {
             HttpConfig.addAreaIdHeader(HttpConfig.AREA_ID, String.valueOf(homeId));
         } else {//移除
             HttpConfig.clearHear(HttpConfig.AREA_ID);
@@ -61,23 +81,18 @@ public class HttpUrlConfig {
         } else {//移除
             HttpConfig.clearHear(HttpConfig.TOKEN_KEY);
         }
-        return baseSCUrl + url;
+        return apiSCUrl + url;
     }
 
     //根据条件判断走SA/SC
     private static String getACServerUrl(String url) {
-//        int homeId = HomeUtil.getHomeId();
-//        if (UserUtils.isLogin() && homeId > 0) {//登陆&不在SA环境
-//            return getSCServerUrl(url);
-//        } else {//没有登陆SC
-//            return getSAServerUrl(url);
-//        }
         if (HomeUtil.isSAEnvironment()) {
             return getSAServerUrl(url);
         } else {
             if (UserUtils.isLogin() && HomeUtil.getHomeId() > 0) {//登陆&不在SA环境
                 return getSCServerUrl(url);
             } else {//没有登陆SC
+                HttpConfig.addAreaIdHeader(HttpConfig.TOKEN_KEY, HomeUtil.getSaToken());
                 return getSAServerUrl(url);
             }
         }
@@ -85,11 +100,12 @@ public class HttpUrlConfig {
 
     /**
      * 没有header sc
+     *
      * @param url
      * @return
      */
-    private static String getSCServerUrlWithoutHead(String url){
-        return baseSCUrl + url;
+    private static String getSCServerUrlWithoutHead(String url) {
+        return apiSCUrl + url;
     }
 
     /**
@@ -134,7 +150,7 @@ public class HttpUrlConfig {
      * @return
      */
     public static String getAreasUrl() {
-        return getACServerUrl(HttpUrlParams.areas);
+        return getACServerUrl(HttpUrlParams.areas + Constant.NO_AREA_ID);
     }
 
     /**
@@ -143,7 +159,7 @@ public class HttpUrlConfig {
      * @return
      */
     public static String getLocation_tmpl() {
-        return getSAServerUrl(HttpUrlParams.location_tmpl);
+        return getACServerUrl(HttpUrlParams.location_tmpl);
     }
 
     /**
@@ -154,7 +170,6 @@ public class HttpUrlConfig {
     public static String getUsers() {
         return getACServerUrl(HttpUrlParams.users);
     }
-
 
     /**
      * 获取用户权限
@@ -176,7 +191,7 @@ public class HttpUrlConfig {
      * @param user_id 用户id
      * @return
      */
-    public static String getExitHomeCompany(int id, int user_id) {
+    public static String getExitHomeCompany(long id, int user_id) {
         return getACServerUrl(HttpUrlParams.areas + "/" + id + "/" + HttpUrlParams.users + "/" + user_id);
     }
 
@@ -186,8 +201,8 @@ public class HttpUrlConfig {
      * @param id 家庭id
      * @return
      */
-    public static String getDelHomeCompany(int id) {
-        return getACServerUrl(HttpUrlParams.areas + "/" + id);
+    public static String getDelHomeCompany(long id) {
+        return getACServerUrl(HttpUrlParams.areas + "/" + id + Constant.NO_AREA_ID);
     }
 
     /**
@@ -309,7 +324,6 @@ public class HttpUrlConfig {
      */
     public static String getCaptcha() {
         return getSCServerUrl(HttpUrlParams.captcha);
-//        return getSCServerNoAreaIdUrl(HttpUrlParams.captcha);
     }
 
     /**
@@ -359,11 +373,30 @@ public class HttpUrlConfig {
 
     /**
      * 云用户 没有header
+     *
      * @return
      */
-    public static String getSCUsersWithoutHeader(){
+    public static String getSCUsersWithoutHeader() {
         HttpConfig.clearHeader();
         return getSCServerUrlWithoutHead(HttpUrlParams.users);
+    }
+
+    /**
+     * sa用户
+     *
+     * @return
+     */
+    public static String getSAUsers() {
+        return getSAServerUrl(HttpUrlParams.users);
+    }
+
+    /**
+     * sa用户
+     *
+     * @return
+     */
+    public static String getACUsers() {
+        return getACServerUrl(HttpUrlParams.users);
     }
 
     /**
@@ -385,6 +418,15 @@ public class HttpUrlConfig {
     }
 
     /**
+     * 云端家庭
+     *
+     * @return
+     */
+    public static String getScAreasNoHeader() {
+        return getSCServerUrlWithoutHead(HttpUrlParams.areas);
+    }
+
+    /**
      * 获取 SCOPE Token（sa）
      *
      * @return
@@ -393,7 +435,7 @@ public class HttpUrlConfig {
         if (!TextUtils.isEmpty(HomeUtil.getSaToken())) {
             HttpConfig.addAreaIdHeader(HttpConfig.TOKEN_KEY, HomeUtil.getSaToken());
         }
-        return getSAServerUrl(HttpUrlParams.scopes);
+        return getACServerUrl(HttpUrlParams.scopes);
     }
 
     /**
@@ -402,16 +444,110 @@ public class HttpUrlConfig {
      * @return
      */
     public static String getScopesToken() {
-        return getSAServerUrl(HttpUrlParams.scopes_token);
+        return getACServerUrl(HttpUrlParams.scopes_token);
     }
 
     /**
      * 转移拥有者
+     *
      * @param userId
      * @return
      */
-    public static String getTransferOwner(int userId){
-        return getACServerUrl(HttpUrlParams.users + "/"+userId+"/"+HttpUrlParams.transfer_owner);
+    public static String getTransferOwner(int userId) {
+        return getACServerUrl(HttpUrlParams.users + "/" + userId + "/" + HttpUrlParams.transfer_owner);
     }
 
+    /**
+     * 通过sc找回sa的用户凭证
+     * @param id 用户id
+     * @return
+     */
+    public static String getSAToken(int id){
+        HttpConfig.clearHear(HttpConfig.AREA_ID);
+        HttpConfig.clearHear(HttpConfig.TOKEN_KEY);
+        return apiSCUrl+HttpUrlParams.users + "/" + id + "/" + HttpUrlParams.sa_token;
+    }
+
+    /**
+     * 上传插件
+     * @return
+     */
+    public static String getUploadPlugin(){
+        return getSAServerUrl(HttpUrlParams.upload_plugins);
+    }
+
+    /**
+     * 设备分类
+     * @return
+     */
+    public static String getDeviceType(){
+        return getACServerUrl(HttpUrlParams.device_types);
+    }
+
+    /**
+     * 获取设备access_token
+     * @return
+     */
+    public static String getDeviceAccessToken(){
+        return apiSCUrl+HttpUrlParams.device_access_token+ Constant.ONLY_SC;
+    }
+
+    /**
+     * 找回凭证配置
+     *
+     * @return
+     */
+    public static String getFindCertificate() {
+        return getACServerUrl(HttpUrlParams.find_certificate);
+    }
+
+    /**
+     * 获取第三方绑定验证码
+     *
+     * @return
+     */
+    public static String getVerificationCode() {
+        return getACServerUrl(HttpUrlParams.verification_code);
+    }
+
+    /**
+     * 获取更新版本版本信息
+     * @return
+     */
+    public static String getSoftWareVersion() {
+        return getSAServerUrl(HttpUrlParams.software_version);
+    }
+
+    /**
+     * 获取当前版本信息
+     * @return
+     */
+    public static String getCurrentVersion() {
+        return getSAServerUrl(HttpUrlParams.current_version);
+    }
+
+    /**
+     *升级软件
+     * @return
+     */
+    public static String getUpgradeSoftWare() {
+        return getSAServerUrl(HttpUrlParams.upgrade_software);
+    }
+
+    /**
+     * 安装/更新插件
+     * @param name
+     * @return
+     */
+    public static String getAddOrUpdatePlugin(String name){
+        return getSAServerUrl(HttpUrlParams.brand + "/" + name + "/" + HttpUrlParams.plugins);
+    }
+
+    /**
+     * 品牌创作插件
+     * @return
+     */
+    public static String getCreatePluginList(){
+        return getACServerUrl(HttpUrlParams.create_plugin);
+    }
 }

@@ -19,7 +19,7 @@ public class PermissionBean {
         this.permissions = permissions;
     }
 
-    public static class PermissionsBean  {
+    public static class PermissionsBean {
         /**
          * add_area : true
          * add_device : true
@@ -68,6 +68,24 @@ public class PermissionBean {
         private boolean get_location;//查看房间详情
         private boolean update_scene; //修改场景
         private boolean delete_scene;// 删除场景
+        private boolean sa_firmware_upgrade;//sa固件升级
+        private boolean sa_software_upgrade;//sa软件升级
+
+        public boolean isSa_firmware_upgrade() {
+            return sa_firmware_upgrade;
+        }
+
+        public void setSa_firmware_upgrade(boolean sa_firmware_upgrade) {
+            this.sa_firmware_upgrade = sa_firmware_upgrade;
+        }
+
+        public boolean isSa_software_upgrade() {
+            return sa_software_upgrade;
+        }
+
+        public void setSa_software_upgrade(boolean sa_software_upgrade) {
+            this.sa_software_upgrade = sa_software_upgrade;
+        }
 
         public boolean isGet_location() {
             return get_location;

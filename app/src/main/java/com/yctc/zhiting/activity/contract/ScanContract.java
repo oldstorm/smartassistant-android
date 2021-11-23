@@ -17,7 +17,7 @@ import com.yctc.zhiting.request.BindCloudRequest;
  */
 public interface ScanContract {
     interface Model {
-        void invitationCheck(String body, GenerateCodeJson qrCode, RequestDataCallback<InvitationCheckBean> callback);
+        void invitationCheck(String body, GenerateCodeJson qrCode, String tempChannelUrl, RequestDataCallback<InvitationCheckBean> callback);
 
         void createHomeSC(SynPost.AreaBean request, RequestDataCallback<IdBean> callback);
 
@@ -29,13 +29,13 @@ public interface ScanContract {
 
         void invitationCheckFail(int errorCode, String msg);
 
-        void createHomeSCSuccess(int homeSCId);
+        void createHomeSCSuccess(IdBean idBean);
 
         void createHomeSCFail(int errorCode, String msg);
     }
 
     interface Presenter extends BasePresenter<View> {
-        void invitationCheck(String name, GenerateCodeJson qrCode);
+        void invitationCheck(String name, GenerateCodeJson qrCode, String tempChannelUrl);
 
         void createHomeSC(String homeName);
 

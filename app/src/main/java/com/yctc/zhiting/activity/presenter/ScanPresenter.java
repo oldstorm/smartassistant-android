@@ -2,9 +2,7 @@ package com.yctc.zhiting.activity.presenter;
 
 import android.util.Log;
 
-import com.app.main.framework.baseutil.LogUtil;
 import com.app.main.framework.baseview.BasePresenterImpl;
-import com.app.main.framework.httputil.Header;
 import com.app.main.framework.httputil.RequestDataCallback;
 import com.yctc.zhiting.activity.contract.ScanContract;
 import com.yctc.zhiting.activity.model.ScanModel;
@@ -34,9 +32,10 @@ public class ScanPresenter extends BasePresenterImpl<ScanContract.View> implemen
     }
 
     @Override
-    public void invitationCheck(String body, GenerateCodeJson qrCode) {
+    public void invitationCheck(String body, GenerateCodeJson qrCode, String tempChannelUrl) {
+        if (mView!=null)
         mView.showLoadingView();
-        model.invitationCheck(body, qrCode, new RequestDataCallback<InvitationCheckBean>() {
+        model.invitationCheck(body, qrCode, tempChannelUrl, new RequestDataCallback<InvitationCheckBean>() {
             @Override
             public void onSuccess(InvitationCheckBean obj) {
                 super.onSuccess(obj);
@@ -70,7 +69,7 @@ public class ScanPresenter extends BasePresenterImpl<ScanContract.View> implemen
             public void onSuccess(IdBean obj) {
                 super.onSuccess(obj);
                 if (mView != null) {
-                    mView.createHomeSCSuccess(obj.getId());
+                    mView.createHomeSCSuccess(obj);
                 }
             }
 

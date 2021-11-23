@@ -3,12 +3,20 @@ package com.yctc.zhiting.entity;
 import com.app.main.framework.httputil.request.Request;
 import com.yctc.zhiting.entity.mine.HomeCompanyBean;
 
+import java.util.List;
+
+import okhttp3.Cookie;
+
+/**
+ * 授权信息类
+ */
 public class AuthBackBean extends Request {
 
-    private int userId;
-    private String userName;
-    private HomeCompanyBean homeCompanyBean;
-    private ScopeTokenBean.STBean stBean;
+    private int userId;  // 用户id
+    private String userName; // 用户昵称
+    private HomeCompanyBean homeCompanyBean; // 家庭信息
+    private ScopeTokenBean.STBean stBean; // 授权token和过期时间
+    private List<Cookie> cookies; // 登录SC时的cookie
 
     public AuthBackBean(int userId, String userName, HomeCompanyBean homeCompanyBean, ScopeTokenBean.STBean stBean) {
         this.userId = userId;
@@ -47,5 +55,13 @@ public class AuthBackBean extends Request {
 
     public void setStBean(ScopeTokenBean.STBean stBean) {
         this.stBean = stBean;
+    }
+
+    public List<Cookie> getCookies() {
+        return cookies;
+    }
+
+    public void setCookies(List<Cookie> cookies) {
+        this.cookies = cookies;
     }
 }

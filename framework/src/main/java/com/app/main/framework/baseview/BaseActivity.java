@@ -51,7 +51,7 @@ import butterknife.ButterKnife;
 
 public abstract class BaseActivity extends BasePermissionsAndStackActivity implements BaseView {
     public static final String SHARE_ANIM_KEY = "SHARE_ANIM_KEY";
-    public String TAG = getClass().getSimpleName()+"====";
+    public String TAG = getClass().getSimpleName() + "====";
     //根容器布局
     private RelativeLayout mContainer;
     /*导航栏*/
@@ -316,7 +316,7 @@ public abstract class BaseActivity extends BasePermissionsAndStackActivity imple
 //                KeyboardHelper.hideKeyboard(loadingView.getRootView());
 //                timerCloseLoadingView();
 //            }
-            if (loadingDialog==null){
+            if (loadingDialog == null) {
                 loadingDialog = new LoadingDialog(this);
                 loadingDialog.setOnShowListener(new DialogInterface.OnShowListener() {
                     @Override
@@ -332,7 +332,7 @@ public abstract class BaseActivity extends BasePermissionsAndStackActivity imple
                     }
                 });
             }
-            if (!loadingDialog.isShowing()){
+            if (!loadingDialog.isShowing()) {
                 loadingDialog.show();
                 timerCloseLoadingView();
 
@@ -346,7 +346,7 @@ public abstract class BaseActivity extends BasePermissionsAndStackActivity imple
 //            if (loadingView != null && loadingView.getRootView().getVisibility() != View.GONE) {
 //                loadingView.getRootView().setVisibility(View.GONE);
 //            }
-            if (loadingDialog!=null && loadingDialog.isShowing()){
+            if (loadingDialog != null && loadingDialog.isShowing()) {
                 loadingDialog.dismiss();
             }
         });
@@ -358,7 +358,7 @@ public abstract class BaseActivity extends BasePermissionsAndStackActivity imple
 //                Activity currentActivity = LibLoader.getCurrentActivity();
 //                if (currentActivity instanceof BaseActivity && !currentActivity.isFinishing())
 //                    ((BaseActivity) currentActivity).hideLoadingView();
-                if (loadingDialog!=null && loadingDialog.isShowing())
+                if (loadingDialog != null && loadingDialog.isShowing() && !isDestroyed())
                     loadingDialog.dismiss();
             };
         }
@@ -390,7 +390,7 @@ public abstract class BaseActivity extends BasePermissionsAndStackActivity imple
     }
 
     //    界面之间的跳转
-     public void switchToActivity(Class<?> clazz) {
+    public void switchToActivity(Class<?> clazz) {
         Intent intent = new Intent(this, clazz);
         startActivity(intent);
     }

@@ -1,10 +1,8 @@
 package com.yctc.zhiting.activity.model;
 
-
 import com.app.main.framework.httputil.HTTPCaller;
 import com.app.main.framework.httputil.NameValuePair;
 import com.app.main.framework.httputil.RequestDataCallback;
-import com.yctc.zhiting.activity.contract.BrandDetailContract;
 import com.yctc.zhiting.activity.contract.SceneDevicesContract;
 import com.yctc.zhiting.config.HttpUrlConfig;
 import com.yctc.zhiting.entity.home.RoomDeviceListBean;
@@ -20,6 +18,7 @@ public class SceneDevicesModel implements SceneDevicesContract.Model {
 
     /**
      * 设备列表
+     *
      * @param callback
      */
     @Override
@@ -31,10 +30,11 @@ public class SceneDevicesModel implements SceneDevicesContract.Model {
 
     /**
      * 房间列表
+     *
      * @param callback
      */
     @Override
     public void getRoomList(RequestDataCallback<RoomListBean> callback) {
-        HTTPCaller.getInstance().get(RoomListBean.class, HttpUrlConfig.getLocation(),callback);
+        HTTPCaller.getInstance().get(RoomListBean.class, HttpUrlConfig.getLocation(), callback);
     }
 }

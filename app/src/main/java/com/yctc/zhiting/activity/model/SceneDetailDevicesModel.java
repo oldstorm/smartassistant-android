@@ -1,6 +1,7 @@
 package com.yctc.zhiting.activity.model;
 
 
+import com.app.main.framework.baseutil.LogUtil;
 import com.app.main.framework.httputil.HTTPCaller;
 import com.app.main.framework.httputil.NameValuePair;
 import com.app.main.framework.httputil.RequestDataCallback;

@@ -2,6 +2,7 @@ package com.yctc.zhiting.utils;
 
 import android.text.TextUtils;
 
+import com.app.main.framework.baseutil.SpConstant;
 import com.app.main.framework.baseutil.SpUtil;
 import com.app.main.framework.gsonutils.GsonConverter;
 import com.yctc.zhiting.config.Constant;
@@ -21,7 +22,9 @@ public class UserUtils {
     public static void saveUser(MemberDetailBean user) {
         if (user == null) {
             SpUtil.put(Constant.CLOUD_USER, "");
+            SpUtil.put(SpConstant.CLOUD_USER_ID, 0);
         } else {
+            SpUtil.put(SpConstant.CLOUD_USER_ID, user.getUser_id());
             SpUtil.put(Constant.CLOUD_USER, GsonConverter.getGson().toJson(user));
         }
     }

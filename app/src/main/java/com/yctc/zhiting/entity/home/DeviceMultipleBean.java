@@ -40,6 +40,7 @@ public class DeviceMultipleBean implements MultiItemEntity, Serializable {
     private boolean online;//是否离线
     private String identity;//设备标识
     private int instance_id;
+    private String control; // 本地加载相对路径
 
     public int getInstance_id() {
         return instance_id;
@@ -184,5 +185,13 @@ public class DeviceMultipleBean implements MultiItemEntity, Serializable {
 
     public void setSa_user_token(String sa_user_token) {
         this.sa_user_token = sa_user_token;
+    }
+
+    public String getControl() {
+        return control;
+    }
+
+    public void setControl(String control) {
+        this.control = control;
     }
 }

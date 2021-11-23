@@ -1,15 +1,12 @@
 package com.yctc.zhiting.activity.presenter;
 
-import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.BasePresenterImpl;
 import com.app.main.framework.httputil.RequestDataCallback;
 import com.yctc.zhiting.activity.contract.HomeCompanyContract;
 import com.yctc.zhiting.activity.model.HomeCompanyModel;
-import com.yctc.zhiting.entity.mine.HomeCompanyBean;
 import com.yctc.zhiting.entity.mine.HomeCompanyListBean;
+import com.yctc.zhiting.entity.mine.IdBean;
 import com.yctc.zhiting.entity.mine.PermissionBean;
-
-import java.util.List;
 
 
 /**
@@ -73,6 +70,31 @@ public class HomeCompanyPresenter extends BasePresenterImpl<HomeCompanyContract.
                 if (mView != null) {
                     mView.hideLoadingView();
                     mView.getFail(errorCode, errorMessage);
+                }
+            }
+        });
+    }
+
+    /**
+     * 添加云端家庭家庭
+     * @param body
+     */
+    @Override
+    public void addHomeCompany(String body) {
+        model.addHomeCompany(body, new RequestDataCallback<IdBean>() {
+            @Override
+            public void onSuccess(IdBean obj) {
+                super.onSuccess(obj);
+                if (mView!=null){
+                    mView.addHomeCompanySuccess(obj);
+                }
+            }
+
+            @Override
+            public void onFailed(int errorCode, String errorMessage) {
+                super.onFailed(errorCode, errorMessage);
+                if (mView!=null){
+                    mView.addHomeCompanyFail(errorCode, errorMessage);
                 }
             }
         });

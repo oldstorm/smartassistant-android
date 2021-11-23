@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
@@ -15,6 +16,8 @@
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission
         android:name="android.permission.READ_LOGS"
         tools:ignore="ProtectedPermissions" />
@@ -35,33 +38,105 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-        <activity android:name=".activity.TransferOwnerActivity"></activity>
-        <activity android:name=".activity.SceneDeviceTaskAttrActivity" />
-        <activity android:name=".activity.SceneListNewActivity" />
-        <activity android:name=".activity.SceneDeviceConditionAttrActivity" />
-        <activity android:name=".activity.SceneDetailDeviceActivity" />
+        <activity android:name=".activity.CreatePluginDetailActivity"></activity>
+        <activity android:name=".activity.SBSearchActivity" />
+        <activity android:name=".activity.AboutActivity" />
+        <activity android:name=".activity.SupportBrand2Activity" />
+        <activity
+            android:name=".activity.AgreementAndPolicyActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.NormalWebActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.ConfigNetworkWebActivity"
+            android:screenOrientation="portrait">
+
+            <!-- <intent-filter> -->
+            <!-- <action android:name="android.intent.action.MAIN" /> -->
+
+
+            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
+            <!-- </intent-filter> -->
+        </activity>
+        <activity
+            android:name=".activity.ScanDevice2Activity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.ApNetworkActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan|stateHidden" />
+        <activity
+            android:name=".activity.SetHomeKitActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.FindSAGuideActivity"
+            android:screenOrientation="portrait" />
+        <activity android:name=".activity.TransferOwnerActivity" />
+        <activity
+            android:name=".activity.SceneDeviceTaskAttrActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.SceneListNewActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.SceneDeviceConditionAttrActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.SceneDetailDeviceActivity"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".activity.SceneDetailActivity"
             android:launchMode="singleTask"
-            android:windowSoftInputMode="adjustPan"></activity>
-        <activity android:name=".activity.BindCloudActivity" />
-        <activity android:name=".activity.LoginActivity" />
-        <activity android:name=".activity.SetUPActivity" />
-        <activity android:name=".activity.SettingActivity" />
-        <activity android:name=".activity.EffectTimePeriodActivity" />
-        <activity android:name=".activity.LogActivity" />
-        <activity android:name=".activity.SceneListActivity" />
-        <activity android:name=".activity.TaskDeviceControlActivity" />
-        <activity android:name=".activity.SceneDeviceStatusControlActivity" />
-        <activity android:name=".activity.SceneDeviceActivity" />
-        <activity android:name=".activity.HowCreateSceneActivity" />
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name=".activity.BindCloudActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.LoginActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.SetUPActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.SettingActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.EffectTimePeriodActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.LogActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.SceneListActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.TaskDeviceControlActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.SceneDeviceStatusControlActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.SceneDeviceActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.HowCreateSceneActivity"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".activity.CreateSceneActivity"
             android:launchMode="singleTask"
+            android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustPan" />
-        <activity android:name=".activity.UpdateDeviceLocationActivity" />
-        <activity android:name=".activity.DeviceSettingActivity" />
-        <activity android:name=".activity.DeviceDetailActivity" /> <!-- 头条适配 -->
+        <activity
+            android:name=".activity.UpdateDeviceLocationActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.DeviceSettingActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.DeviceDetailActivity"
+            android:screenOrientation="portrait" /> <!-- 头条适配 -->
         <meta-data
             android:name="design_width_in_dp"
             android:value="375" />
@@ -69,7 +144,9 @@
             android:name="design_height_in_dp"
             android:value="667" />
 
-        <activity android:name=".activity.SplashActivity">
+        <activity
+            android:name=".activity.SplashActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -86,29 +163,73 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name=".activity.PluginDetailActivity" />
-        <activity android:name=".activity.BrandDetailActivity" />
-        <activity android:name=".activity.SupportBrandActivity" />
-        <activity android:name=".activity.DeviceConnectActivity" />
-        <activity android:name=".activity.ScanDeviceActivity" />
-        <activity android:name=".activity.MemberDetailActivity" />
-        <activity android:name=".activity.RADetailActivity" />
-        <activity android:name=".activity.RoomAreaActivity" />
+        <activity
+            android:name=".activity.PluginDetailActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.BrandDetailActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.SupportBrandActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.DeviceConnectActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.ScanDeviceActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.MemberDetailActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.RADetailActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.RoomAreaActivity"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".activity.MainActivity"
             android:launchMode="singleTask"
             android:screenOrientation="portrait" />
-        <activity android:name=".activity.AddHCActivity" />
-        <activity android:name=".activity.HomeCompanyActivity" />
-        <activity android:name=".activity.UserInfoActivity" />
-        <activity android:name=".activity.HCDetailActivity" />
-        <activity android:name=".activity.DevicesActivity" />
+        <activity
+            android:name=".activity.AddHCActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.HomeCompanyActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.UserInfoActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.HCDetailActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.DevicesActivity"
+            android:screenOrientation="portrait" />
         <activity
             android:name=".activity.SetDevicePositionActivity"
+            android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustNothing|stateHidden" /> <!-- <activity android:name=".activity.ScanActivity" /> -->
-        <activity android:name=".activity.CommonWebActivity" />
-        <activity android:name=".activity.ErrorActivity" />
-        <activity android:name=".activity.AuthorizeActivity" />
+        <activity
+            android:name=".activity.CommonWebActivity"
+            android:screenOrientation="portrait">
+
+            <!-- <intent-filter> -->
+            <!-- <action android:name="android.intent.action.MAIN" /> -->
+
+
+            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
+            <!-- </intent-filter> -->
+        </activity>
+        <activity
+            android:name=".activity.ErrorActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.AuthorizeActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.SoftwareUpgradeActivity"
+            android:screenOrientation="portrait" />
     </application>
 
 </manifest>

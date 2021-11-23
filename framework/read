@@ -1,9 +1,11 @@
+1、智汀架构、websocket模块、gomoblie集成对接、临时通道、线2线3数据同步
+2、udp发现SA、蓝牙、webSocket发现普通设备
+
 1、适配状态栏的高度，两个方法
 ScreenUtil.fitNotchScreen(getContext(),rootView);
-
-   <com.app.main.framework.widget.StatusBarView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+<com.app.main.framework.widget.StatusBarView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"/>
 
 2、TabLayout 属性
                         <android.support.design.widget.TabLayout
@@ -55,5 +57,6 @@ ScreenUtil.fitNotchScreen(getContext(),rootView);
 
             }
         });
+
 7、防止键盘将控件顶起
 android:windowSoftInputMode="adjustNothing|stateHidden"

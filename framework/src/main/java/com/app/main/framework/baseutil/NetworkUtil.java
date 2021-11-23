@@ -6,6 +6,9 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
+import java.io.IOException;
+import java.net.InetAddress;
+
 public class NetworkUtil {
     /**
      * 判断网络连接状态
@@ -73,4 +76,19 @@ public class NetworkUtil {
         }
         return false;
     }
+
+    /**
+     * 检查地址是否ping得通
+     * @param ip
+     * @return
+     */
+    public static boolean pingIPResult(String ip, int millisSecond){
+        try {
+            return InetAddress.getByName(ip).isReachable(millisSecond);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
 }

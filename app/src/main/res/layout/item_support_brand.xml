@@ -46,7 +46,8 @@
             android:ellipsize="end"
             android:text=""
             android:textSize="@dimen/textSize12"
-            android:textColor="@color/color_94A5BE"/>
+            android:textColor="@color/color_94A5BE"
+            android:visibility="gone"/>
     </LinearLayout>
 
 

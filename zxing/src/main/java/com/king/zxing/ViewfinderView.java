@@ -436,7 +436,7 @@ public class ViewfinderView extends View {
         //左上横
         canvas.drawRect(frame.left - offset, frame.top - offset, frame.left + cornerRectHeight, frame.top, paint);
         //左下横
-        canvas.drawRect(frame.left - offset, frame.bottom + offset, frame.left + cornerRectHeight, frame.bottom, paint);
+        canvas.drawRect(frame.left - offset, frame.bottom , frame.left + cornerRectHeight, frame.bottom+ offset, paint);
         //左下竖
         canvas.drawRect(frame.left - offset, frame.bottom - cornerRectHeight, frame.left, frame.bottom, paint);
         //右上竖

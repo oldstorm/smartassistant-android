@@ -248,13 +248,13 @@ public class SceneDeviceTaskAttrActivity extends MVPBaseActivity<SceneDeviceTask
             @Override
             public void onTodo(String operator, String operatorName, int val) {
                 tvNext.setEnabled(true);
-                sceneDeviceTaskAttrAdapter.getItem(pos).setVal(AttrUtil.getActualVal(selectedAttr.getMin(), selectedAttr.getMax(), val));
+                double min = selectedAttr!=null && selectedAttr.getMin() == null ? 0 : selectedAttr.getMin();
+                double max = selectedAttr!=null && selectedAttr.getMax() == null ? 100 : selectedAttr.getMax();
+                sceneDeviceTaskAttrAdapter.getItem(pos).setVal(AttrUtil.getActualVal(min, max, val));
                 sceneDeviceTaskAttrAdapter.getItem(pos).setVal_type(Constant.INT_STR);
                 sceneDeviceTaskAttrAdapter.notifyItemChanged(pos);
                 setNextStatus();
                 brightnessDialog.dismiss();
-
-
             }
         });
     }
@@ -268,7 +268,9 @@ public class SceneDeviceTaskAttrActivity extends MVPBaseActivity<SceneDeviceTask
             @Override
             public void onTodo(String operator, String operatorName, int val) {
                 tvNext.setEnabled(true);
-                sceneDeviceTaskAttrAdapter.getItem(pos).setVal(AttrUtil.getActualVal(selectedAttr.getMin(), selectedAttr.getMax(), val));
+                double min = selectedAttr!=null && selectedAttr.getMin() == null ? 0 : selectedAttr.getMin();
+                double max = selectedAttr!=null && selectedAttr.getMax() == null ? 100 : selectedAttr.getMax();
+                sceneDeviceTaskAttrAdapter.getItem(pos).setVal(AttrUtil.getActualVal(min, max, val));
                 sceneDeviceTaskAttrAdapter.getItem(pos).setVal_type(Constant.INT_STR);
                 sceneDeviceTaskAttrAdapter.notifyItemChanged(pos);
                 setNextStatus();
@@ -298,6 +300,15 @@ public class SceneDeviceTaskAttrActivity extends MVPBaseActivity<SceneDeviceTask
                 if (CollectionUtil.isNotEmpty(attrs)){
                     for (SceneConditionAttrEntity attr : attrs) {
                         attr.setVal(null);
+                        String attribute = attr.getAttribute();
+                        if (attribute!=null && (attribute.equals("color_temp") || attribute.equals("brightness"))){
+                            if (attr.getMin() == null){
+                                attr.setMin(0);
+                            }
+                            if (attr.getMax() == null){
+                                attr.setMax(100);
+                            }
+                        }
                     }
                     if (CollectionUtil.isNotEmpty(attrList)) {  // 如果是场景过来
                         for (SceneConditionAttrEntity attr : attrs) {

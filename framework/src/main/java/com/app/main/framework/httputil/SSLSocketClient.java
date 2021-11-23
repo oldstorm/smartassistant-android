@@ -1,4 +1,4 @@
-package com.yctc.zhiting.websocket;
+package com.app.main.framework.httputil;
 
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;

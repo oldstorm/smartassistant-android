@@ -123,15 +123,17 @@ public class SceneDetailDeviceActivity extends MVPBaseActivity<SceneDetailDevice
                 }
 
                 // 把对应设备装进房间
-                for (LocationBean locationBean : locations){
-                    List<DeviceMultipleBean> devices = new ArrayList<>();
-                    for (DeviceMultipleBean deviceMultipleBean : roomListBean.getDevices()){
-                        if (locationBean.getId() == deviceMultipleBean.getLocation_id()){
-                            devices.add(deviceMultipleBean);
+                if (CollectionUtil.isNotEmpty(locations)) {
+                    for (LocationBean locationBean : locations) {
+                        List<DeviceMultipleBean> devices = new ArrayList<>();
+                        for (DeviceMultipleBean deviceMultipleBean : roomListBean.getDevices()) {
+                            if (locationBean.getId() == deviceMultipleBean.getLocation_id()) {
+                                devices.add(deviceMultipleBean);
+                            }
                         }
-                    }
-                    if (CollectionUtil.isNotEmpty(devices)){
-                        data.add(new SceneDevicesBean(locationBean.getId(), locationBean.getName(), devices));
+                        if (CollectionUtil.isNotEmpty(devices)) {
+                            data.add(new SceneDevicesBean(locationBean.getId(), locationBean.getName(), devices));
+                        }
                     }
                 }
 

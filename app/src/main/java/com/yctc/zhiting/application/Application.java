@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.app.main.framework.baseutil.SpUtil;
 import com.app.main.framework.baseview.BaseApplication;
 import com.tencent.bugly.crashreport.CrashReport;
 import com.yctc.zhiting.BuildConfig;

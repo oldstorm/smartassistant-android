@@ -1,6 +1,7 @@
 package com.yctc.zhiting.config;
 
 import android.net.wifi.WifiInfo;
+import android.os.Environment;
 
 import com.yctc.zhiting.entity.mine.HomeCompanyBean;
 
@@ -8,26 +9,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 public class Constant {
-    public static final boolean ANTI_ALIAS = true;
-    public static final int DEFAULT_SIZE = 150;
-    public static final int DEFAULT_START_ANGLE = 270;
-    public static final int DEFAULT_SWEEP_ANGLE = 360;
-    public static final int DEFAULT_ANIM_TIME = 1000;
-    public static final int DEFAULT_MAX_VALUE = 100;
-    public static final int DEFAULT_VALUE = 50;
-    public static final int DEFAULT_HINT_SIZE = 15;
-    public static final int DEFAULT_UNIT_SIZE = 30;
-    public static final int DEFAULT_VALUE_SIZE = 15;
-    public static final int DEFAULT_ARC_WIDTH = 15;
-    public static final int DEFAULT_WAVE_HEIGHT = 40;
     public static int USER_ID = 1;//用户id
-    public static HomeCompanyBean CurrentHome = null;//当前家庭对象
-    public static WifiInfo wifiInfo = null;//无线网络对象
-
     public static String EQUAL = "=";
-    public static String LESS = "<";
-    public static String GREATER = ">";
-
     public static String SWITCH = "switch";
     public static String set_bright = "set_bright";
     public static String set_color_temp = "set_color_temp";
@@ -37,27 +20,49 @@ public class Constant {
     public static String POWER = "power";
     public static String color_temp = "color_temp";
     public static String brightness = "brightness";
-
     public static String START = "start";
     public static String SIZE = "size";
-
-    // WebSocket 操作插件
-    public static String PLUGIN = "plugin";
-    // WebSocket 安装插件
-    public static String INSTALL = "install";
-    // WebSocket 更新插件
-    public static String UPDATE = "update";
-    // WebSocket 删除插件
-    public static String REMOVE = "remove";
-
+    public static String PLUGIN = "plugin";// WebSocket 操作插件
+    public static String INSTALL = "install"; // WebSocket 安装插件
+    public static String UPDATE = "update";// WebSocket 更新插件
+    public static String REMOVE = "remove";// WebSocket 删除插件
     public static String CN_CODE = "86";
     public static String CLOUD_USER = "cloud_user";
-
+    public static String CLOUD_USER_ID = "cloud_user_id";
     public static String STR = "string";
     public static String INT_STR = "int";
 
     public static final String USER = "user";
     public static final String AREA = "area";
+    public static final String ONLY_SC = "&type=only_sc";//有这个标签的不要请求临时通道的接口
+    public static final String NO_AREA_ID = "&type=no_area_id";//去掉area_id
+
+    public static WifiInfo wifiInfo = null;//无线网络对象
+    public static HomeCompanyBean CurrentHome = null;//当前家庭对象
+    public static final String HTTPS = "https";
+    public static final String HTTP = "http";
+    public static final String HTTP_HEAD = HTTP+"://";
+    public static final String HTTPS_HEAD = HTTPS+"://";
+
+    public static final String HOMEKIT = "homekit";
+    public static final String PIN = "pin";
+
+    public static final String SMART_ASSISTANT = "smart_assistant";
+
+    public static final String PLUGIN_PATH =  Environment.getExternalStorageDirectory().getAbsolutePath()+ "/zhiting/plugins/";
+
+    public static final String FIND_DEVICE_URL = "255.255.255.255";
+    public static final int FIND_DEVICE_PORT = 54321;
+    public static final String CONFIG_DEVICE_TO_SERVER_ADDRESS = "sacloudgz.zhitingtech.com";
+    public static final String ZHITING_APP = "zhitingApp";
+    public static final String ZHITING_USER_AGENT = "zhitingua";
+
+    public static final String AGREED = "agreed"; // 同意用户协议和隐私政策
+
+    public static final String ABOUT_US_URL = "https://www.baidu.com";
+    public static final String AGREEMENT_URL = "https://scgz.zhitingtech.com/smartassitant/protocol/user";
+    public static final String POLICY_URL = "https://scgz.zhitingtech.com/smartassitant/protocol/privacy";
+    public static final String DOT_ZIP = ".zip";
 
     /**
      * 智能设备类型
@@ -90,35 +95,6 @@ public class Constant {
     }
 
     /**
-     * domain 类型
-     */
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface DomainType {
-        String TYPE_PLUGIN = "plugin"; //设备功能
-        String TYPE_YEELIGHT = "yeelight"; //设备信息
-    }
-
-    /**
-     * service 类型
-     */
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface ServiceType {
-        String TYPE_GET_ACTIONS = "get_actions";
-        String TYPE_SWITCH = "switch";
-        String TYPE_STATE = "state";
-    }
-
-    /**
-     * 指令类型
-     */
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface DirectType {
-        int TYPE_FUNCTION = 1; //设备功能
-        int TYPE_INFO = 2; //设备信息
-    }
-
-
-    /**
      * 属性
      */
     @Retention(RetentionPolicy.SOURCE)
@@ -127,17 +103,6 @@ public class Constant {
         String COLOR_TEMP = "color_temp"; //开关
         String BRIGHTNESS = "brightness"; //智能中心sa
     }
-
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface MessageType {
-        String DEVICE_INFO = "device_info"; //设备信息
-        String DEVICE_SWITCH = "device_switch"; //开关
-    }
-
-    public static String NETWORK_TYPE = "networkType";
-    public static String GET_USER_INFO = "getUserInfo";
-    public static String SET_TITLE = "setTitle";
-    public static String IS_PROFESSION = "isProfession";
 
     /**
      * 专业版js代码
