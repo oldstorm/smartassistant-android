@@ -23,6 +23,14 @@ public class SpUtil {
         sharedPreferences.edit().putInt(key, value).apply();
     }
 
+    public static void putLong(String key, long value){
+        sharedPreferences.edit().putLong(key, value).apply();
+    }
+
+    public static long getLong(String key){
+        return sharedPreferences.getLong(key, 0);
+    }
+
     public static int getInt(String key){
         return sharedPreferences.getInt(key, 0);
     }

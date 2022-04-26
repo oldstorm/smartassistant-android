@@ -125,7 +125,6 @@ public class WifiUtil {
         if (isConnectWifi()){
             name = getCurrentWifiInfo().getSSID();
             name = name.substring(1, name.length()-1);
-            System.out.println("WiFi名称："+name);
         }
         return name;
     }

@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="@dimen/dp_300"
+    android:layout_height="wrap_content"
+    android:background="@drawable/shape_white_c10"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/llTop"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingLeft="@dimen/dp_15"
+        android:paddingRight="@dimen/dp_15"
+        android:paddingBottom="@dimen/dp_20">
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/dp_20"
+            android:text="@string/common_tips"
+            android:textColor="@color/color_3F4663"
+            android:textSize="@dimen/textSize16"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvContent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_16"
+            android:gravity="left"
+            android:textColor="@color/color_3F4663"
+            android:textSize="@dimen/textSize14"
+            tools:text="@string/home_delete_local_sa" />
+
+        <LinearLayout
+            android:id="@+id/llNoLogin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_16"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <TextView
+                android:id="@+id/tvLoginTip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:gravity="left"
+                tools:text="@string/home_login_tip"
+                android:textColor="@color/color_3F4663"
+                android:textSize="@dimen/textSize14" />
+
+            <TextView
+                android:id="@+id/login"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="left"
+                android:paddingLeft="@dimen/dp_15"
+                android:paddingRight="@dimen/dp_15"
+                android:text="去登录"
+                android:textColor="@color/color_cc2da3f6"
+                android:textSize="@dimen/textSize14" />
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:id="@+id/llLogin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <TextView
+                android:id="@+id/tvCloudHomeDeleteTip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dp_16"
+                android:gravity="left"
+                android:text="@string/home_cloud_delete_tip"
+                android:textColor="@color/color_3F4663"
+                android:textSize="@dimen/textSize14" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dp_16"
+                android:gravity="left"
+                android:text="*信息同步时请保证智慧中心的网络状态正常，避免网络异常导致信息丢失"
+                android:textColor="#999999"
+                android:textSize="@dimen/textSize14" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/llCreateCloudHome"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_16"
+            android:gravity="left"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:id="@+id/ivDotCreateHomeOrCompany"
+                android:layout_width="@dimen/dp_19"
+                android:layout_height="@dimen/dp_19"
+                android:src="@drawable/selector_checkbox" />
+
+            <TextView
+                android:id="@+id/tvCreateCloud"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/dp_8"
+                android:gravity="left"
+                android:text="@string/home_create_cloud_home"
+                android:textColor="@color/color_FF0000"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/llCloudDisk"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_16"
+            android:gravity="left"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:id="@+id/ivDotDeleteCloud"
+                android:layout_width="@dimen/dp_19"
+                android:layout_height="@dimen/dp_19"
+                android:src="@drawable/selector_checkbox" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/dp_8"
+                android:gravity="left"
+                android:text="@string/home_delete_cloud_folder"
+                android:textColor="@color/color_FF0000"
+                android:textSize="@dimen/textSize14" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/viewLine"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:layout_weight="1"
+        android:background="@color/color_DDDDDD"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/llTop" />
+
+    <LinearLayout
+        android:id="@+id/llBottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/viewLine">
+
+        <TextView
+            android:id="@+id/tvCancel"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/dp_50"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/home_cancel"
+            android:textColor="@color/color_94A5BE"
+            android:textSize="@dimen/textSize14"
+            android:visibility="visible" />
+
+        <View
+            android:layout_width="0.5dp"
+            android:layout_height="match_parent"
+            android:background="@color/color_DDDDDD" />
+
+        <TextView
+            android:id="@+id/tvConfirm"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/common_confirm"
+            android:textColor="@color/color_2da3f6"
+            android:textSize="@dimen/textSize14"
+            android:visibility="visible" />
+
+    </LinearLayout>
+
+</LinearLayout>

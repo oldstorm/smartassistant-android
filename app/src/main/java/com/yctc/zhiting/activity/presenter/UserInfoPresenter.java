@@ -4,6 +4,7 @@ import com.app.main.framework.baseview.BasePresenterImpl;
 import com.app.main.framework.httputil.RequestDataCallback;
 import com.yctc.zhiting.activity.contract.UserInfoContract;
 import com.yctc.zhiting.activity.model.UserInfoModel;
+import com.yctc.zhiting.entity.mine.LoginBean;
 
 public class UserInfoPresenter extends BasePresenterImpl<UserInfoContract.View> implements UserInfoContract.Presenter {
 
@@ -19,6 +20,30 @@ public class UserInfoPresenter extends BasePresenterImpl<UserInfoContract.View> 
         model = null;
     }
 
+    /**
+     * 用户信息
+     * @param id
+     */
+    @Override
+    public void getUserInfo(int id) {
+        model.getUserInfo(id, new RequestDataCallback<LoginBean>() {
+            @Override
+            public void onSuccess(LoginBean obj) {
+                super.onSuccess(obj);
+                if (mView != null) {
+                    mView.getUserInfoSuccess(obj);
+                }
+            }
+
+            @Override
+            public void onFailed(int errorCode, String errorMessage) {
+                super.onFailed(errorCode, errorMessage);
+                if (mView != null) {
+                    mView.getUserInfoFail(errorCode, errorMessage);
+                }
+            }
+        });
+    }
 
     /**
      * 修改昵称

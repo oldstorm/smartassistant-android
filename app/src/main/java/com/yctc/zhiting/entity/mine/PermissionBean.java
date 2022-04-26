@@ -71,6 +71,22 @@ public class PermissionBean {
         private boolean sa_firmware_upgrade;//sa固件升级
         private boolean sa_software_upgrade;//sa软件升级
 
+        private boolean update_area_member_location; // 修改成员部门
+        private boolean add_department; // 添加部门
+        private boolean update_department_order; // 调整部门顺序
+        private boolean get_department; // 查看部门详情
+        private boolean add_department_user; // 添加成员
+        private boolean update_department; // 部门设置
+        private boolean update_area_company_name; // 修改公司名称权限
+
+        public boolean isUpdate_area_company_name() {
+            return update_area_company_name;
+        }
+
+        public void setUpdate_area_company_name(boolean update_area_company_name) {
+            this.update_area_company_name = update_area_company_name;
+        }
+
         public boolean isSa_firmware_upgrade() {
             return sa_firmware_upgrade;
         }
@@ -309,6 +325,54 @@ public class PermissionBean {
 
         public void setDelete_scene(boolean delete_scene) {
             this.delete_scene = delete_scene;
+        }
+
+        public boolean isUpdate_area_member_location() {
+            return update_area_member_location;
+        }
+
+        public void setUpdate_area_member_location(boolean update_area_member_location) {
+            this.update_area_member_location = update_area_member_location;
+        }
+
+        public boolean isAdd_department() {
+            return add_department;
+        }
+
+        public void setAdd_department(boolean add_department) {
+            this.add_department = add_department;
+        }
+
+        public boolean isUpdate_department_order() {
+            return update_department_order;
+        }
+
+        public void setUpdate_department_order(boolean update_department_order) {
+            this.update_department_order = update_department_order;
+        }
+
+        public boolean isGet_department() {
+            return get_department;
+        }
+
+        public void setGet_department(boolean get_department) {
+            this.get_department = get_department;
+        }
+
+        public boolean isAdd_department_user() {
+            return add_department_user;
+        }
+
+        public void setAdd_department_user(boolean add_department_user) {
+            this.add_department_user = add_department_user;
+        }
+
+        public boolean isUpdate_department() {
+            return update_department;
+        }
+
+        public void setUpdate_department(boolean update_department) {
+            this.update_department = update_department;
         }
     }
 }

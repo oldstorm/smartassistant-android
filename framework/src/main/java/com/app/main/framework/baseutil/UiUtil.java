@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.os.Environment;
 import android.os.Handler;
@@ -117,11 +118,30 @@ public class UiUtil {
     }
 
     /**
+     * dip转换px
+     */
+    public static int dip2px(float dip) {
+        final float scale = getContext().getResources().getDisplayMetrics().density;
+        return (int) (dip * scale + 0.5f);
+    }
+
+    /**
      * px转换dip
      */
     public static int px2dip(int px) {
         final float scale = getContext().getResources().getDisplayMetrics().density;
         return (int) (px / scale + 0.5f);
+    }
+
+    /**
+     * sp 转 px
+     *
+     * @param spValue sp 值
+     * @return px 值
+     */
+    public static int sp2px(final float spValue) {
+        final float fontScale = getContext().getResources().getDisplayMetrics().scaledDensity;
+        return (int) (spValue * fontScale + 0.5f);
     }
 
     /**
@@ -433,5 +453,20 @@ public class UiUtil {
         } catch (Exception e) {
             Log.i("error:", e+"");
         }
+    }
+
+
+    /**
+     * 改变颜色的透明度
+     *
+     * @param color
+     * @param alpha
+     * @return
+     */
+    public static int changeAlpha(int color, int alpha) {
+        int red = Color.red(color);
+        int green = Color.green(color);
+        int blue = Color.blue(color);
+        return Color.argb(alpha, red, green, blue);
     }
 }

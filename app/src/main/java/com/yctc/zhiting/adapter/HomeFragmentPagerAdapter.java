@@ -10,33 +10,19 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.app.main.framework.baseview.BaseFragment;
 import com.yctc.zhiting.entity.mine.LocationBean;
+import com.yctc.zhiting.fragment.HomeItemFragment2;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-/**
- * author : JIM
- * date : 2021/4/2814:26
- * desc :
- */
 public class HomeFragmentPagerAdapter extends FragmentPagerAdapter {
 
-    private List<BaseFragment> mFragments = new ArrayList<>();
+    private List<HomeItemFragment2> mFragments = new ArrayList<>();
     private List<LocationBean> mTitles = new ArrayList<>();
     private FragmentManager fm;
 
-//    public CommonFragmentPagerAdapter(FragmentManager fm, BaseFragment... fragments) {
-//        super(fm);
-//        mFragments.addAll(Arrays.asList(fragments));
-//    }
-//
-//    public CommonFragmentPagerAdapter(FragmentManager fm, Collection<BaseFragment> fragments) {
-//        super(fm);
-//        mFragments.addAll(fragments);
-//    }
-
-    public HomeFragmentPagerAdapter(FragmentManager fm, Collection<BaseFragment> fragments, List<LocationBean> titles) {
+    public HomeFragmentPagerAdapter(FragmentManager fm, Collection<HomeItemFragment2> fragments, List<LocationBean> titles) {
         super(fm);
         this.fm = fm;
         mTitles.clear();

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F6F8FD"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+   <LinearLayout
+       android:layout_width="match_parent"
+       android:layout_height="match_parent"
+       android:orientation="vertical">
+
+       <RelativeLayout
+           android:id="@+id/rlTitle"
+           android:layout_width="match_parent"
+           android:layout_height="@dimen/dp_44"
+           app:layout_constraintTop_toTopOf="parent"
+           app:layout_constraintLeft_toLeftOf="parent"
+           app:layout_constraintRight_toRightOf="parent"
+           android:background="@color/white">
+
+           <ImageView
+               android:id="@+id/ivBack"
+               android:layout_width="wrap_content"
+               android:layout_height="match_parent"
+               android:layout_centerVertical="true"
+               android:paddingStart="@dimen/dp_16"
+               android:paddingEnd="@dimen/dp_8"
+               android:src="@mipmap/m_back" />
+
+           <TextView
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:layout_centerInParent="true"
+               android:text="@string/home_setup_hint2"
+               android:textColor="@color/color_3F466"
+               android:textSize="@dimen/textSize18"
+               android:textStyle="bold" />
+
+           <TextView
+               android:id="@+id/tvSave"
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:layout_alignParentEnd="true"
+               android:text="@string/home_sort_save"
+               android:textColor="@color/color_3F466"
+               android:textSize="@dimen/textSize14"
+               android:textStyle="bold"
+               android:layout_centerVertical="true"
+               android:padding="@dimen/dp_10"
+               android:layout_marginEnd="@dimen/dp_6"/>
+       </RelativeLayout>
+
+       <androidx.recyclerview.widget.RecyclerView
+           android:id="@+id/rcDevices"
+           android:layout_width="match_parent"
+           android:layout_height="match_parent"
+           app:layout_constraintTop_toBottomOf="@+id/rlTitle" />
+
+   </LinearLayout>
+
+    <include
+        android:id="@+id/layout_null"
+        layout="@layout/layout_empty"
+        android:visibility="gone" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

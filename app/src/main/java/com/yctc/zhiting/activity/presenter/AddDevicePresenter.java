@@ -2,6 +2,7 @@ package com.yctc.zhiting.activity.presenter;
 
 
 import com.app.main.framework.baseview.BasePresenterImpl;
+import com.app.main.framework.httputil.NameValuePair;
 import com.app.main.framework.httputil.RequestDataCallback;
 import com.app.main.framework.httputil.comfig.HttpConfig;
 import com.yctc.zhiting.activity.contract.AddDeviceContract;
@@ -11,6 +12,8 @@ import com.yctc.zhiting.activity.model.AddHCModel;
 import com.yctc.zhiting.entity.home.DeviceTypeListBean;
 import com.yctc.zhiting.entity.mine.CheckBindSaBean;
 import com.yctc.zhiting.entity.scene.PluginDetailBean;
+
+import java.util.List;
 
 /**
  * 添加设备
@@ -98,6 +101,54 @@ public class AddDevicePresenter extends BasePresenterImpl<AddDeviceContract.View
                 super.onFailed(errorCode, errorMessage);
                 if (mView != null) {
                     mView.getPluginDetailFail(errorCode,errorMessage);
+                }
+            }
+        });
+    }
+
+    /**
+     * 一级分类
+     */
+    @Override
+    public void getDeviceFirstType() {
+        model.getDeviceFirstType(new RequestDataCallback<DeviceTypeListBean>() {
+            @Override
+            public void onSuccess(DeviceTypeListBean obj) {
+                super.onSuccess(obj);
+                if (mView != null) {
+                    mView.getDeviceFirstTypeSuccess(obj);
+                }
+            }
+
+            @Override
+            public void onFailed(int errorCode, String errorMessage) {
+                super.onFailed(errorCode, errorMessage);
+                if (mView != null) {
+                    mView.getDeviceFirstTypFail(errorCode, errorMessage);
+                }
+            }
+        });
+    }
+
+    /**
+     * 二级分类
+     */
+    @Override
+    public void getDeviceSecondType(List<NameValuePair> requestData) {
+        model.getDeviceSecondType(requestData, new RequestDataCallback<DeviceTypeListBean>() {
+            @Override
+            public void onSuccess(DeviceTypeListBean obj) {
+                super.onSuccess(obj);
+                if (mView != null) {
+                    mView.getDeviceSecondTypeSuccess(obj);
+                }
+            }
+
+            @Override
+            public void onFailed(int errorCode, String errorMessage) {
+                super.onFailed(errorCode, errorMessage);
+                if (mView != null) {
+                    mView.getDeviceSecondTypeFail(errorCode, errorMessage);
                 }
             }
         });

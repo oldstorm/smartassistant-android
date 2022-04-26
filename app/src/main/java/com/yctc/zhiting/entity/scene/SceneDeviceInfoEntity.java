@@ -6,6 +6,7 @@ public class SceneDeviceInfoEntity implements Serializable {
 
     private String name; // 设备名称
     private String location_name; // 设备所在房间/区域名称
+    private String department_name;
     private String logo_url; // 设备图片
     private int status; // 设备状态:1为正常;2为被删除;3为离线
 
@@ -32,6 +33,14 @@ public class SceneDeviceInfoEntity implements Serializable {
 
     public void setLocation_name(String location_name) {
         this.location_name = location_name;
+    }
+
+    public String getDepartment_name() {
+        return department_name;
+    }
+
+    public void setDepartment_name(String department_name) {
+        this.department_name = department_name;
     }
 
     public String getLogo_url() {

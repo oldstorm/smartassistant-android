@@ -20,6 +20,7 @@ import com.yctc.zhiting.activity.contract.SceneDevicesContract;
 import com.yctc.zhiting.activity.presenter.BrandDetailPresenter;
 import com.yctc.zhiting.activity.presenter.SceneDevicesPresenter;
 import com.yctc.zhiting.adapter.SceneDevicesAdapter;
+import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.entity.home.DeviceMultipleBean;
 import com.yctc.zhiting.entity.home.RoomDeviceListBean;
 import com.yctc.zhiting.entity.mine.LocationBean;
@@ -83,7 +84,7 @@ public class SceneDeviceActivity extends MVPBaseActivity<SceneDevicesContract.Vi
                 bundle.putString(IntentConstant.NAME, deviceMultipleBean.getName());
                 bundle.putString(IntentConstant.TYPE, deviceMultipleBean.getType());
                 bundle.putString(IntentConstant.LOGO_URL, deviceMultipleBean.getLogo_url());
-                bundle.putString(IntentConstant.RA_NAME, deviceMultipleBean.getLocation_name());
+                bundle.putString(IntentConstant.RA_NAME, Constant.AREA_TYPE == 2 ? deviceMultipleBean.getDepartment_name() : deviceMultipleBean.getLocation_name());
                 bundle.putInt(IntentConstant.FROM, 0);
                 if (from == 1) {
                     switchToActivity(SceneDeviceStatusControlActivity.class, bundle);
@@ -127,7 +128,8 @@ public class SceneDeviceActivity extends MVPBaseActivity<SceneDevicesContract.Vi
                 List<DeviceMultipleBean> excludeRoom = new ArrayList<>();
                 // 先把没有归属房间装进去
                 for (DeviceMultipleBean dmb : roomListBean.getDevices()){
-                    if (dmb.getLocation_id() == 0){
+                    int locationId = Constant.AREA_TYPE == 2 ? dmb.getDepartment_id() : dmb.getLocation_id();
+                    if (locationId == 0){
                         excludeRoom.add(dmb);
                     }
                 }
@@ -139,7 +141,8 @@ public class SceneDeviceActivity extends MVPBaseActivity<SceneDevicesContract.Vi
                 for (LocationBean locationBean : locations){
                     List<DeviceMultipleBean> devices = new ArrayList<>();
                     for (DeviceMultipleBean deviceMultipleBean : roomListBean.getDevices()){
-                        if (locationBean.getId() == deviceMultipleBean.getLocation_id()){
+                        int locationId = Constant.AREA_TYPE == 2 ? deviceMultipleBean.getDepartment_id() : deviceMultipleBean.getLocation_id();
+                        if (locationBean.getId() == locationId){
                             devices.add(deviceMultipleBean);
                         }
                     }

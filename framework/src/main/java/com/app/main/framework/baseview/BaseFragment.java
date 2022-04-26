@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.ActivityOptions;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,6 +25,7 @@ import com.app.main.framework.baseutil.LibLoader;
 import com.app.main.framework.baseutil.LogUtil;
 import com.app.main.framework.baseutil.NetworkUtil;
 import com.app.main.framework.baseutil.UiUtil;
+import com.app.main.framework.dialog.LoadingDialog;
 import com.app.main.framework.disklrucache.DiskLruCacheHelper;
 import com.app.main.framework.entity.AppEventEntity;
 import com.app.main.framework.httputil.NameValuePair;
@@ -40,8 +42,10 @@ import java.util.List;
 import java.util.Objects;
 
 import butterknife.ButterKnife;
+import pub.devrel.easypermissions.AfterPermissionGranted;
+import pub.devrel.easypermissions.EasyPermissions;
 
-public abstract class BaseFragment extends Fragment implements BaseView {
+public abstract class BaseFragment extends BasePermissionsFragment implements BaseView {
 
     public String TAG = "当前组件=========" + getClass().getSimpleName() + "=======";
     public String TAG_NAME = getClass().getSimpleName() + "=======";
@@ -54,6 +58,8 @@ public abstract class BaseFragment extends Fragment implements BaseView {
     public List<NameValuePair> requestData = new ArrayList<>();
     public ReplaceViewHelper helper = new ReplaceViewHelper(LibLoader.getCurrentActivity());
     public DiskLruCacheHelper cacheHelper;//数据的缓存
+    public static Runnable mRunnable;
+    protected LoadingDialog loadingDialogInAct;
 
     @Nullable
     @Override
@@ -221,12 +227,53 @@ public abstract class BaseFragment extends Fragment implements BaseView {
         }
     }
 
+    /**
+     * 加载弹窗
+     */
+    public void showLoadingDialogInAct() {
+        if (loadingDialogInAct == null) {
+            loadingDialogInAct = new LoadingDialog(getContext());
+            loadingDialogInAct.setOnShowListener(dialog -> loadingDialogInAct.reset());
+
+            loadingDialogInAct.setOnDismissListener(dialog -> loadingDialogInAct.stop());
+        }
+        loadingDialogInAct.show();
+    }
+
+    public void dismissLoadingDialogInAct() {
+        if (loadingDialogInAct != null && loadingDialogInAct.isShowing()) {
+            loadingDialogInAct.dismiss();
+        }
+    }
+
+    /**
+     * 根据百分比改变颜色透明度
+     */
+    public int changeAlpha(int color, float fraction) {
+        int red = Color.red(color);
+        int green = Color.green(color);
+        int blue = Color.blue(color);
+        int alpha = (int) (Color.alpha(color) * fraction);
+        return Color.argb(alpha, red, green, blue);
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
         hideLoadingView();
         if (bindEventBus()) {//注册EventBus
             EventBus.getDefault().unregister(this);
+        }
+        if (mRunnable != null) {
+            mRunnable = null;
+        }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (mRunnable != null) {
+            mRunnable = null;
         }
     }
 
@@ -420,30 +467,30 @@ public abstract class BaseFragment extends Fragment implements BaseView {
         switchToActivityWithTextShareAnim(clazz, null, shareView, UiUtil.getString(R.string.shareElement_img));
     }
 
-    public void switchToActivityForResultShareAnim(Class<?> clazz, Bundle bundle, View shareView, String shareElement,int requestCode) {
+    public void switchToActivityForResultShareAnim(Class<?> clazz, Bundle bundle, View shareView, String shareElement, int requestCode) {
         Intent intent = new Intent(getActivity(), clazz);
-        if (bundle != null){
+        if (bundle != null) {
             intent.putExtras(bundle);
         }
         intent.putExtra(SHARE_ANIM_KEY, true);
         ActivityOptionsCompat options = ActivityOptionsCompat.makeSceneTransitionAnimation(getActivity(), shareView, shareElement);
-        startActivityForResult(intent, requestCode,options.toBundle());
+        startActivityForResult(intent, requestCode, options.toBundle());
     }
 
-    public void switchToActivityResultTextShareAnim(Class<?> clazz, Bundle bundle, View shareView,int requestCode) {
-        switchToActivityForResultShareAnim(clazz, bundle, shareView, UiUtil.getString(R.string.shareElement_txt),requestCode);
+    public void switchToActivityResultTextShareAnim(Class<?> clazz, Bundle bundle, View shareView, int requestCode) {
+        switchToActivityForResultShareAnim(clazz, bundle, shareView, UiUtil.getString(R.string.shareElement_txt), requestCode);
     }
 
-    public void switchToActivityResultTextShareAnim(Class<?> clazz, View shareView,int requestCode) {
-        switchToActivityForResultShareAnim(clazz, null, shareView, UiUtil.getString(R.string.shareElement_txt),requestCode);
+    public void switchToActivityResultTextShareAnim(Class<?> clazz, View shareView, int requestCode) {
+        switchToActivityForResultShareAnim(clazz, null, shareView, UiUtil.getString(R.string.shareElement_txt), requestCode);
     }
 
-    public void switchToActivityResultImageShareAnim(Class<?> clazz, Bundle bundle, View shareView,int requestCode) {
-        switchToActivityForResultShareAnim(clazz, bundle, shareView, UiUtil.getString(R.string.shareElement_img),requestCode);
+    public void switchToActivityResultImageShareAnim(Class<?> clazz, Bundle bundle, View shareView, int requestCode) {
+        switchToActivityForResultShareAnim(clazz, bundle, shareView, UiUtil.getString(R.string.shareElement_img), requestCode);
     }
 
-    public void switchToActivityResultImageShareAnim(Class<?> clazz, View shareView,int requestCode) {
-        switchToActivityForResultShareAnim(clazz, null, shareView, UiUtil.getString(R.string.shareElement_img),requestCode);
+    public void switchToActivityResultImageShareAnim(Class<?> clazz, View shareView, int requestCode) {
+        switchToActivityForResultShareAnim(clazz, null, shareView, UiUtil.getString(R.string.shareElement_img), requestCode);
     }
     //---------------------------------空白页----------------------------------------------
 

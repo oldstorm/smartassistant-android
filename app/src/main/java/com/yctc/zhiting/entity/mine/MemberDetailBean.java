@@ -25,8 +25,11 @@ public class MemberDetailBean {
     private boolean is_set_password;
     private boolean is_creator;
     private boolean is_self;
-    private boolean is_owner; // 是否是拥有者
+    private boolean is_owner; //是否是SA拥有者
+    private String avatar_url;
     private List<RoleInfosBean> role_infos;
+    private List<LocationBean> department_infos;
+    private AreaEntity area;
 
     public int getUser_id() {
         return user_id;
@@ -100,6 +103,14 @@ public class MemberDetailBean {
         this.is_owner = is_owner;
     }
 
+    public String getAvatar_url() {
+        return avatar_url;
+    }
+
+    public void setAvatar_url(String avatar_url) {
+        this.avatar_url = avatar_url;
+    }
+
     public List<RoleInfosBean> getRole_infos() {
         return role_infos;
     }
@@ -107,6 +118,23 @@ public class MemberDetailBean {
     public void setRole_infos(List<RoleInfosBean> role_infos) {
         this.role_infos = role_infos;
     }
+
+    public List<LocationBean> getDepartment_infos() {
+        return department_infos;
+    }
+
+    public void setDepartment_infos(List<LocationBean> department_infos) {
+        this.department_infos = department_infos;
+    }
+
+    public AreaEntity getArea() {
+        return area;
+    }
+
+    public void setArea(AreaEntity area) {
+        this.area = area;
+    }
+
 
     public static class RoleInfosBean {
         /**
@@ -139,6 +167,45 @@ public class MemberDetailBean {
 
         public void setName(String name) {
             this.name = name;
+        }
+    }
+
+    public static class AreaEntity {
+        private String id;
+        private String name;
+        private int mode;
+        private List<DepartmentInfoBean> departments;
+
+        public String getId() {
+            return id;
+        }
+
+        public void setId(String id) {
+            this.id = id;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public int getMode() {
+            return mode;
+        }
+
+        public void setMode(int mode) {
+            this.mode = mode;
+        }
+
+        public List<DepartmentInfoBean> getDepartments() {
+            return departments;
+        }
+
+        public void setDepartments(List<DepartmentInfoBean> departments) {
+            this.departments = departments;
         }
     }
 }

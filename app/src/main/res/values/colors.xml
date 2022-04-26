@@ -55,10 +55,29 @@
     <color name="color_07B5A3">#07B5A3</color>
     <color name="color_1A07B5A3">#1A07B5A3</color>
     <color name="color_989EA6">#989EA6</color>
-
+    <color name="color_1A2DA3F6">#1A2DA3F6</color>
+    <color name="color_0d000000">#0d000000</color>
+    <color name="color_ff7f7f">#FF7F7F</color>
     <color name="green">#00FF00</color>
     <color name="blue">#EE9A00</color>
     <color name="red">#EE0000</color>
+    <color name="color_26151515">#26151515</color>
+    <color name="color_3699FF">#3699FF</color>
+    <color name="color_333699FF">#333699FF</color>
+    <color name="color_1aFF0000">#1aFF0000</color>
+    <color name="color_1a000000">#1a000000</color>
+    <color name="color_803699FF">#803699FF</color>
+    <color name="color_8094a5be">#8094A5BE</color>
+    <color name="color_0BDB99">#0BDB99</color>
+    <color name="color_330BDB99">#330BDB99</color>
+    <color name="color_FF5161">#FF5161</color>
+    <color name="color_1A8CF7">#1A8CF7</color>
+    <color name="color_47ADFF">#47ADFF</color>
+    <color name="color_89C3FF">#89C3FF</color>
+    <color name="color_1EE8D1">#1EE8D1</color>
+    <color name="color_F5F5F5">#F5F5F5</color>
+    <color name="color_4BB5FF">#4BB5FF</color>
+    <color name="color_428CFB">#428CFB</color>
 
     <integer-array name="gradient_arc_color">
         <item>@color/green</item>

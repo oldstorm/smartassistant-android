@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:paddingBottom="@dimen/dp_10"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <TextView
+        android:id="@+id/tvName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:paddingLeft="@dimen/dp_16"
+        android:paddingRight="@dimen/dp_16"
+        android:paddingTop="@dimen/dp_16"
+        android:paddingBottom="@dimen/dp_6"
+        android:text="手动"
+        android:textColor="@color/color_3f4663_94a5be_selected"
+        android:textSize="@dimen/textSize16"
+        android:textStyle="bold" />
+    <View
+        android:id="@+id/viewLine"
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="@dimen/dp_3"
+        android:layout_marginLeft="@dimen/dp_21"
+        android:layout_marginRight="@dimen/dp_21"
+        app:layout_constraintTop_toBottomOf="@+id/tvName"
+        app:layout_constraintLeft_toLeftOf="@+id/tvName"
+        app:layout_constraintRight_toRightOf="@+id/tvName"
+        android:background="@drawable/shape_2da3f6_c2" />
+</androidx.constraintlayout.widget.ConstraintLayout>

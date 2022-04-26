@@ -135,8 +135,6 @@ public class UDPSocket {
 
             //回调接收到的 json 信息
             if(receiveCallback!=null){
-                System.out.println("响应地址："+receivePacket.getAddress().getHostAddress());
-                System.out.println("响应长度："+receivePacket.getLength());
                 receiveCallback.onReceiveByteData(receivePacket.getAddress().getHostAddress(), receivePacket.getPort(), receivePacket.getData(), receivePacket.getLength());
                 receiveCallback.onReceive(strReceive);
             }
@@ -167,18 +165,24 @@ public class UDPSocket {
         });
     }
 
-    public void stopUDPSocket() {
+    public synchronized void stopUDPSocket() {
         isThreadRunning = false;
         receivePacket = null;
         if (clientThread != null) {
             clientThread.interrupt();
             clientThread = null;
         }
-        if (client != null && !client.isClosed()) {
-            client.close();
-            client.disconnect();
-            client = null;
+        if (client != null ) {
+            if (!client.isClosed()) {
+                client.close();
+                client.disconnect();
+                client = null;
+            }
         }
+    }
+
+    public boolean isRunning(){
+        return isThreadRunning;
     }
 
     public interface OnReceiveCallback{

@@ -53,6 +53,13 @@ public class UserUtils {
         return "";
     }
 
+    public static String getCloudHeadImage() {
+        MemberDetailBean user = getUser();
+        if (user != null)
+            return user.getAvatar_url();
+        return "";
+    }
+
     /**
      * 更新名字
      *
@@ -62,6 +69,14 @@ public class UserUtils {
         MemberDetailBean user = getUser();
         if (user != null) {
             user.setNickname(name);
+            SpUtil.put(Constant.CLOUD_USER, GsonConverter.getGson().toJson(user));
+        }
+    }
+
+    public static void setCloudUserHeadImg(String headImg) {
+        MemberDetailBean user = getUser();
+        if (user != null) {
+            user.setAvatar_url(headImg);
             SpUtil.put(Constant.CLOUD_USER, GsonConverter.getGson().toJson(user));
         }
     }

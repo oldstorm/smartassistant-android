@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.app.main.framework.baseutil.UiUtil;
+import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.dialog.CommonBaseDialog;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.yctc.zhiting.R;
@@ -37,11 +38,19 @@ public class HomeSelectDialog extends CommonBaseDialog {
 
     private List<HomeCompanyBean> data;
 
+    private boolean needCheckBind;
+    private boolean canCancel;
+
     public HomeSelectDialog() {
     }
 
     public HomeSelectDialog(List<HomeCompanyBean> data) {
         this.data = data;
+    }
+
+    public HomeSelectDialog(List<HomeCompanyBean> data, boolean needCheckBind) {
+        this.data = data;
+        this.needCheckBind = needCheckBind;
     }
 
     @Override
@@ -66,11 +75,12 @@ public class HomeSelectDialog extends CommonBaseDialog {
 
     @Override
     protected void initArgs(Bundle arguments) {
-
+        canCancel = arguments.getBoolean("canCancel");
     }
 
     @Override
     protected void initView(View view) {
+        setCancelable(canCancel);
         tvTitle.setText(getContext().getResources().getString(R.string.home_switch));
         tvTip.setVisibility(View.GONE);
         tvTodo.setVisibility(View.GONE);
@@ -81,13 +91,20 @@ public class HomeSelectDialog extends CommonBaseDialog {
         homeSelectAdapter.setNewData(data);
 
         homeSelectAdapter.setOnItemClickListener((adapter, view1, position) -> {
-
-            homeSelectAdapter.getItem(position).setSelected(true);
+            HomeCompanyBean homeCompanyBean = homeSelectAdapter.getItem(position);
+            if (needCheckBind){
+                if (!homeCompanyBean.isIs_bind_sa()){
+                    ToastUtil.show(UiUtil.getString(R.string.family_without_intelligent_center));
+                    return;
+                }
+            }
             if (clickItemListener!=null){
                 clickItemListener.onItem(homeSelectAdapter.getItem(position));
                 for (int i=0; i<homeSelectAdapter.getData().size(); i++){
                     homeSelectAdapter.getData().get(i).setSelected(false);
                 }
+                homeSelectAdapter.getItem(position).setSelected(true);
+                homeSelectAdapter.notifyDataSetChanged();
             }
         });
     }

@@ -6,6 +6,7 @@ import com.app.main.framework.httputil.RequestDataCallback;
 import com.yctc.zhiting.activity.contract.BindCloudContract;
 import com.yctc.zhiting.activity.model.BindCloudModel;
 import com.yctc.zhiting.entity.mine.CaptchaBean;
+import com.yctc.zhiting.entity.mine.LoginBean;
 import com.yctc.zhiting.entity.mine.MemberDetailBean;
 
 import java.util.List;
@@ -64,9 +65,9 @@ public class BindCloudPresenter extends BasePresenterImpl<BindCloudContract.View
      */
     @Override
     public void register(String body) {
-        model.register(body, new RequestDataCallback<MemberDetailBean>() {
+        model.register(body, new RequestDataCallback<LoginBean>() {
             @Override
-            public void onSuccess(MemberDetailBean obj) {
+            public void onSuccess(LoginBean obj) {
                 super.onSuccess(obj);
                 if (mView!=null){
                     mView.registerSuccess(obj);

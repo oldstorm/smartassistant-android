@@ -1,5 +1,7 @@
 package com.yctc.zhiting.utils;
 
+import com.app.main.framework.baseutil.LogUtil;
+
 public class AttrUtil {
 
     /**

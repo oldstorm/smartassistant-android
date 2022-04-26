@@ -20,7 +20,9 @@ import com.yctc.zhiting.entity.scene.SceneBean;
 import com.yctc.zhiting.entity.scene.SceneItemBean;
 import com.yctc.zhiting.utils.SpacesItemDecoration;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * 场景
@@ -29,6 +31,7 @@ public class SceneAdapter extends BaseQuickAdapter<SceneBean, BaseViewHolder> {
 
     private int type;
     private boolean connected;
+    private boolean isSorting;
 
     public SceneAdapter(int type) {
         super(R.layout.item_scene);
@@ -40,6 +43,15 @@ public class SceneAdapter extends BaseQuickAdapter<SceneBean, BaseViewHolder> {
         notifyDataSetChanged();
     }
 
+    /**
+     * 排序
+     * @param isSorting
+     */
+    public void setSorting(boolean isSorting) {
+        this.isSorting = isSorting;
+        notifyDataSetChanged();
+    }
+
     @Override
     protected void convert(BaseViewHolder helper, SceneBean item) {
         helper.addOnClickListener(R.id.tvPerform);
@@ -48,6 +60,7 @@ public class SceneAdapter extends BaseQuickAdapter<SceneBean, BaseViewHolder> {
         ImageView ivType = helper.getView(R.id.ivType);
         ImageView ivLink = helper.getView(R.id.ivLink);
         ImageView ivSwitch = helper.getView(R.id.ivSwitch);
+        ImageView ivSort = helper.getView(R.id.ivSort);
         RecyclerView rvDevice = helper.getView(R.id.rvDevice);
         rvDevice.setOnTouchListener((v, event) -> helper.getView(R.id.clParent).onTouchEvent(event));
         rvDevice.setLayoutManager(new GridLayoutManager(mContext, type == 1 ? 5 : 7));
@@ -88,9 +101,9 @@ public class SceneAdapter extends BaseQuickAdapter<SceneBean, BaseViewHolder> {
         LinearLayout llSwitch = helper.getView(R.id.llSwitch);
         ProgressBar rbSwitch = helper.getView(R.id.rbSwitch);
 
-        Switch sw = helper.getView(R.id.sw);
         tvName.setText(item.getName());
-        llPerform.setVisibility(type == 0 ? View.VISIBLE : View.GONE);
+
+        llPerform.setVisibility(!isSorting && type == 0 ? View.VISIBLE : View.GONE);
         tvPerform.setVisibility(type == 0 && !item.isPerforming() ? View.VISIBLE : View.GONE);
         rbPerform.setVisibility(type == 0 && item.isPerforming() ? View.VISIBLE : View.GONE);
 
@@ -100,7 +113,6 @@ public class SceneAdapter extends BaseQuickAdapter<SceneBean, BaseViewHolder> {
         tvPerform.setTextColor((connected && item.isControl_permission()) ? UiUtil.getColor(R.color.color_2da3f6) : UiUtil.getColor(R.color.white));
 
         // 开关按钮
-        llSwitch.setVisibility(type == 1  ? View.VISIBLE : View.GONE);
         llSwitch.setEnabled(item.isControl_permission() && connected);
         rbSwitch.setVisibility(item.isPerforming() ? View.VISIBLE : View.GONE);
         llSwitch.setGravity(item.isIs_on() ? Gravity.RIGHT|Gravity.CENTER_VERTICAL : Gravity.LEFT|Gravity.CENTER_VERTICAL);
@@ -108,32 +120,30 @@ public class SceneAdapter extends BaseQuickAdapter<SceneBean, BaseViewHolder> {
 
         // 自动执行
         if (type == 1) {
-            if (item.isControl_permission() && connected) {  // 有权限且已连接sa
-                llSwitch.setVisibility(View.VISIBLE);
+            if (isSorting) {
+                llSwitch.setVisibility(View.GONE);
                 ivSwitch.setVisibility(View.GONE);
             } else {
-                llSwitch.setVisibility(View.GONE);
-                ivSwitch.setEnabled(connected);
-                ivSwitch.setVisibility(View.VISIBLE);
-                ivSwitch.setImageResource(item.isIs_on() ? R.drawable.icon_on_disable : R.drawable.icon_off_disable);
+                if (item.isControl_permission() && connected) {  // 有权限且已连接sa
+                    llSwitch.setVisibility(View.VISIBLE);
+                    ivSwitch.setVisibility(View.GONE);
+                } else {
+                    llSwitch.setVisibility(View.GONE);
+                    ivSwitch.setEnabled(connected);
+                    ivSwitch.setVisibility(View.VISIBLE);
+                    ivSwitch.setImageResource(item.isIs_on() ? R.drawable.icon_on_disable : R.drawable.icon_off_disable);
+                }
             }
         }
+        ivSort.setVisibility(isSorting ? View.VISIBLE : View.GONE);
         sceneItemAdapter.setNewData(item.getItems());
-
-//        sw.setOnCheckedChangeListener((buttonView, isChecked) -> {
-//            if (sceneSwitchListener!=null){
-//                sceneSwitchListener.onChangeListener(item.getId(), isChecked);
-//            }
-//        });
     }
-//
-//    private OnSceneSwitchListener sceneSwitchListener;
-//
-//    public void setSceneSwitchListener(OnSceneSwitchListener sceneSwitchListener) {
-//        this.sceneSwitchListener = sceneSwitchListener;
-//    }
-//
-//    public interface OnSceneSwitchListener{
-//        void onChangeListener(int id, boolean execute);
-//    }
+
+    public List<Integer> getIdList() {
+        List<Integer> idList = new ArrayList<>();
+        for (SceneBean sceneBean : getData()) {
+            idList.add(sceneBean.getId());
+        }
+        return idList;
+    }
 }

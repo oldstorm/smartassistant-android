@@ -1,5 +1,6 @@
 package com.yctc.zhiting.fragment.presenter;
 
+import com.app.main.framework.baseutil.LogUtil;
 import com.app.main.framework.baseview.BasePresenterImpl;
 import com.app.main.framework.httputil.NameValuePair;
 import com.app.main.framework.httputil.RequestDataCallback;
@@ -60,14 +61,14 @@ public class SceneFragmentPresenter extends BasePresenterImpl<SceneFragmentContr
      * @param execute
      */
     @Override
-    public void perform(int id, boolean execute) {
+    public void perform(int id, int position, boolean execute) {
         String body = "{\"is_execute\":"+ execute+"}";
         model.perform(id, body, new RequestDataCallback<Object>() {
             @Override
             public void onSuccess(Object obj) {
                 super.onSuccess(obj);
                 if (mView!=null){
-                    mView.performSuccess();
+                    mView.performSuccess(position);
                 }
             }
 
@@ -75,7 +76,7 @@ public class SceneFragmentPresenter extends BasePresenterImpl<SceneFragmentContr
             public void onFailed(int errorCode, String errorMessage) {
                 super.onFailed(errorCode, errorMessage);
                 if (mView!=null){
-                    mView.performFail(errorCode, errorMessage);
+                    mView.performFail(errorCode, position, errorMessage);
                 }
             }
         });

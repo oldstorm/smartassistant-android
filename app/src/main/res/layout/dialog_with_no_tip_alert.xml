@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@drawable/shape_white_c10">
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:paddingTop="@dimen/dp_20"
+        android:paddingBottom="@dimen/dp_12"
+        android:textColor="@color/color_3F4663"
+        android:textSize="@dimen/textSize14"
+        android:textStyle="bold"
+        android:text="@string/common_tips" />
+
+    <TextView
+        android:id="@+id/tvTip"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/tvTitle"
+        android:gravity="left"
+        android:paddingLeft="@dimen/dp_23"
+        android:paddingRight="@dimen/dp_10"
+        android:textColor="@color/color_3F4663"
+        android:textSize="@dimen/textSize12"
+        tools:text="退出后此密码不可查询，请确保已分享此密码。" />
+
+    <TextView
+        android:id="@+id/tvNotTip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/tvTip"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_marginLeft="@dimen/dp_23"
+        android:layout_marginTop="@dimen/dp_13"
+        android:drawableLeft="@drawable/selector_add_square"
+        android:drawablePadding="@dimen/dp_8"
+        android:text="@string/not_tip_again"
+        android:textColor="@color/color_3f4663"
+        android:textSize="@dimen/textSize12"
+        android:textStyle="bold" />
+    <View
+        android:id="@+id/viewLine"
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="0.5dp"
+        android:background="@color/color_DDDDDD"
+        app:layout_constraintTop_toBottomOf="@+id/tvNotTip"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginTop="@dimen/dp_25"/>
+
+    <TextView
+        android:id="@+id/tvCancel"
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/viewLine"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintRight_toLeftOf="@+id/viewVerLine"
+        android:paddingTop="@dimen/dp_18"
+        android:paddingBottom="@dimen/dp_18"
+        android:gravity="center"
+        android:text="@string/cancel"
+        android:textColor="@color/color_94A5BE"
+        android:textSize="@dimen/textSize14"
+        android:textStyle="bold" />
+    <View
+        android:id="@+id/viewVerLine"
+        android:layout_width="0.5dp"
+        android:layout_height="@dimen/dp_0"
+        app:layout_constraintTop_toTopOf="@+id/tvCancel"
+        app:layout_constraintBottom_toBottomOf="@+id/tvCancel"
+        app:layout_constraintLeft_toRightOf="@+id/tvCancel"
+        app:layout_constraintRight_toLeftOf="@+id/tvConfirm"
+        android:background="@color/color_DDDDDD"/>
+    <TextView
+        android:id="@+id/tvConfirm"
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/viewLine"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toRightOf="@+id/viewVerLine"
+        app:layout_constraintHorizontal_weight="1"
+        android:paddingTop="@dimen/dp_18"
+        android:paddingBottom="@dimen/dp_18"
+        android:gravity="center"
+        android:text="@string/confirm"
+        android:textColor="@color/color_2da3f6"
+        android:textSize="@dimen/textSize14"
+        android:textStyle="bold" />
+</androidx.constraintlayout.widget.ConstraintLayout>

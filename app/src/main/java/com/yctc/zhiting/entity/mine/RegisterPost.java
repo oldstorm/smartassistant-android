@@ -1,7 +1,5 @@
 package com.yctc.zhiting.entity.mine;
 
-import com.app.main.framework.entity.BaseEntity;
-
 public class RegisterPost{
 
     private String country_code;
@@ -9,6 +7,15 @@ public class RegisterPost{
     private String password;
     private String captcha;
     private String captcha_id;
+    private int login_type;
+
+    public int getLogin_type() {
+        return login_type;
+    }
+
+    public void setLogin_type(int login_type) {
+        this.login_type = login_type;
+    }
 
     public RegisterPost(String phone, String password) {
         this.phone = phone;

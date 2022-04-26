@@ -17,6 +17,9 @@ public class LocationBean implements Serializable {
     private int locationId;
     private boolean select;//是否选中
 
+    private int user_count; // 人员数量(公司部门才有)
+    private boolean is_manger; // (公司部门才有)
+
     public boolean isCheck() {
         return select;
     }
@@ -26,6 +29,10 @@ public class LocationBean implements Serializable {
     }
 
     public LocationBean() {
+    }
+
+    public LocationBean(String name) {
+        this.name = name;
     }
 
     public LocationBean(int id, String name) {
@@ -85,5 +92,21 @@ public class LocationBean implements Serializable {
 
     public void setLocationId(int locationId) {
         this.locationId = locationId;
+    }
+
+    public int getUser_count() {
+        return user_count;
+    }
+
+    public void setUser_count(int user_count) {
+        this.user_count = user_count;
+    }
+
+    public boolean isIs_manger() {
+        return is_manger;
+    }
+
+    public void setIs_manger(boolean is_manger) {
+        this.is_manger = is_manger;
     }
 }

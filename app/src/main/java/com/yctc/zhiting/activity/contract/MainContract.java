@@ -11,10 +11,9 @@ public interface MainContract {
     }
 
     interface View extends BaseView {
-        void postOrderCheckSuccess(HttpResult msg);
     }
 
     interface Presenter extends BasePresenter<View> {
-        void postOrderCheck(AddRoomRequest request);
+
     }
 }

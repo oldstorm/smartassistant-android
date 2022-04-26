@@ -14,6 +14,7 @@ import android.view.animation.LinearInterpolator;
 
 import androidx.annotation.Nullable;
 
+import com.app.main.framework.baseutil.UiUtil;
 import com.yctc.zhiting.R;
 
 
@@ -33,7 +34,7 @@ public class ConnectView extends View {
     // 外圈的颜色
     private int outDashColor = Color.parseColor("#FFCFD2E6");
     // 内圈的颜色
-    private int inDashColor = Color.parseColor("#FFDDE5EB");
+    private int inDashColor = Color.parseColor("#80DDE5EB");
     // 进度的颜色
     private int progressColor = Color.parseColor("#2DA3F6");
     // 中间文本颜色
@@ -83,12 +84,13 @@ public class ConnectView extends View {
         dashCntColor = typedArray.getColor(R.styleable.ConnectView_dashCntColor, DEFAULT_COLOR);
         dashStopColor = typedArray.getColor(R.styleable.ConnectView_dashStopColor, DEFAULT_COLOR);
         outDashColor = typedArray.getColor(R.styleable.ConnectView_outDashColor, Color.parseColor("#FFCFD2E6"));
-        inDashColor = typedArray.getColor(R.styleable.ConnectView_inDashColor, Color.parseColor("#FFDDE5EB"));
+        inDashColor = typedArray.getColor(R.styleable.ConnectView_inDashColor, Color.parseColor("#80DDE5EB"));
         progressColor = typedArray.getColor(R.styleable.ConnectView_progressColor, DEFAULT_COLOR);
-        circleRadius = typedArray.getDimensionPixelSize(R.styleable.ConnectView_dashCircleRadius, 110);
+        int radius = UiUtil.px2dip((int) (UiUtil.getScreenWidth()*0.62/2)) +20;
+        circleRadius = typedArray.getDimensionPixelSize(R.styleable.ConnectView_dashCircleRadius, radius);
         dashRingWidth = typedArray.getDimensionPixelSize(R.styleable.ConnectView_dashRingWidth, 2);
         dashRingHeight = typedArray.getDimensionPixelSize(R.styleable.ConnectView_dashRingHeight, 30);
-        textColor = typedArray.getColor(R.styleable.ConnectView_progressColor, Color.parseColor("#3F4663"));
+        textColor = typedArray.getColor(R.styleable.ConnectView_progressColor, Color.parseColor("#FF3F4663"));
         textSize = typedArray.getDimensionPixelSize(R.styleable.ConnectView_textSize, 36);
         typedArray.recycle();
     }
@@ -102,7 +104,7 @@ public class ConnectView extends View {
         mPaint.setStrokeWidth(dashRingWidth);
 
         mTextPaint = new Paint();
-        mPaint.setAntiAlias(true);
+        mTextPaint.setAntiAlias(true);
 
         animator = ValueAnimator.ofInt(0, 255);
         animator.setInterpolator(new LinearInterpolator());
@@ -123,12 +125,6 @@ public class ConnectView extends View {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         width = getSize(widthMeasureSpec);
         height = getSize(heightMeasureSpec);
-//        if (width< UiUtil.dip2px(250)){
-//            width = UiUtil.dip2px(250);
-//        }
-//        if (height<UiUtil.dip2px(250)){
-//            height = UiUtil.dip2px(250);
-//        }
         if (width<height){
             height = width;
         }else {
@@ -184,8 +180,6 @@ public class ConnectView extends View {
         for(int i=0;  i<100; i++){
             canvas.save();
             canvas.rotate(360+i*3.6f);
-            int alpha = (int)((i/60f*255+circleAlpha)%255);
-//            mPaint.setAlpha(alpha);
             canvas.translate(circleRadius*2+10, 0);
             canvas.drawLine(0,0, dashRingHeight,0, mPaint);
             canvas.restore();
@@ -194,14 +188,11 @@ public class ConnectView extends View {
 
     private void drawDash2(Canvas canvas){
         mPaint.setColor(inDashColor);
-//        canvas.translate(width/2, height/2);
 
         //60等分
         for(int i=0;  i<100; i++){
             canvas.save();
             canvas.rotate(360+i*3.6f);
-            int alpha = (int)((i/60f*255+circleAlpha)%255);
-//            mPaint.setAlpha(alpha);
             canvas.translate(circleRadius*2+10-dashRingHeight, 0);
             canvas.drawLine(0,0, dashRingHeight/2,0, mPaint);
             canvas.restore();
@@ -233,11 +224,9 @@ public class ConnectView extends View {
 
         //60等分
         mPaint.setColor(progressColor);
-        for(int i=0;  i<currentProgress; i++){
+        for(int i=-25;  i<currentProgress-25; i++){
             canvas.save();
             canvas.rotate(360+i*3.6f);
-            int alpha = (int)((i/60f*255+circleAlpha)%255);
-//            mPaint.setAlpha(alpha);
             canvas.translate(circleRadius*2+10, 0);
             canvas.drawLine(0,0, dashRingHeight,0, mPaint);
             canvas.restore();
@@ -252,20 +241,4 @@ public class ConnectView extends View {
         invalidate();
 
     }
-
-//    @Override
-//    protected void onAttachedToWindow() {
-//        super.onAttachedToWindow();
-//        if (animator!=null){
-//            animator.start();
-//        }
-//    }
-//
-//    @Override
-//    protected void onDetachedFromWindow() {
-//        super.onDetachedFromWindow();
-//        if (animator!=null){
-//            animator.cancel();
-//        }
-//    }
 }

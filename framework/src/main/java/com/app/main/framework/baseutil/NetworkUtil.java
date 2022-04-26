@@ -5,6 +5,10 @@ import android.app.Activity;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
+
+import com.app.main.framework.gsonutils.GsonConverter;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -79,10 +83,11 @@ public class NetworkUtil {
 
     /**
      * 检查地址是否ping得通
+     *
      * @param ip
      * @return
      */
-    public static boolean pingIPResult(String ip, int millisSecond){
+    public static boolean pingIPResult(String ip, int millisSecond) {
         try {
             return InetAddress.getByName(ip).isReachable(millisSecond);
         } catch (IOException e) {
@@ -91,4 +96,8 @@ public class NetworkUtil {
         return false;
     }
 
+
+    public static boolean isWifi() {
+        return getNetworkerStatus() == 1;
+    }
 }

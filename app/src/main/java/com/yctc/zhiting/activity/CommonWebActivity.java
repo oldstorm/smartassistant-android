@@ -1,26 +1,43 @@
 package com.yctc.zhiting.activity;
 
+import static com.yctc.zhiting.config.Constant.CurrentHome;
+
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.http.SslError;
+import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.SslErrorHandler;
+import android.webkit.ValueCallback;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.app.main.framework.baseutil.LogUtil;
+import com.app.main.framework.baseutil.SpUtil;
 import com.app.main.framework.baseutil.UiUtil;
 import com.app.main.framework.baseview.MVPBaseActivity;
+import com.app.main.framework.config.HttpBaseUrl;
+import com.app.main.framework.entity.ChannelEntity;
+import com.app.main.framework.gsonutils.GsonConverter;
+import com.app.main.framework.httputil.HTTPCaller;
+import com.app.main.framework.httputil.NameValuePair;
+import com.app.main.framework.httputil.RequestDataCallback;
+import com.app.main.framework.httputil.TempChannelUtil;
+import com.app.main.framework.httputil.comfig.HttpConfig;
 import com.google.gson.Gson;
 import com.yctc.zhiting.R;
 import com.yctc.zhiting.activity.contract.CommonWebContract;
@@ -29,6 +46,7 @@ import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.config.HttpUrlConfig;
 import com.yctc.zhiting.entity.JsBean;
 import com.yctc.zhiting.event.FinishWebActEvent;
+import com.yctc.zhiting.utils.HomeUtil;
 import com.yctc.zhiting.utils.IntentConstant;
 import com.yctc.zhiting.utils.JsMethodConstant;
 import com.yctc.zhiting.utils.WebViewInitUtil;
@@ -37,6 +55,8 @@ import com.yctc.zhiting.utils.statusbarutil.StatusBarUtil;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.OnClick;
@@ -56,12 +76,28 @@ public class CommonWebActivity extends MVPBaseActivity<CommonWebContract.View, C
     WebView webView;
     @BindView(R.id.progressbar)
     ProgressBar progressbar;
+    @BindView(R.id.tvWebTitle)
+    TextView tvWebTitle;
+    @BindView(R.id.tvTitle)
+    TextView tvTitle;
+    @BindView(R.id.llSettingNamePass)
+    LinearLayout llSettingNamePass;
+    @BindView(R.id.llClose)
+    LinearLayout llClose;
 
+    /**
+     * 1. 第三方平台
+     * 2. crm系统
+     * 3. scm系统
+     * 4. 离线帮助
+     * default 专业版
+     */
     private int webUrlType;
     private String webUrl = HttpUrlConfig.baseSAUrl;
-    private final String thirdPartyUrl = "https://sc.zhitingtech.com/#/third-platform";
+    private final String thirdPartyUrl = HttpBaseUrl.baseSCUrl + Constant.THIRD_PLATFORM;
+    private final String offlineUrl = HttpBaseUrl.baseSCUrl + Constant.OFFLINE_HELP;
 
-//    private String webUrl = "http://192.168.22.91/doc/test.html";
+    private ValueCallback mValueCallback;
     boolean flag;
 
     @Override
@@ -70,6 +106,7 @@ public class CommonWebActivity extends MVPBaseActivity<CommonWebContract.View, C
     }
 
     @Override
+
     protected boolean isLoadTitleBar() {
         return false;
     }
@@ -87,45 +124,140 @@ public class CommonWebActivity extends MVPBaseActivity<CommonWebContract.View, C
     @Override
     protected void initUI() {
         super.initUI();
-
         WebViewInitUtil webViewInitUtil = new WebViewInitUtil(this);
         webViewInitUtil.initWebView(webView);
-        webViewInitUtil.setProgressBar(progressbar);
+        webViewInitUtil.setProgressBar(progressbar)
+                .setWebFileChoseListener(valueCallback -> {
+                    mValueCallback = valueCallback;
+                    Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                    intent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*");
+                    startActivityForResult(intent, Constant.OPEN_FILE);
+                });
         String ua = webView.getSettings().getUserAgentString();
-        webView.getSettings().setUserAgentString(ua + "; "+Constant.ZHITING_USER_AGENT);
+        webView.getSettings().setUserAgentString(ua + "; " + Constant.ZHITING_USER_AGENT);
         webView.addJavascriptInterface(new JsInterface(), Constant.ZHITING_APP);
         webView.setWebViewClient(new MyWebViewClient());
-
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == Constant.OPEN_FILE) {
+            if (resultCode == Activity.RESULT_OK) {
+                WebViewInitUtil.seleteH5Phone(data, mValueCallback);
+            } else {
+                mValueCallback.onReceiveValue(null);
+                mValueCallback = null;
+            }
+        }
+    }
+
+    private String crmUrl; // 客户管理系统
+    private String scmUrl; // 供应链管理
 
     @Override
     protected void initIntent(Intent intent) {
         super.initIntent(intent);
         webUrlType = intent.getIntExtra(IntentConstant.WEB_URL_TYPE, 0);
         StatusBarUtil.setStatusBarDarkTheme(this, webUrlType == 1);
-        if (webUrlType == 1){ // 第三方平台
+        // 如果不是第三方平台过来且不在SA环境下
+        saveTempChannel();
+        if (webUrlType == 1) { // 第三方平台
+            ivBack.setVisibility(View.VISIBLE);
+            tvWebTitle.setText(getResources().getText(R.string.mine_third_party));
+            tvWebTitle.setVisibility(View.VISIBLE);
             rlTitle.setVisibility(View.VISIBLE);
             webView.loadUrl(thirdPartyUrl);
-        }else { // 专业版
+        } else if (webUrlType == 2) {  // crm系统
+            tvTitle.setText(getResources().getText(R.string.mine_crm_system));
+            llClose.setBackgroundResource(R.drawable.shape_stroke_7e849b_c14);
+            clTop.setVisibility(View.VISIBLE);
+            crmUrl = webUrl + Constant.CRM_MIDDLE_URL + CurrentHome.getSa_user_token();
+            webView.loadUrl(crmUrl);
+        } else if (webUrlType == 3) {  // 供应链系统
+            tvTitle.setText(getResources().getText(R.string.mine_supply_chain));
+            llClose.setBackgroundResource(R.drawable.shape_stroke_7e849b_c14);
+            clTop.setVisibility(View.VISIBLE);
+            scmUrl = webUrl + Constant.SCM_MIDDLE_URL + CurrentHome.getSa_user_token();
+            LogUtil.e("供应链："+scmUrl);
+            webView.loadUrl(scmUrl);
+        } else if (webUrlType == 4) {  // 离线帮助
+            ivBack.setVisibility(View.VISIBLE);
+            tvWebTitle.setText(getResources().getText(R.string.home_offline_help));
+            tvWebTitle.setVisibility(View.VISIBLE);
+            rlTitle.setVisibility(View.VISIBLE);
+            webView.loadUrl(offlineUrl);
+        } else { // 专业版
+            tvTitle.setText(getResources().getText(R.string.mine_professional));
+            llSettingNamePass.setVisibility(View.VISIBLE);
             clTop.setVisibility(View.VISIBLE);
             webView.loadUrl(webUrl);
         }
     }
 
+    private void saveTempChannel() {
+        if (webUrlType != 1 && webUrlType != 4 && !HomeUtil.isSAEnvironment()) {
+            long homeId = 0;
+            if (CurrentHome != null) {
+                homeId = CurrentHome.getArea_id() == 0 ? CurrentHome.getId() : CurrentHome.getArea_id();
+            }
+
+            HttpConfig.addAreaIdHeader(HttpConfig.AREA_ID, String.valueOf(homeId));
+            HttpConfig.addAreaIdHeader(HttpConfig.TOKEN_KEY, CurrentHome.getSa_user_token());
+
+            String tempJson = SpUtil.get(CurrentHome.getSa_user_token());
+            ChannelEntity channel = GsonConverter.getGson().fromJson(tempJson, ChannelEntity.class);
+            List<NameValuePair> requestData = new ArrayList<>();
+            requestData.add(new NameValuePair(TempChannelUtil.TEMP_CHANNEL_PARAM, HttpBaseUrl.HTTPS));
+            if (channel == null) {
+                HTTPCaller.getInstance().get(ChannelEntity.class, TempChannelUtil.CHANNEL_URL, requestData,
+                        new RequestDataCallback<ChannelEntity>() {
+                            @Override
+                            public void onSuccess(ChannelEntity obj) {
+                                super.onSuccess(obj);
+                                if (obj != null) {
+                                    Log.e(TAG, "checkTemporaryUrl=onSuccess123=");
+                                    webUrl = Constant.HTTPS_HEAD + obj.getHost();
+                                    TempChannelUtil.saveTempChannelUrl(obj);
+                                    if (webUrlType == 2) {  // crm系统
+                                        crmUrl = webUrl + Constant.CRM_MIDDLE_URL + CurrentHome.getSa_user_token();
+                                        webView.loadUrl(crmUrl);
+                                    } else if (webUrlType == 3) {  // 供应链系统
+                                        scmUrl = webUrl + Constant.SCM_MIDDLE_URL + CurrentHome.getSa_user_token();
+                                        webView.loadUrl(scmUrl);
+                                    } else { // 专业版
+                                        webView.loadUrl(webUrl);
+                                    }
+                                }
+                            }
+
+                            @Override
+                            public void onFailed(int errorCode, String errorMessage) {
+                                super.onFailed(errorCode, errorMessage);
+                                Log.e(TAG, "checkTemporaryUrl=onFailed123=");
+
+                            }
+                        });
+            } else {
+                webUrl = Constant.HTTPS_HEAD + channel.getHost();
+            }
+        }
+    }
+
     @OnClick(R.id.ivBack)
-    void clickBack(){
+    void clickBack() {
         onBackPressed();
     }
 
     @Override
     public void onBackPressed() {
-        if (webView.canGoBack()) {
+        if (webUrlType == 0) {
+            super.onBackPressed();
+        } else if (webView.canGoBack()) {
             webView.goBack();
-        }else {
+        } else {
             super.onBackPressed();
         }
-
     }
 
     class MyWebViewClient extends WebViewClient {
@@ -133,6 +265,7 @@ public class CommonWebActivity extends MVPBaseActivity<CommonWebContract.View, C
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
             super.onPageStarted(view, url, favicon);
+            showLoadingDialogInAct();
             webView.loadUrl("javascript:" + Constant.professional_js);
         }
 
@@ -140,6 +273,7 @@ public class CommonWebActivity extends MVPBaseActivity<CommonWebContract.View, C
         public void onPageFinished(WebView view, String url) {
             super.onPageFinished(view, url);
             flag = true;
+            dismissLoadingDialogInAct();
             LogUtil.e(TAG + "onPageFinished");
         }
 
@@ -186,6 +320,8 @@ public class CommonWebActivity extends MVPBaseActivity<CommonWebContract.View, C
         super.onDestroy();
         StatusBarUtil.setStatusBarDarkTheme(this, true);
         webView.clearCache(true);
+        webView.clearHistory();
+        webView.removeAllViews();
         webView.destroy();
     }
 
@@ -215,7 +351,7 @@ public class CommonWebActivity extends MVPBaseActivity<CommonWebContract.View, C
      * @param jsBean
      */
     void getUserInfo(JsBean jsBean) {
-        String js = "zhiting.callBack('" + jsBean.getCallbackID() + "'," + "'{\"userId\":" + Constant.CurrentHome.getUser_id() + ",\"token\":\"" + Constant.CurrentHome.getSa_user_token() + "\"}')";
+        String js = "zhiting.callBack('" + jsBean.getCallbackID() + "'," + "'{\"userId\":" + CurrentHome.getUser_id() + ",\"token\":\"" + CurrentHome.getSa_user_token() + "\"}')";
         runOnMainUi(js);
     }
 
@@ -240,16 +376,10 @@ public class CommonWebActivity extends MVPBaseActivity<CommonWebContract.View, C
     }
 
     private void runOnMainUi(String js) {
-        UiUtil.runInMainThread(new Runnable() {
-            @Override
-            public void run() {
-                webView.loadUrl("javascript:" + js);
-            }
-        });
+        UiUtil.runInMainThread(() -> webView.loadUrl("javascript:" + js));
     }
 
     class JsInterface {
-
         @SuppressLint("JavascriptInterface")
         @JavascriptInterface
         public void entry(String json) {
@@ -257,7 +387,6 @@ public class CommonWebActivity extends MVPBaseActivity<CommonWebContract.View, C
             switch (jsBean.getFunc()) {
                 case JsMethodConstant.NETWORK_TYPE:  // 网络类型
                     networkType(jsBean);
-
                     break;
 
                 case JsMethodConstant.GET_USER_INFO:  // 用户信息
@@ -272,7 +401,6 @@ public class CommonWebActivity extends MVPBaseActivity<CommonWebContract.View, C
                     isProfession(jsBean);
                     break;
             }
-
         }
     }
 }

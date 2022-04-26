@@ -113,12 +113,12 @@ public class ZipUtils {
         folderPath += "/" + strZipName.substring(0, strZipName.lastIndexOf("."));
 
         File desDir = new File(folderPath);
-        if (!desDir.exists())
-        {
-            desDir.mkdirs();
+        if (desDir.exists()) {
+            desDir.delete();
         }
+        desDir.mkdirs();
         ZipFile zf;
-
+            LogUtil.e("解压文件："+zipFile.getAbsolutePath());
             zf = new ZipFile(zipFile);
             for (Enumeration<?> entries = zf.entries(); entries.hasMoreElements();)
             {

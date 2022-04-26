@@ -58,6 +58,7 @@
     <string name="permission_apply">This app needs access to your storage,location and camera</string>
     <string name="storage_permission_apply">该功能需要存储空间权限</string>
     <string name="access_fine_location_apply">该功能需要定位权限</string>
+    <string name="install_apk_apply">该功能需要安装权限</string>
 
 
     <string name="confirm">Confirm</string>

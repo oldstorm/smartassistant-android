@@ -4,9 +4,9 @@
     package="com.app.main.framework">
 
 <!--    <uses-permission name="android.permission.ACCESS_NETWORK_STATE" />-->
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.INTERNET" /> <!-- 请求网络权限 -->
-    <uses-permission android:name="android.permission.VIBRATE" />
+<!--    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />-->
+<!--    <uses-permission android:name="android.permission.INTERNET" /> &lt;!&ndash; 请求网络权限 &ndash;&gt;-->
+<!--    <uses-permission android:name="android.permission.VIBRATE" />-->
 
     <application
         android:allowBackup="true"

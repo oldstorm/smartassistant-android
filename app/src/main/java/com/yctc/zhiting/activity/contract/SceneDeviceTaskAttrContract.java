@@ -12,7 +12,7 @@ import com.yctc.zhiting.entity.DeviceDetailResponseEntity;
  */
 public interface SceneDeviceTaskAttrContract {
     interface Model {
-        void getDeviceDetail(int id, RequestDataCallback<DeviceDetailResponseEntity> callback);
+        void getDeviceDetail(int id, int type, RequestDataCallback<DeviceDetailResponseEntity> callback);
     }
 
     interface View extends BaseView {
@@ -21,6 +21,6 @@ public interface SceneDeviceTaskAttrContract {
     }
 
     interface Presenter extends BasePresenter<View> {
-        void getDeviceDetail(int id);
+        void getDeviceDetail(int id, int type);
     }
 }

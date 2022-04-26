@@ -54,7 +54,7 @@
                 android:layout_height="wrap_content"
                 android:drawablePadding="@dimen/dp_6"
                 android:gravity="center"
-                android:text="@string/scene_reconnect"
+                android:text="@string/scene_add_scene"
                 android:textColor="@color/white"
                 android:textSize="@dimen/textSize14"
                 android:textStyle="bold"

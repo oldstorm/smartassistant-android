@@ -1,5 +1,6 @@
 package com.yctc.zhiting.adapter;
 
+import android.text.TextUtils;
 import android.widget.ImageView;
 
 import com.app.main.framework.baseutil.UiUtil;
@@ -22,7 +23,11 @@ public class AddDeviceAdapter extends BaseQuickAdapter<DeviceBean, BaseViewHolde
     protected void convert(BaseViewHolder helper, DeviceBean item) {
         helper.setText(R.id.tvName, item.getName());
         ImageView ivLogo = helper.getView(R.id.ivCover);
-        GlideUtil.load(item.getLogoUrl()).into(ivLogo);
+        if (TextUtils.isEmpty(item.getSa_id())) {
+            GlideUtil.load(item.getLogoUrl()).into(ivLogo);
+        } else {
+            ivLogo.setImageResource(R.drawable.img_sa);
+        }
 
         String decText = item.isBind() ? UiUtil.getString(R.string.mine_home_device_join) : UiUtil.getString(R.string.mine_home_device_add);
         String tag = item.getPluginId();

@@ -13,6 +13,7 @@ import android.view.View;
 import androidx.annotation.Nullable;
 
 
+import com.app.main.framework.baseutil.UiUtil;
 import com.yctc.zhiting.R;
 
 import java.util.ArrayList;
@@ -132,7 +133,7 @@ public class RadarScanView extends View {
     private void initPaint() {
         // 初始化画笔几个圆圈
         mCirclePaint = new Paint();
-        mCirclePaint.setColor(changeAlpha(DEFAULT_COLOR, 100));
+        mCirclePaint.setColor(UiUtil.changeAlpha(DEFAULT_COLOR, 100));
         mCirclePaint.setStrokeWidth(1);
         mCirclePaint.setStyle(Paint.Style.STROKE);
         mCirclePaint.setAntiAlias(true);
@@ -364,8 +365,8 @@ public class RadarScanView extends View {
     private void drawSweep(Canvas canvas, int cx, int cy, int radius) {
         //扇形的透明的渐变效果
         SweepGradient sweepGradient = new SweepGradient(cx, cy,
-                new int[]{Color.TRANSPARENT, changeAlpha(mSweepColor, 0), changeAlpha(mSweepColor, 120),
-                        changeAlpha(mSweepColor, 130), changeAlpha(mSweepColor, 130)
+                new int[]{Color.TRANSPARENT, UiUtil.changeAlpha(mSweepColor, 0), UiUtil.changeAlpha(mSweepColor, 120),
+                        UiUtil.changeAlpha(mSweepColor, 130), UiUtil.changeAlpha(mSweepColor, 130)
                 }, new float[]{0.0f, 0.9f, 0.99f, 0.998f, 1f});
         mSweepPaint.setShader(sweepGradient);
         //先旋转画布，再绘制扫描的颜色渲染，实现扫描时的旋转效果。
@@ -417,48 +418,6 @@ public class RadarScanView extends View {
                 dpVal, context.getResources().getDisplayMetrics());
     }
 
-    /**
-     * 水滴数据类
-     */
-    private static class Dot {
-
-        int x;
-        int y;
-        float radius;
-        int color;
-        float alpha = 255;
-
-        public Dot(int x, int y, float radius, int color) {
-            this.x = x;
-            this.y = y;
-            this.radius = radius;
-            this.color = color;
-        }
-
-        /**
-         * 获取改变透明度后的颜色值
-         *
-         * @return
-         */
-        public int changeAlpha() {
-            return RadarScanView.changeAlpha(color, (int) alpha);
-        }
-
-    }
-
-    /**
-     * 改变颜色的透明度
-     *
-     * @param color
-     * @param alpha
-     * @return
-     */
-    private static int changeAlpha(int color, int alpha) {
-        int red = Color.red(color);
-        int green = Color.green(color);
-        int blue = Color.blue(color);
-        return Color.argb(alpha, red, green, blue);
-    }
 
     private OnScanListener scanListener;
 

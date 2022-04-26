@@ -1,5 +1,8 @@
 package com.yctc.zhiting.websocket;
 
+import static com.yctc.zhiting.config.Constant.CurrentHome;
+
+import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -10,12 +13,14 @@ import com.app.main.framework.baseutil.SpConstant;
 import com.app.main.framework.baseutil.SpUtil;
 import com.app.main.framework.baseutil.TimeFormatUtil;
 import com.app.main.framework.baseutil.UiUtil;
+import com.app.main.framework.config.HttpBaseUrl;
 import com.app.main.framework.entity.ChannelEntity;
 import com.app.main.framework.gsonutils.GsonConverter;
+import com.app.main.framework.httputil.Header;
 import com.app.main.framework.httputil.SSLSocketClient;
 import com.app.main.framework.httputil.cookie.CookieJarImpl;
 import com.app.main.framework.httputil.cookie.PersistentCookieStore;
-import com.yctc.zhiting.config.Constant;
+import com.king.zxing.util.LogUtils;
 import com.yctc.zhiting.utils.HomeUtil;
 import com.yctc.zhiting.utils.UserUtils;
 
@@ -38,21 +43,8 @@ import okio.ByteString;
 public class WSocketManager {
 
     private String TAG = "WSocketManager===";
-    //private String url = "ws://192.168.0.84:8088/ws";//测试服务器ip
-    //private String urlSC = "wss://sc.zhitingtech.com:8088/ws";//SC服务器获取的url
-    //private String urlSC = "wss://echo.websocket.org";
-    //private String urlSC = "wss://104.238.164.189:8088/ws";//SC服务器获取的url
-    //private String url = "wss://sa.zhitingtech.com/ws";//服务器域名
-    //private String url = "ws://192.168.0.188:8088/ws";//伟杰服务器
-    //private String url = "ws://192.168.0.112:8088/ws";//马健
-    //private String url = "ws://192.168.0.127:8088/ws";//巫力宏
-    //private String urlSA = "ws://sa.zhitingtech.com:8088/ws";//SA服务器获取的url
-    private String urlSC = "wss://scgz.zhitingtech.com/ws";//SC服务器获取的url
+    private String urlSC = "wss://" + HttpBaseUrl.baseSCHost + "/ws";//SC服务器获取的url
     private String urlSA = "ws://192.168.22.123:9020/ws";//SA服务器获取的url
-//    private String urlSA = "ws://192.168.22.106:37965/ws";//SA服务器获取的url
-//    private String urlSC = "wss://192.168.22.76:9097/ws";//SC服务器获取的url
-//    private String urlSA = "ws://192.168.22.76:8088/ws";//SA服务器获取的url
-    private String mHostSC = "scgz.zhitingtech.com";
 
     private Request mRequest;
     private WebSocket mWebSocket;
@@ -111,7 +103,7 @@ public class WSocketManager {
         public void onMessage(WebSocket webSocket, String text) {
             super.onMessage(webSocket, text);
             //接收服务器消息 text
-            Log.e(TAG, "onMessage1=" + text);
+            //Log.e(TAG, "onMessage1=" + text);
             isConnecting = true;
             UiUtil.runInMainThread(() -> {
                 if (mWebSocketListeners.size() > 0) {
@@ -129,8 +121,6 @@ public class WSocketManager {
             super.onMessage(webSocket, bytes);
             //如果服务器传递的是byte类型的
             isConnecting = true;
-            String msg = bytes.utf8();
-            Log.e(TAG, "onMessage2=" + msg);
         }
 
         @Override
@@ -139,10 +129,6 @@ public class WSocketManager {
             //连接失败调用 异常信息t.getMessage()
             t.printStackTrace();
             Log.e(TAG, "失败1=" + t.getMessage());
-            if (response != null) {
-                Log.e(TAG, "失败2=" + response.message());
-                Log.e(TAG, "失败3=" + response.body().toString());
-            }
             isConnecting = false;
             UiUtil.runInMainThread(() -> {
                 if (mWebSocketListeners.size() > 0) {
@@ -160,6 +146,8 @@ public class WSocketManager {
      * 初始化websocket
      */
     public void start() {
+        //close();
+
         Log.e(TAG, "start");
         if (mOkHttpClient != null) {
             mOkHttpClient = null;
@@ -167,10 +155,14 @@ public class WSocketManager {
         if (mRequest != null) {
             mRequest = null;
         }
-        if (mWebSocket != null) {
-            mWebSocket.close(1000, "close");
-            mWebSocket = null;
-        }
+
+        String url = getUrl();
+        if (TextUtils.isEmpty(url)) return;
+
+        mRequest = new Request.Builder()
+                .url(url)
+                .build();
+
         mOkHttpClient = new OkHttpClient.Builder()
                 .retryOnConnectionFailure(false)//允许失败重试
                 .readTimeout(TIMEOUT, TimeUnit.SECONDS)//设置读取超时时间
@@ -184,14 +176,75 @@ public class WSocketManager {
                 .addInterceptor(new UserAgentInterceptor())
                 .build();
 
-        String url = getUrl();
-        mRequest = new Request.Builder()
-                .url(url)
-                .build();
-
         mWebSocket = mOkHttpClient.newWebSocket(mRequest, mWebSocketListener);
         mOkHttpClient.dispatcher().executorService().shutdown();//内存不足时释
         Log.e(TAG, "url=" + url);
+    }
+
+    /**
+     * 设备详情的WS
+     */
+    private WebSocket mDevWebSocket;
+    public void connectWS(String url, String token, WebSocketListener webSocketListener) {
+        if (TextUtils.isEmpty(url)) {
+            return;
+        }
+
+        if (mDevWebSocket!=null) {
+            mDevWebSocket = null;
+        }
+
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .retryOnConnectionFailure(false)//允许失败重试
+                .readTimeout(TIMEOUT, TimeUnit.SECONDS)//设置读取超时时间
+                .writeTimeout(TIMEOUT, TimeUnit.SECONDS)//设置写的超时时间
+                .connectTimeout(TIMEOUT, TimeUnit.SECONDS)//设置连接超时时间
+                .pingInterval(PING_TIME, TimeUnit.SECONDS)//心跳
+                .certificatePinner(CertificatePinner.DEFAULT)
+                .hostnameVerifier(SSLSocketClient.getHostnameVerifier())//配置
+                .sslSocketFactory(SSLSocketClient.getSSLSocketFactory(), SSLSocketClient.getX509TrustManager())
+                .cookieJar(new CookieJarImpl(PersistentCookieStore.getInstance()))
+                .addInterceptor(new UserAgentInterceptor())
+                .build();
+
+        Request request = new Request.Builder()
+                .url(url)
+                .build();
+
+        mDevWebSocket = okHttpClient.newWebSocket(request, webSocketListener);
+        okHttpClient.dispatcher().executorService().shutdown();//内存不足时释
+        Log.e(TAG, "url=" + url);
+    }
+
+    /**
+     * 设备详情发送消息
+     *
+     * @param json
+     * @return
+     */
+    public WSocketManager sendDevMessage(String json) {
+        if (mDevWebSocket != null && !TextUtils.isEmpty(json)) {
+//            LogUtil.e("发送数据："+json);
+            boolean success = mDevWebSocket.send(json);
+            //Log.e(TAG, "sendMessage发送消息2=" + json + "\nsuccess=" + success);
+        }
+        return this;
+    }
+
+    /**
+     * 关闭设备详情的WS
+     */
+    public void closeDevWS() {
+        if (mDevWebSocket!=null) {
+            mDevWebSocket.close(1000, "close");
+        }
+    }
+
+    public void close() {
+        if (mWebSocket != null) {
+            mWebSocket.close(1000, "close");
+            mWebSocket = null;
+        }
     }
 
     /**
@@ -200,25 +253,40 @@ public class WSocketManager {
      * @return
      */
     private String getUrl() {
-        if (Constant.CurrentHome!=null && !TextUtils.isEmpty(Constant.CurrentHome.getSa_lan_address())) {
-            String url = "ws://"+Constant.CurrentHome.getSa_lan_address().replace("http://", "")+"/ws";
-            urlSA = url;
-        }
-        if (HomeUtil.isSAEnvironment()) {
-            return urlSA;
-        } else {
-            if (UserUtils.isLogin()) {
-                return getSCUrl();
-            } else {
-                return urlSA;
-            }
+        if (UserUtils.isLogin() && !HomeUtil.isSAEnvironment()) {//登录并且不在SA,使用SC需要登录
+            return getSCUrl();
+        } else if (HomeUtil.isSAEnvironment() && HomeUtil.isBindSA()) {//SA
+            return getSAUrl();
+        } else {//断开
+            close();
+            return "";
         }
     }
 
+    /**
+     * 获取SA地址
+     *
+     * @return
+     */
+    private String getSAUrl() {
+        if (CurrentHome != null && !TextUtils.isEmpty(CurrentHome.getSa_lan_address())) {
+            Uri uri = Uri.parse(CurrentHome.getSa_lan_address());
+            urlSA = "ws://" + uri.getAuthority() + "/ws";
+        } else {
+            urlSA = "";
+        }
+        return urlSA;
+    }
+
+    /**
+     * 获取SC地址
+     *
+     * @return
+     */
     private String getSCUrl() {
         String newUrlSC = urlSC;
         long currentTime = TimeFormatUtil.getCurrentTime();
-        String tokenKey = SpUtil.get(SpConstant.SA_TOKEN);
+        String tokenKey = SpUtil.get(SpConstant.AREA_ID);
         String json = SpUtil.get(tokenKey);
 
         if (!TextUtils.isEmpty(json)) {
@@ -226,8 +294,7 @@ public class WSocketManager {
             if (channel != null) {
                 LogUtil.e("WSocketManager=getSCUrl=" + GsonConverter.getGson().toJson(channel));
                 if ((currentTime - channel.getCreate_channel_time()) < channel.getExpires_time()) {
-                    newUrlSC = newUrlSC.replace(mHostSC, channel.getHost());
-//                    newUrlSC=newUrlSC.replace("wss","ws");
+                    newUrlSC = newUrlSC.replace(HttpBaseUrl.baseSCHost, channel.getHost());
                     LogUtil.e("WSocketManager=getSCUrl=" + newUrlSC);
                 }
             }
@@ -242,10 +309,10 @@ public class WSocketManager {
      * @return
      */
     public WSocketManager sendMessage(String json) {
-        Log.e(TAG, "sendMessage发送消息1=" + isConnecting + ",json=" + json);
         if (isConnecting && mWebSocket != null && !TextUtils.isEmpty(json)) {
+//            LogUtil.e("发送数据："+json);
             boolean success = mWebSocket.send(json);
-            Log.e(TAG, "sendMessage发送消息2=" + json + "\nsuccess=" + success);
+            //Log.e(TAG, "sendMessage发送消息2=" + json + "\nsuccess=" + success);
         }
         return this;
     }
@@ -254,6 +321,7 @@ public class WSocketManager {
         if (!mWebSocketListeners.contains(listener)) {
             mWebSocketListeners.add(listener);
         }
+        LogUtils.d("mWebSocketListeners : " + mWebSocketListeners.size());
     }
 
     public void removeWebSocketListener(IWebSocketListener listener) {

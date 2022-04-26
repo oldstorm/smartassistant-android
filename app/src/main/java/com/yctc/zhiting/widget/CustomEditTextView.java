@@ -7,12 +7,14 @@ import android.graphics.Typeface;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.InputType;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 
 import androidx.annotation.Nullable;
@@ -34,6 +36,7 @@ public class CustomEditTextView extends LinearLayout {
     private int mEqualSpacing; // 平分间距
     private boolean isEqual; // 是否平分
     private int mViewWidth; // 输入框总宽度
+    private boolean mHideText;
 
     public OnInputCompleteListener getInputCompleteListener() {
         return inputCompleteListener;
@@ -107,6 +110,15 @@ public class CustomEditTextView extends LinearLayout {
         isEqual = equal;
     }
 
+    public boolean ismHideText() {
+        return mHideText;
+    }
+
+    public void setmHideText(boolean mHideText) {
+        this.mHideText = mHideText;
+        hideText();
+    }
+
     public CustomEditTextView(Context context) {
         this(context, null);
     }
@@ -128,7 +140,7 @@ public class CustomEditTextView extends LinearLayout {
         if (isEqual){
             mSpacing = ta.getDimensionPixelSize(R.styleable.CustomEditTextView_cet_spacing, 0);
         }
-        initView();
+        initViewParent();
         ta.recycle();
     }
     /**
@@ -137,6 +149,39 @@ public class CustomEditTextView extends LinearLayout {
     public  int dip2px(int dip) {
         final float scale = mContext.getResources().getDisplayMetrics().density;
         return (int) (dip * scale + 0.5f);
+    }
+
+    private void initViewParent() {
+        for (int i=0; i<mEtCount; i++) {
+            FrameLayout frameLayout = new FrameLayout(mContext);
+            frameLayout.setLayoutParams(getCETLayoutParams(i));
+            EditText editText = new EditText(mContext);
+            editText.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT));
+            editText.setTextAlignment(TEXT_ALIGNMENT_CENTER);
+            editText.setGravity(Gravity.CENTER);
+            editText.setId(i);
+            editText.setCursorVisible(false);
+            editText.setTypeface(Typeface.DEFAULT_BOLD);
+            editText.setMaxEms(1);
+            editText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(1)});
+            editText.setInputType(InputType.TYPE_CLASS_NUMBER);
+            editText.setPadding(0, 0, 0, 0);
+//            editText.setBackground(null);
+//            frameLayout.setBackgroundResource(mEtBg);
+            editText.setBackgroundResource(mEtBg);
+            View view = new View(mContext);
+            view.setLayoutParams(new FrameLayout.LayoutParams(UiUtil.dip2px(15), UiUtil.dip2px(15), Gravity.CENTER));
+            view.setBackgroundResource(R.drawable.shape_black_dot);
+            view.setVisibility(GONE);
+            setEditListener(editText, view);
+            frameLayout.addView(editText);
+            frameLayout.addView(view);
+            addView(frameLayout);
+            if (i==0){
+                editText.setFocusable(true);
+            }
+        }
     }
 
 
@@ -154,7 +199,7 @@ public class CustomEditTextView extends LinearLayout {
             editText.setInputType(InputType.TYPE_CLASS_NUMBER);
             editText.setPadding(0, 0, 0, 0);
             editText.setBackgroundResource(mEtBg);
-            setEditListener(editText);
+            setEditListener(editText, null);
             addView(editText);
             if (i==0){
                 editText.setFocusable(true);
@@ -171,8 +216,10 @@ public class CustomEditTextView extends LinearLayout {
 
     private void updateEtMargin(){
         for (int i=0; i<mEtCount; i++){
-            EditText editText = (EditText) getChildAt(i);
-            editText.setLayoutParams(getCETLayoutParams(i));
+//            EditText editText = (EditText) getChildAt(i);
+//            editText.setLayoutParams(getCETLayoutParams(i));
+            FrameLayout frameLayout = (FrameLayout) getChildAt(i);
+            frameLayout.setLayoutParams(getCETLayoutParams(i));
         }
     }
 
@@ -180,7 +227,7 @@ public class CustomEditTextView extends LinearLayout {
      * 键盘、文本变化和焦点事件
      * @param editText
      */
-    private void setEditListener(EditText editText){
+    private void setEditListener(EditText editText, View view){
         editText.setOnKeyListener(new OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
@@ -206,6 +253,9 @@ public class CustomEditTextView extends LinearLayout {
                 if (s.length()!=0){
                     focus();
                 }
+                if (view!=null) {
+                    view.setVisibility(mHideText && s.length()!=0 ? VISIBLE : GONE);
+                }
                 if (inputCompleteListener!=null){
                     inputCompleteListener.onTextChange(CustomEditTextView.this, getResult());
                     EditText lastEditText = (EditText)getChildAt(mEtCount-1);
@@ -225,6 +275,23 @@ public class CustomEditTextView extends LinearLayout {
         });
     }
 
+    /**
+     * 隐藏文本
+     */
+    private void hideText() {
+        int childCount = getChildCount();
+        FrameLayout frameLayout;
+        EditText editText;
+        View view;
+        for (int i=0; i<childCount; i++) {
+            frameLayout = (FrameLayout) getChildAt(i);
+            editText = (EditText) frameLayout.getChildAt(0);
+            view = (View) frameLayout.getChildAt(1);
+            boolean show = mHideText && !TextUtils.isEmpty(editText.getText().toString());
+            view.setVisibility(show ? VISIBLE : GONE);
+        }
+    }
+
     @Override
     public void setEnabled(boolean enabled) {
         int childCount = getChildCount();
@@ -239,9 +306,11 @@ public class CustomEditTextView extends LinearLayout {
      */
     private void focus(){
         int count = getChildCount();
+        FrameLayout frameLayout;
         EditText editText;
         for (int i=0; i<count; i++){
-            editText = (EditText) getChildAt(i);
+            frameLayout = (FrameLayout) getChildAt(i);
+            editText = (EditText) frameLayout.getChildAt(0);
             if (editText.getText().length()<1){
                 editText.requestFocus();
                 return;
@@ -257,9 +326,11 @@ public class CustomEditTextView extends LinearLayout {
      * 回退焦点
      */
     private void backFocus(){
+        FrameLayout frameLayout;
         EditText editText;
         for (int i=mEtCount-1; i>=0; i--){
-            editText = (EditText)getChildAt(i);
+            frameLayout = (FrameLayout) getChildAt(i);
+            editText = (EditText) frameLayout.getChildAt(0);
             if (editText.getText().length()>=1){
                 editText.setText("");
                 editText.requestFocus();

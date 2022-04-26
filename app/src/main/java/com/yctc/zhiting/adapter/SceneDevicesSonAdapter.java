@@ -8,10 +8,8 @@ import com.app.main.framework.imageutil.GlideUtil;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.yctc.zhiting.R;
+import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.entity.home.DeviceMultipleBean;
-
-
-
 
 /**
  * 场景可控制设备列表
@@ -29,7 +27,7 @@ public class SceneDevicesSonAdapter extends BaseQuickAdapter<DeviceMultipleBean,
         TextView tvLocation = helper.getView(R.id.tvLocation);
         GlideUtil.load(item.getLogo_url()).into(ivCover);
         tvName.setText(item.getName());
-        tvLocation.setText(item.getLocation_name());
+        tvLocation.setText(Constant.AREA_TYPE == 2 ? item.getDepartment_name() : item.getLocation_name());
 
     }
 }

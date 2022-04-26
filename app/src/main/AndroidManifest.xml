@@ -5,19 +5,22 @@
 
     <uses-permission android:name="android.permission.INTERNET" /> <!-- 请求网络权限 -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- 获取WIFI信息状态的权限 -->
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" /> <!-- <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> -->
+    <uses-permission android:name="android.permission.LOCAL_MAC_ADDRESS" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.FLASHLIGHT" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" /> <!-- 安装apk -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission
         android:name="android.permission.READ_LOGS"
         tools:ignore="ProtectedPermissions" />
@@ -38,7 +41,91 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-        <activity android:name=".activity.CreatePluginDetailActivity"></activity>
+        <activity
+            android:name=".activity.DLAddPwdFailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.DLAddPwdSuccessActivity"
+            android:exported="false" />
+<!--        <activity-->
+<!--            android:name=".activity.DLAddPwdActivity"-->
+<!--            android:exported="false" />-->
+        <activity
+            android:name=".activity.DLUserDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.DLAuthWayActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.DLAddUserActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.UserManageActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.DisposablePwdAddActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.DisposablePwdActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.DLGuideActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.DLLogActivity"
+            android:exported="false" /> <!-- <activity -->
+        <!-- android:name=".activity.DoorLockDetailActivity" -->
+        <!-- android:exported="false" /> -->
+        <activity
+            android:name=".activity.ImageActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.FeedbackDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.FeedbackListActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.FeedbackActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.ThirdPartyWebActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.ThirdPartyActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.ChangeIconActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.GuideActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.AvatarActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.ForgetPwdActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.AccountCancellationActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.PwdModifyActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.AccountAndSecurityActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activity.ExperienceCenterActivity"
+            android:exported="false" />
+        <activity android:name=".activity.CompanyMemberDetailActivity" />
+        <activity android:name=".activity.AddMemberActivity" />
+        <activity android:name=".activity.DepartmentSettingsActivity" />
+        <activity android:name=".activity.DepartmentDetailActivity" />
+        <activity android:name=".activity.DepartmentListActivity" />
+        <activity android:name=".activity.CompanyDetailActivity" />
+        <activity android:name=".activity.AddCompanyActivity" />
+        <activity android:name=".activity.CreatePluginDetailActivity" />
         <activity android:name=".activity.SBSearchActivity" />
         <activity android:name=".activity.AboutActivity" />
         <activity android:name=".activity.SupportBrand2Activity" />
@@ -50,15 +137,7 @@
             android:screenOrientation="portrait" />
         <activity
             android:name=".activity.ConfigNetworkWebActivity"
-            android:screenOrientation="portrait">
-
-            <!-- <intent-filter> -->
-            <!-- <action android:name="android.intent.action.MAIN" /> -->
-
-
-            <!-- <category android:name="android.intent.category.LAUNCHER" /> -->
-            <!-- </intent-filter> -->
-        </activity>
+            android:screenOrientation="portrait" />
         <activity
             android:name=".activity.ScanDevice2Activity"
             android:screenOrientation="portrait" />
@@ -230,6 +309,32 @@
         <activity
             android:name=".activity.SoftwareUpgradeActivity"
             android:screenOrientation="portrait" />
+        <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.DevicesSortActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.CommonDeviceSetActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".activity.CustomDeviceLocationActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".activity.DoorSettingActivity"
+            android:screenOrientation="portrait" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/provider_paths" />
+        </provider>
     </application>
 
 </manifest>

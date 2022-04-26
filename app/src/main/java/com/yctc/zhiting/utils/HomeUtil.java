@@ -3,6 +3,7 @@ package com.yctc.zhiting.utils;
 import android.net.wifi.WifiInfo;
 import android.text.TextUtils;
 
+import com.app.main.framework.baseutil.LogUtil;
 import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.entity.mine.HomeCompanyBean;
 
@@ -14,6 +15,7 @@ public class HomeUtil {
     private static HomeCompanyBean mHome = new HomeCompanyBean();
 
     public static boolean tokenIsInvalid; // saToken是否失效
+    public static boolean isInLAN; //是不是在局域网
 
     //获取家庭名字
     public static String getHomeName() {
@@ -85,9 +87,15 @@ public class HomeUtil {
 
     //判断当前的家庭是否SA环境
     public static boolean isSAEnvironment(HomeCompanyBean home) {
+        return isBssidEqual(home) || isInLAN;
+    }
+
+    public static boolean isBssidEqual(HomeCompanyBean home) {
         WifiInfo wifiInfo = Constant.wifiInfo;
-        if (home != null && wifiInfo != null && home.getMac_address() != null && wifiInfo.getBSSID() != null &&
-                home.getMac_address().equalsIgnoreCase(wifiInfo.getBSSID())) {
+        if (home != null && wifiInfo != null && home.getBSSID() != null && wifiInfo.getBSSID() != null &&
+                home.getBSSID().equalsIgnoreCase(wifiInfo.getBSSID()) && home.isIs_bind_sa()) {
+            LogUtil.e("HomeUtil.wifiInfo========" + wifiInfo.getBSSID());
+            LogUtil.e("HomeUtil.home========" + home.getBSSID());
             return true;
         }
         return false;

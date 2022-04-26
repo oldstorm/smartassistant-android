@@ -92,6 +92,7 @@ public class LogBean {
         private String name;
         private int type;
         private String location_name;
+        private String department_name;
         /**
          * 子任务结果:1执行完成;2部分执行完成;3执行失败;4执行超时;5设备已被删除;6设备离线;7场景已被删除
          */
@@ -127,6 +128,14 @@ public class LogBean {
 
         public void setResult(int result) {
             this.result = result;
+        }
+
+        public String getDepartment_name() {
+            return department_name;
+        }
+
+        public void setDepartment_name(String department_name) {
+            this.department_name = department_name;
         }
     }
 }

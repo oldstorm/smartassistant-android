@@ -105,6 +105,7 @@
             android:textColor="@color/color_3f4663"
             android:textStyle="bold"/>
         <TextView
+            android:id="@+id/tvUnit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="%"

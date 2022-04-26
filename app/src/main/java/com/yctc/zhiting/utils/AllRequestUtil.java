@@ -1,7 +1,6 @@
 package com.yctc.zhiting.utils;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -11,7 +10,7 @@ import com.app.main.framework.baseutil.LibLoader;
 import com.app.main.framework.baseutil.LogUtil;
 import com.app.main.framework.baseutil.SpUtil;
 import com.app.main.framework.baseutil.UiUtil;
-import com.app.main.framework.baseutil.toast.ToastUtil;
+import com.app.main.framework.config.HttpBaseUrl;
 import com.app.main.framework.dialog.CertificateDialog;
 import com.app.main.framework.entity.ChannelEntity;
 import com.app.main.framework.gsonutils.GsonConverter;
@@ -35,7 +34,6 @@ import com.yctc.zhiting.config.HttpUrlParams;
 import com.yctc.zhiting.db.DBManager;
 import com.yctc.zhiting.entity.AreaIdBean;
 import com.yctc.zhiting.entity.home.AccessTokenBean;
-import com.yctc.zhiting.entity.home.SynPost;
 import com.yctc.zhiting.entity.mine.HomeCompanyBean;
 import com.yctc.zhiting.entity.mine.HomeCompanyListBean;
 import com.yctc.zhiting.entity.mine.IdBean;
@@ -43,9 +41,9 @@ import com.yctc.zhiting.entity.mine.LocationBean;
 import com.yctc.zhiting.entity.mine.UpdateUserPost;
 import com.yctc.zhiting.event.MineUserInfoEvent;
 import com.yctc.zhiting.event.RefreshHome;
+import com.yctc.zhiting.event.RefreshHomeEvent;
 import com.yctc.zhiting.event.UpdateSaUserNameEvent;
 import com.yctc.zhiting.request.AddHCRequest;
-import com.yctc.zhiting.request.BindCloudRequest;
 import com.yctc.zhiting.request.BindCloudStrRequest;
 
 import org.greenrobot.eventbus.EventBus;
@@ -57,14 +55,11 @@ import java.nio.charset.StandardCharsets;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.WeakHashMap;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLPeerUnverifiedException;
 
-import okhttp3.CacheControl;
 import okhttp3.OkHttpClient;
 
 public class AllRequestUtil {
@@ -73,21 +68,29 @@ public class AllRequestUtil {
     static DBManager dbManager = DBManager.getInstance(mContext.get());
     private static boolean hasDialog;
     public static String nickName = "";
+    private static String TAG = "AllRequestUtil===";
+
     /**
      * 获取云端家庭数据
      */
     public static void getCloudArea() {
+        LogUtil.e(TAG + "getCloudArea0");
         if (!UserUtils.isLogin()) return;
+        LogUtil.e(TAG + "getCloudArea01");
         HTTPCaller.getInstance().get(HomeCompanyListBean.class, HttpUrlConfig.getSCAreasUrl() + Constant.ONLY_SC,
                 new RequestDataCallback<HomeCompanyListBean>() {
                     @Override
                     public void onSuccess(HomeCompanyListBean obj) {
                         super.onSuccess(obj);
+                        LogUtil.e(TAG + "getCloudArea1");
                         if (obj != null) {
                             List<HomeCompanyBean> areas = obj.getAreas();
                             if (CollectionUtil.isNotEmpty(areas)) {// 云端家庭数据不为空，则同步
+                                EventBus.getDefault().post(new MineUserInfoEvent(true));
                                 getCloudAreaSuccess(areas);
                             } else {// 否则创建一个云端家庭
+                                updateSCUserName();
+                                UserUtils.setCloudUserName(nickName);
                                 UiUtil.starThread(() -> {
                                     List<HomeCompanyBean> homeList = dbManager.queryLocalHomeCompanyList();
                                     if (CollectionUtil.isEmpty(homeList)) {//本地数据库是否有默认家庭，否则创建家庭
@@ -102,7 +105,7 @@ public class AllRequestUtil {
                     @Override
                     public void onFailed(int errorCode, String errorMessage) {
                         super.onFailed(errorCode, errorMessage);
-                        Log.e("getCloudArea", errorMessage);
+                        LogUtil.e(TAG + "getCloudArea2", errorMessage);
                     }
                 });
     }
@@ -112,6 +115,7 @@ public class AllRequestUtil {
      */
     private static void insertDefaultHome() {
         HomeCompanyBean homeCompanyBean = new HomeCompanyBean(UiUtil.getString(R.string.main_my_home));
+        homeCompanyBean.setArea_type(Constant.HOME_MODE);
         dbManager.insertHomeCompany(homeCompanyBean, null, false);
     }
 
@@ -127,23 +131,29 @@ public class AllRequestUtil {
             for (HomeCompanyBean homeBean : areas) {
                 homeBean.setCloud_user_id(cloudUserId);
             }
-            List<HomeCompanyBean> userHomeCompanyList = dbManager.queryHomeCompanyListByCloudUserId(cloudUserId);
+            List<HomeCompanyBean> userHomeCompanyList = dbManager.queryHomeCompanyList();
+
             List<Long> cloudIdList = new ArrayList<>();
+            List<Long> areaIdList = new ArrayList<>();
             for (HomeCompanyBean hcb : userHomeCompanyList) {
                 cloudIdList.add(hcb.getId());
+                areaIdList.add(hcb.getArea_id());
             }
             for (HomeCompanyBean area : areas) {
-                if (cloudIdList.contains(area.getId())) {  // 如果家庭已存在，则更新
-                    dbManager.updateHomeCompanyByCloudId(area.getId(), area.getName());
+                if (cloudIdList.contains(area.getId()) || areaIdList.contains(area.getId())) {  // 如果家庭已存在，则更新
+                    dbManager.updateHomeCompanyByCloudId(area);
                 } else {//不存在，插入
-                    if (area.isIs_bind_sa()){
+                    if (area.isIs_bind_sa()) {
                         area.setArea_id(area.getId());
                     }
                     dbManager.insertCloudHomeCompany(area);
                 }
             }
+            if (CollectionUtil.isNotEmpty(areas)) {
+                EventBus.getDefault().post(new MineUserInfoEvent(true));
+            }
             sysAreaCloud(false);
-            EventBus.getDefault().post(new RefreshHome());
+            EventBus.getDefault().post(new RefreshHomeEvent());
         });
     }
 
@@ -155,10 +165,9 @@ public class AllRequestUtil {
         if (CollectionUtil.isNotEmpty(homeCompanyList)) {
             for (int i = 0; i < homeCompanyList.size(); i++) {
                 HomeCompanyBean homeBean = homeCompanyList.get(i);
-                if (homeBean.isIs_bind_sa() && homeBean.getId()!=homeBean.getArea_id()){  // 如果绑了sa
-//                    bindCloudWithoutCreateHome(homeBean, null);
-                }else {
+                if (homeBean.isIs_bind_sa() && homeBean.getId() != homeBean.getArea_id()) {  // 如果绑了sa
 
+                } else {
                     boolean isLast = (i == homeCompanyList.size() - 1);
                     List<LocationBean> list = dbManager.queryLocations(homeBean.getLocalId());
                     List<String> locationNames = new ArrayList<>();
@@ -167,14 +176,14 @@ public class AllRequestUtil {
                             locationNames.add(locationBean.getName());
                         }
                     }
-                    AddHCRequest addHCRequest = new AddHCRequest(homeBean.getName(), locationNames);
+                    AddHCRequest addHCRequest = new AddHCRequest(homeBean.getName(), homeBean.getArea_type(), locationNames);
                     homeBean.setCloud_user_id(UserUtils.getCloudUserId());
                     HTTPCaller.getInstance().post(IdBean.class, HttpUrlConfig.getScAreas() + Constant.ONLY_SC, addHCRequest,
                             new RequestDataCallback<IdBean>() {
                                 @Override
                                 public void onSuccess(IdBean obj) {
                                     super.onSuccess(obj);
-                                    Log.e("sysAreaCloud-success", "success=homeId=" + obj.getId());
+                                    LogUtil.e(TAG + "sysAreaCloud-success", "success=homeId=" + obj.getId());
                                     IdBean.CloudSaUserInfo cloudSaUserInfo = obj.getCloud_sa_user_info();
                                     int userId = homeBean.getUser_id();
                                     String saToken = homeBean.getSa_user_token();
@@ -188,17 +197,9 @@ public class AllRequestUtil {
                                 @Override
                                 public void onFailed(int errorCode, String errorMessage) {
                                     super.onFailed(errorCode, errorMessage);
-                                    Log.e("sysAreaCloud-fail", errorMessage);
+                                    LogUtil.e(TAG + "sysAreaCloud-fail", errorMessage);
                                 }
                             });
-                }
-                if (i==homeCompanyList.size()-1){
-                    if (updateScName){
-                        updateSCUserName();
-                        UserUtils.setCloudUserName(nickName);
-                    }else {
-                        EventBus.getDefault().post(new MineUserInfoEvent(true));
-                    }
                 }
             }
         }
@@ -207,7 +208,7 @@ public class AllRequestUtil {
     /**
      * 修改sc昵称
      */
-    public static void updateSCUserName(){
+    public static void updateSCUserName() {
         UpdateUserPost updateUserPost = new UpdateUserPost();
         updateUserPost.setNickname(nickName);
         String body = new Gson().toJson(updateUserPost);
@@ -215,13 +216,13 @@ public class AllRequestUtil {
             @Override
             public void onSuccess(Object obj) {
                 super.onSuccess(obj);
-                LogUtil.e("updateSCUserName=====成功");
+                LogUtil.e(TAG + "updateSCUserName=====成功");
             }
 
             @Override
             public void onFailed(int errorCode, String errorMessage) {
                 super.onFailed(errorCode, errorMessage);
-                LogUtil.e("updateSCUserName=====失败");
+                LogUtil.e(TAG + "updateSCUserName=====失败");
             }
         });
     }
@@ -237,10 +238,8 @@ public class AllRequestUtil {
         //数据全部同步完，检查是否有绑定sa数据
         if (isLast) {
             List<HomeCompanyBean> homeCompanyList = dbManager.queryHomeCompanyList();
-            LogUtil.e("updateArea1=" + GsonConverter.getGson().toJson(homeCompanyList));
             for (HomeCompanyBean homeBean : homeCompanyList) {
-                System.out.println("绑定云：第三次");
-                bindCloudWithoutCreateHome(homeBean, null);
+                bindCloudWithoutCreateHome(homeBean);
             }
         }
     }
@@ -252,109 +251,41 @@ public class AllRequestUtil {
      * @return
      */
     public static boolean isSAEnvironment(HomeCompanyBean homeBean) {
-        if (homeBean.isIs_bind_sa() && Constant.wifiInfo != null && homeBean.getMac_address() != null
-                && homeBean.getMac_address().equalsIgnoreCase(Constant.wifiInfo.getBSSID())) {
+        if (homeBean.isIs_bind_sa() && Constant.wifiInfo != null && homeBean.getBSSID() != null
+                && homeBean.getBSSID().equalsIgnoreCase(Constant.wifiInfo.getBSSID())) {
             return true;
         }
         return false;
     }
 
-    /**
-     * 创建并绑定家庭云
-     */
-    public static void createHomeBindSC(HomeCompanyBean homeBean, ChannelEntity channelEntity) {
-        //云端id=0表示没有绑定云
-        if (UserUtils.isLogin()) {
-            if (homeBean.getId()==0 && homeBean.isIs_bind_sa()) {
-                SynPost.AreaBean areaBean = new SynPost.AreaBean(homeBean.getName(), new ArrayList<>());//家庭
-                HTTPCaller.getInstance().post(IdBean.class,  HttpUrlConfig.getScAreas()+Constant.ONLY_SC, areaBean,
-                        new RequestDataCallback<IdBean>() {
-                            @Override
-                            public void onSuccess(IdBean data) {
-                                super.onSuccess(data);
-                                LogUtil.e("sysAreaCloud-success", "success");
-                                homeBean.setId(data.getId());
-                                Constant.CurrentHome = homeBean;
-                                int userId =  Constant.CurrentHome.getUser_id();
-                                String token =  Constant.CurrentHome.getSa_user_token();
-                                IdBean.CloudSaUserInfo cloudSaUserInfo = data.getCloud_sa_user_info();
-                                if (cloudSaUserInfo!=null && ! Constant.CurrentHome.isIs_bind_sa()){
-                                    userId = cloudSaUserInfo.getId();
-                                    token = cloudSaUserInfo.getToken();
-                                }
-                                dbManager.updateHomeCompanyCloudId(homeBean.getLocalId(), homeBean.getId(), UserUtils.getCloudUserId(), userId, token);
-                                bindCloud(homeBean, channelEntity);
-                            }
-
-                            @Override
-                            public void onFailed(int errorCode, String errorMessage) {
-                                super.onFailed(errorCode, errorMessage);
-                                LogUtil.e("sysAreaCloud-fail", errorMessage);
-                            }
-                        });
-            } else {
-                bindCloud(homeBean,channelEntity);
-            }
-        }
-    }
-
-    /**
-     * 绑定云家庭
-     *
-     * @param homeBean 家庭对象
-     */
-    public static void bindCloud(HomeCompanyBean homeBean, ChannelEntity channelEntity) {
-        //如果再sa环境，如果未绑定云端，则绑定云端；否则不绑定
-//        if (isSAEnvironment(homeBean)) {
-        if (homeBean.isIs_bind_sa() && homeBean.getId()>0) {
-            LogUtil.e("updateArea2=" + GsonConverter.getGson().toJson(homeBean));
-            Constant.CurrentHome.setId(homeBean.getId());
-            BindCloudStrRequest request = new BindCloudStrRequest();
-//            request.setCloud_area_id(String.valueOf(homeBean.getId()));
-            request.setCloud_user_id(homeBean.getCloud_user_id());
-
-            HttpConfig.addHeader(homeBean.getSa_user_token());
-            HTTPCaller.getInstance().post(AreaIdBean.class, channelEntity!=null ? Constant.HTTPS_HEAD + channelEntity.getHost() + HttpUrlConfig.API + HttpUrlParams.cloud_bind  : HttpUrlConfig.getBindCloud(), request,
-                    new RequestDataCallback<AreaIdBean>() {
-                        @Override
-                        public void onSuccess(AreaIdBean obj) {
-                            super.onSuccess(obj);
-                            if (obj!=null) {
-                                Constant.CurrentHome.setId(obj.getArea_id());  // 重新设置云id值
-                                dbManager.updateHCAreaId(homeBean.getLocalId(), obj.getArea_id(), channelEntity==null);  // 绑定云端成功之后，修改本地云id值
-                            }
-                            EventBus.getDefault().post(new UpdateSaUserNameEvent());
-                            Log.e("updateArea-bind", "success");
-                        }
-
-                        @Override
-                        public void onFailed(int errorCode, String errorMessage) {
-                            super.onFailed(errorCode, errorMessage);
-                            Log.e("updateArea-fail", errorMessage);
-                        }
-                    });
-
-        }
+    public static void bindCloudWithoutCreateHome(HomeCompanyBean home) {
+        bindCloudWithoutCreateHome(home, null, home.getSa_lan_address(), null);
     }
 
     /**
      * 绑定云端家庭（不用在云端创建家庭）
+     *
      * @param homeCompanyBean
      * @param channelEntity
      */
-    public static void bindCloudWithoutCreateHome(HomeCompanyBean homeCompanyBean, ChannelEntity channelEntity){
-        if (homeCompanyBean.isIs_bind_sa() && homeCompanyBean.getId() != homeCompanyBean.getArea_id() && UserUtils.isLogin()){
+    public static void bindCloudWithoutCreateHome(HomeCompanyBean homeCompanyBean, ChannelEntity channelEntity, String sa_lan_address, OnBindListener listener) {
+        LogUtil.e(TAG + "home=" + GsonConverter.getGson().toJson(homeCompanyBean));
+        LogUtil.e(TAG + "isLogin=" + UserUtils.isLogin());
+        if (homeCompanyBean.isIs_bind_sa() && homeCompanyBean.getId() != homeCompanyBean.getArea_id() && UserUtils.isLogin()) {
             checkUrl500(homeCompanyBean.getSa_lan_address(), new onCheckUrlListener() {
                 @Override
-                public void onSuccess() {
-                    getAccessToken(homeCompanyBean, null);
+                public void onSuccess() {//内网ping的通，但是同步云端使用SC
+                    LogUtil.e(TAG + "bindCloudWithoutCreateHome11=onSuccess");
+                    getAccessToken(homeCompanyBean, null, sa_lan_address, listener);
                 }
 
                 @Override
                 public void onError() {
-                    if (channelEntity!=null){
-                        getAccessToken(homeCompanyBean, channelEntity);
-                    }else {
+                    LogUtil.e(TAG + "bindCloudWithoutCreateHome12===onError");
+                    if (channelEntity != null) {
+                        LogUtil.e(TAG + "bindCloudWithoutCreateHome13===onError");
+                        getAccessToken(homeCompanyBean, channelEntity, sa_lan_address, listener);
+                    } else {
                         List<Header> headers = new ArrayList<>();
                         headers.add(new Header(HttpConfig.SA_ID, homeCompanyBean.getSa_id()));
                         List<NameValuePair> requestData = new ArrayList<>();
@@ -367,56 +298,74 @@ public class AllRequestUtil {
                                     public void onSuccess(ChannelEntity obj) {  // 获取临时通道成功
                                         super.onSuccess(obj);
                                         if (obj != null) {
-                                            getAccessToken(homeCompanyBean, obj);
+                                            LogUtil.e(TAG + "bindCloudWithoutCreateHome14===onSuccess");
+                                            getAccessToken(homeCompanyBean, obj, sa_lan_address, listener);
                                         }
                                     }
 
                                     @Override
                                     public void onFailed(int errorCode, String errorMessage) {  // 获取临时通道失败
                                         super.onFailed(errorCode, errorMessage);
-                                        Log.e("CaptureNewActivity=", "checkTemporaryUrl=onFailed");
+                                        LogUtil.e(TAG + "bindCloudWithoutCreateHome15=", "checkTemporaryUrl=onFailed");
                                     }
                                 }, false);
                     }
                 }
             });
+        } else if (listener != null) {
+            listener.onBindSuccess(0);
         }
+    }
+
+    public interface OnBindListener {
+        void onBindSuccess(long homeId);
     }
 
     /**
      * 获取设备access_token
+     *
      * @param homeCompanyBean
      * @param channelEntity
      */
-    public static void getAccessToken(HomeCompanyBean homeCompanyBean, ChannelEntity channelEntity){
+    public static void getAccessToken(HomeCompanyBean homeCompanyBean, ChannelEntity channelEntity, String sa_lan_address, OnBindListener listener) {
         HTTPCaller.getInstance().post(AccessTokenBean.class, HttpUrlConfig.getDeviceAccessToken(), "", new RequestDataCallback<AccessTokenBean>() {
             @Override
             public void onSuccess(AccessTokenBean obj) {
                 super.onSuccess(obj);
-                if (obj!=null){
-                    LogUtil.e("getAccessToken==============成功");
+                if (obj != null) {
+                    LogUtil.e(TAG + "getAccessToken==============成功");
                     BindCloudStrRequest request = new BindCloudStrRequest();
                     request.setAccess_token(obj.getAccess_token());
                     request.setCloud_user_id(UserUtils.getCloudUserId());
                     HttpConfig.addHeader(HttpConfig.SA_ID, homeCompanyBean.getSa_id());
                     HttpConfig.addHeader(HttpConfig.TOKEN_KEY, homeCompanyBean.getSa_user_token());
-                    HTTPCaller.getInstance().post(AreaIdBean.class, channelEntity!=null ? Constant.HTTPS_HEAD + channelEntity.getHost() + HttpUrlConfig.API + HttpUrlParams.cloud_bind  : HttpUrlConfig.getBindCloud(), request,
+
+                    String apiUrl = sa_lan_address + HttpUrlConfig.API + HttpUrlParams.cloud_bind;
+                    if (channelEntity != null) {
+                        apiUrl = Constant.HTTPS_HEAD + channelEntity.getHost() + HttpUrlConfig.API + HttpUrlParams.cloud_bind;
+                    }
+                    HTTPCaller.getInstance().post(AreaIdBean.class, apiUrl, request,
                             new RequestDataCallback<AreaIdBean>() {
                                 @Override
                                 public void onSuccess(AreaIdBean obj) {
                                     super.onSuccess(obj);
-                                    if (obj!=null) {
-                                        Constant.CurrentHome.setId(obj.getArea_id());  // 重新设置云id值
-                                        dbManager.updateHCAreaId(homeCompanyBean.getLocalId(), obj.getArea_id(), channelEntity==null);  // 绑定云端成功之后，修改本地云id值
+                                    if (obj != null) {
+                                        Constant.CurrentHome.setId(obj.getArea_id());// 重新设置云id值
+                                        dbManager.updateHCAreaId(homeCompanyBean.getLocalId(), obj.getArea_id(), channelEntity == null);  // 绑定云端成功之后，修改本地云id值
+                                        if (listener != null) {
+                                            listener.onBindSuccess(obj.getArea_id());
+                                        }
                                     }
                                     EventBus.getDefault().post(new UpdateSaUserNameEvent());
-                                    LogUtil.e("updateArea-bind====success");
+                                    LogUtil.e(TAG + "updateArea-bind====success=" + obj.getArea_id());
                                 }
 
                                 @Override
                                 public void onFailed(int errorCode, String errorMessage) {
                                     super.onFailed(errorCode, errorMessage);
-                                    LogUtil.e("updateArea-fail====="+errorMessage);
+                                    LogUtil.e(TAG + "updateArea-fail=====" + errorMessage);
+                                    if (listener != null)
+                                        listener.onBindSuccess(0);
                                 }
                             });
                 }
@@ -425,11 +374,10 @@ public class AllRequestUtil {
             @Override
             public void onFailed(int errorCode, String errorMessage) {
                 super.onFailed(errorCode, errorMessage);
-                LogUtil.e("getAccessToken==============失败："+errorMessage);
+                LogUtil.e(TAG + "getAccessToken==============失败：" + errorMessage);
             }
         });
     }
-
 
 
     /**
@@ -459,7 +407,7 @@ public class AllRequestUtil {
                 });
     }
 
-    public static void checkUrl500(String url, onCheckUrlListener listener){
+    public static void checkUrl500(String url, onCheckUrlListener listener) {
         if (url != null && !TextUtils.isEmpty(url)) {
             if (!url.startsWith("http"))
                 url = "http://" + url;
@@ -495,9 +443,8 @@ public class AllRequestUtil {
                         try {
                             datas = new String(data, StandardCharsets.UTF_8);
                             LogUtil.e(finalUrl + " " + status + " " + datas);
-                            System.out.println("结果：" + datas);
                             String dataStr = "";
-                            String result="";
+                            String result = "";
                             if (status != -1) {
                                 JSONObject jsonObject = new JSONObject(datas);
                                 dataStr = jsonObject.getString("data");
@@ -513,7 +460,7 @@ public class AllRequestUtil {
                 });
     }
 
-    public static OkHttpClient getClient(){
+    public static OkHttpClient getClient() {
         OkHttpClient client = new OkHttpClient.Builder()
                 .connectTimeout(500, TimeUnit.MILLISECONDS)
                 .writeTimeout(500, TimeUnit.MILLISECONDS)
@@ -521,17 +468,17 @@ public class AllRequestUtil {
                 .addInterceptor(new LoggerInterceptor("ZhiTing", true))
                 .sslSocketFactory(SSLSocketClient.getSSLSocketFactory(), SSLSocketClient.getX509TrustManager())
                 .hostnameVerifier((hostname, session) -> {
-                    if (hostname.equals(HTTPCaller.CLOUD_HOST_NAME)) {  // SC直接访问
+                    if (hostname.equals(HttpBaseUrl.baseSCHost)) {  // SC直接访问
                         return true;
                     } else {
                         if (session != null) {
                             String cersCacheJson = SpUtil.get(hostname); // 根据主机名获取本地存储的数据
-                            LogUtil.e("缓存证书："+cersCacheJson);
+                            LogUtil.e("缓存证书：" + cersCacheJson);
                             try {
                                 Certificate[] certificates = session.getPeerCertificates();  // 证书
                                 String cersJson = HTTPCaller.byte2Base64String(certificates[0].getEncoded());  // 把证书转为base64存储
                                 if (!TextUtils.isEmpty(cersCacheJson)) {  // 如果之前存储过
-                                    LogUtil.e("服务证书："+cersJson);
+                                    LogUtil.e("服务证书：" + cersJson);
                                     String ccj = new String(cersCacheJson.getBytes(), "UTF-8");
                                     String cj = new String(cersJson.getBytes(), "UTF-8");
                                     boolean cer = cj.equals(ccj);
@@ -567,10 +514,23 @@ public class AllRequestUtil {
             if (!hasDialog) {
                 hasDialog = true;
                 CertificateDialog certificateDialog = CertificateDialog.newInstance(tips);
-                certificateDialog.setConfirmListener(() -> {
-                    SpUtil.put(hostName, cerCache);
-                    certificateDialog.dismiss();
-                    hasDialog = false;
+//                certificateDialog.setConfirmListener(() -> {
+//                    SpUtil.put(hostName, cerCache);
+//                    certificateDialog.dismiss();
+//                    hasDialog = false;
+//                });
+                certificateDialog.setConfirmListener(new CertificateDialog.OnConfirmListener() {
+                    @Override
+                    public void onConfirm() {
+                        SpUtil.put(hostName, cerCache);
+                        certificateDialog.dismiss();
+                        hasDialog = false;
+                    }
+
+                    @Override
+                    public void onCancel() {
+                        certificateDialog.dismiss();
+                    }
                 });
                 certificateDialog.show(activity);
             }

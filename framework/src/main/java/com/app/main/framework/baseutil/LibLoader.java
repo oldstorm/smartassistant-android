@@ -134,6 +134,18 @@ public class LibLoader {
     }
 
     /**
+     * 除某个activity之外，全部结束
+     * @param cls
+     */
+    public static void finishAllActivityExcludeCertain(Class<?> cls){
+        for (Activity activity : activityStack) {
+            if (!activity.getClass().equals(cls)) {
+                activity.finish();
+            }
+        }
+    }
+
+    /**
      * 结束所有的Activity
      */
     public static void finishAllActivity() {

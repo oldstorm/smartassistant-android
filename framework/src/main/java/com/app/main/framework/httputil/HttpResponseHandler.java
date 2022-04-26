@@ -20,7 +20,7 @@ public abstract class HttpResponseHandler implements Callback {
      */
     public void onFailure(Call call, IOException e) {
         if (e != null && e.getMessage() != null && e.getMessage().getBytes() != null) {
-            onFailure(-1, e.getMessage().getBytes());
+            onFailure(404, e.getMessage().getBytes());
         }
     }
 

@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -17,6 +18,7 @@ import com.yctc.zhiting.R;
 import com.yctc.zhiting.activity.contract.SceneDetailDeviceContract;
 import com.yctc.zhiting.activity.presenter.SceneDetailDevicesPresenter;
 import com.yctc.zhiting.adapter.SceneDevicesAdapter;
+import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.entity.home.DeviceMultipleBean;
 import com.yctc.zhiting.entity.home.RoomDeviceListBean;
 import com.yctc.zhiting.entity.mine.LocationBean;
@@ -31,7 +33,7 @@ import java.util.List;
 
 import butterknife.BindView;
 
-public class SceneDetailDeviceActivity extends MVPBaseActivity<SceneDetailDeviceContract.View, SceneDetailDevicesPresenter> implements  SceneDetailDeviceContract.View {
+public class SceneDetailDeviceActivity extends MVPBaseActivity<SceneDetailDeviceContract.View, SceneDetailDevicesPresenter> implements SceneDetailDeviceContract.View {
 
 
     @BindView(R.id.llParent)
@@ -44,6 +46,8 @@ public class SceneDetailDeviceActivity extends MVPBaseActivity<SceneDetailDevice
     TextView tvTodo;
     @BindView(R.id.tvEmpty)
     TextView tvEmpty;
+    @BindView(R.id.ivEmpty)
+    ImageView ivEmpty;
 
     private LocationPopupWindow locationPopupWindow;
 
@@ -57,6 +61,7 @@ public class SceneDetailDeviceActivity extends MVPBaseActivity<SceneDetailDevice
      */
     private int from;
     private String title;
+    private int type; // 1. 任务设备列表  2. 条件设备列表
 
     @Override
     protected int getLayoutId() {
@@ -66,6 +71,8 @@ public class SceneDetailDeviceActivity extends MVPBaseActivity<SceneDetailDevice
     @Override
     protected void initUI() {
         super.initUI();
+        ivEmpty.setImageResource(R.drawable.icon_device_empty);
+        tvEmpty.setText(UiUtil.getString(R.string.scene_no_device));
         rvData.setLayoutManager(new LinearLayoutManager(this));
         sceneDevicesAdapter = new SceneDevicesAdapter();
         rvData.setAdapter(sceneDevicesAdapter);
@@ -78,7 +85,7 @@ public class SceneDetailDeviceActivity extends MVPBaseActivity<SceneDetailDevice
 
                 if (from == 1) {
                     switchToActivity(SceneDeviceConditionAttrActivity.class, bundle);
-                }else if (from == 2){
+                } else if (from == 2) {
                     switchToActivity(SceneDeviceTaskAttrActivity.class, bundle);
                 }
             }
@@ -90,13 +97,18 @@ public class SceneDetailDeviceActivity extends MVPBaseActivity<SceneDetailDevice
         super.initIntent(intent);
         title = getIntent().getStringExtra(IntentConstant.TITLE);
         from = getIntent().getIntExtra(IntentConstant.FROM, 0);
+        if (from == 1) {
+            type = 2;
+        } else if (from == 2) {
+            type = 1;
+        }
         setTitleRightText(getResources().getString(R.string.scene_select));
         getRightTitleText().setTextColor(UiUtil.getColor(R.color.color_3F4663));
         getRightTitleText().setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
         getRightTitleText().setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (locationPopupWindow!=null){
+                if (locationPopupWindow != null) {
                     locationPopupWindow.show(llParent);
                 }
             }
@@ -107,18 +119,19 @@ public class SceneDetailDeviceActivity extends MVPBaseActivity<SceneDetailDevice
 
     @Override
     public void getDeviceListSuccess(RoomDeviceListBean roomListBean) {
-        if (roomListBean != null){
-            if (CollectionUtil.isNotEmpty(roomListBean.getDevices())){
+        if (roomListBean != null) {
+            if (CollectionUtil.isNotEmpty(roomListBean.getDevices())) {
                 setNullView(false);
                 // 把数据装进各个房间
                 List<DeviceMultipleBean> excludeRoom = new ArrayList<>();
                 // 先把没有归属房间装进去
-                for (DeviceMultipleBean dmb : roomListBean.getDevices()){
-                    if (dmb.getLocation_id() == 0){
+                for (DeviceMultipleBean dmb : roomListBean.getDevices()) {
+                    int locationId = Constant.AREA_TYPE == 2 ? dmb.getDepartment_id() : dmb.getLocation_id();
+                    if (locationId == 0) {
                         excludeRoom.add(dmb);
                     }
                 }
-                if (CollectionUtil.isNotEmpty(excludeRoom)){
+                if (CollectionUtil.isNotEmpty(excludeRoom)) {
                     data.add(new SceneDevicesBean(0, "", excludeRoom));
                 }
 
@@ -127,7 +140,8 @@ public class SceneDetailDeviceActivity extends MVPBaseActivity<SceneDetailDevice
                     for (LocationBean locationBean : locations) {
                         List<DeviceMultipleBean> devices = new ArrayList<>();
                         for (DeviceMultipleBean deviceMultipleBean : roomListBean.getDevices()) {
-                            if (locationBean.getId() == deviceMultipleBean.getLocation_id()) {
+                            int locationId = Constant.AREA_TYPE == 2 ? deviceMultipleBean.getDepartment_id() : deviceMultipleBean.getLocation_id();
+                            if (locationBean.getId() == locationId) {
                                 devices.add(deviceMultipleBean);
                             }
                         }
@@ -140,21 +154,21 @@ public class SceneDetailDeviceActivity extends MVPBaseActivity<SceneDetailDevice
                 if (CollectionUtil.isNotEmpty(data)) {
                     setNullView(false);
                     sceneDevicesAdapter.setNewData(data);
-                }else {
+                } else {
                     setNullView(true);
                 }
-            }else {
+            } else {
                 setNullView(true);
             }
-        }else {
+        } else {
             setNullView(true);
         }
     }
 
     @Override
     public void getRoomListSuccess(RoomListBean roomListBean) {
-        if (roomListBean!=null){
-            mPresenter.getDeviceList();
+        if (roomListBean != null) {
+            mPresenter.getDeviceList(type);
             if (CollectionUtil.isNotEmpty(roomListBean.getLocations())) {
                 setNullView(false);
                 locations = roomListBean.getLocations();
@@ -170,29 +184,30 @@ public class SceneDetailDeviceActivity extends MVPBaseActivity<SceneDetailDevice
                         locationPopupWindow.dismiss();
                     }
                 });
-            }else {
+            } else {
                 setNullView(true);
             }
-        }else {
+        } else {
             setNullView(true);
         }
     }
 
     /**
      * 筛选数据
+     *
      * @param id
      */
-    private void resetData(int id){
-        if (id == 0){
+    private void resetData(int id) {
+        if (id == 0) {
             if (CollectionUtil.isNotEmpty(data)) {
                 setNullView(false);
                 sceneDevicesAdapter.setNewData(data);
-            }else {
+            } else {
                 setNullView(true);
             }
-        }else {
+        } else {
             List<SceneDevicesBean> newData = new ArrayList<>();
-            for (SceneDevicesBean sceneDevicesBean : data){
+            for (SceneDevicesBean sceneDevicesBean : data) {
                 if (sceneDevicesBean.getId() == id) {
                     newData.add(sceneDevicesBean);
                 }
@@ -200,7 +215,7 @@ public class SceneDetailDeviceActivity extends MVPBaseActivity<SceneDetailDevice
             if (CollectionUtil.isNotEmpty(newData)) {
                 setNullView(false);
                 sceneDevicesAdapter.setNewData(newData);
-            }else {
+            } else {
                 setNullView(true);
             }
         }
@@ -216,7 +231,7 @@ public class SceneDetailDeviceActivity extends MVPBaseActivity<SceneDetailDevice
         ToastUtil.show(msg);
     }
 
-    private void setNullView(boolean visible){
+    private void setNullView(boolean visible) {
         tvTodo.setVisibility(View.INVISIBLE);
         rvData.setVisibility(visible ? View.GONE : View.VISIBLE);
         layoutNull.setVisibility(visible ? View.VISIBLE : View.GONE);

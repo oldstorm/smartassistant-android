@@ -26,20 +26,15 @@ import com.scwang.smart.refresh.layout.api.RefreshLayout;
 import com.scwang.smart.refresh.layout.listener.OnRefreshListener;
 import com.yctc.zhiting.R;
 import com.yctc.zhiting.activity.CreatePluginDetailActivity;
-import com.yctc.zhiting.activity.LoginActivity;
 import com.yctc.zhiting.adapter.SbCreateAdapter;
-import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.dialog.CenterAlertDialog;
 import com.yctc.zhiting.dialog.UploadPluginDialog;
 import com.yctc.zhiting.entity.CreatePluginListBean;
-import com.yctc.zhiting.entity.mine.OperatePluginBean;
 import com.yctc.zhiting.fragment.contract.SBCreateContract;
 import com.yctc.zhiting.fragment.presenter.SBCreatePresenter;
-import com.yctc.zhiting.request.AddOrUpdatePluginRequest;
 import com.yctc.zhiting.utils.CollectionUtil;
 import com.yctc.zhiting.utils.IntentConstant;
 
-import org.greenrobot.eventbus.EventBus;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -65,10 +60,9 @@ public class SBCreateFragment extends MVPBaseFragment<SBCreateContract.View, SBC
     TextView tvEmpty;
 
     private SbCreateAdapter mSbCreateAdapter;
-
     private UploadPluginDialog uploadPluginDialog;
 
-    public static SBCreateFragment getInstance(){
+    public static SBCreateFragment getInstance() {
         return new SBCreateFragment();
     }
 
@@ -85,12 +79,7 @@ public class SBCreateFragment extends MVPBaseFragment<SBCreateContract.View, SBC
         ivEmpty.setImageResource(R.drawable.icon_empty_data);
         tvEmpty.setText(getResources().getString(R.string.common_no_content));
         initRv();
-        refreshLayout.setOnRefreshListener(new OnRefreshListener() {
-            @Override
-            public void onRefresh(@NonNull @NotNull RefreshLayout refreshLayout) {
-                getData(false);
-            }
-        });
+        refreshLayout.setOnRefreshListener(refreshLayout -> getData(false));
         initUploadPluginDialog();
         getData(true);
     }
@@ -98,7 +87,7 @@ public class SBCreateFragment extends MVPBaseFragment<SBCreateContract.View, SBC
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
-        if (isVisibleToUser){
+        if (isVisibleToUser) {
             getData(true);
         }
     }
@@ -106,62 +95,62 @@ public class SBCreateFragment extends MVPBaseFragment<SBCreateContract.View, SBC
     /**
      * 初始化列表
      */
-    private void initRv(){
+    private void initRv() {
         mSbCreateAdapter = new SbCreateAdapter();
         rvBrand.setLayoutManager(new LinearLayoutManager(getContext()));
         rvBrand.setAdapter(mSbCreateAdapter);
 
-        mSbCreateAdapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
-                CreatePluginListBean.PluginsBean pluginsBean = mSbCreateAdapter.getItem(position);
-                if (pluginsBean.getBuild_status() == 1) {
-                    Bundle bundle = new Bundle();
-                    bundle.putSerializable(IntentConstant.BEAN, pluginsBean);
-                    switchToActivityForResult(CreatePluginDetailActivity.class, bundle, DETAIL_REQUEST_CODE);
-                }
+        mSbCreateAdapter.setOnItemClickListener((adapter, view, position) -> {
+            CreatePluginListBean.PluginsBean pluginsBean = mSbCreateAdapter.getItem(position);
+            if (pluginsBean.getBuild_status() == 1) {
+                Bundle bundle = new Bundle();
+                bundle.putSerializable(IntentConstant.BEAN, pluginsBean);
+                switchToActivityForResult(CreatePluginDetailActivity.class, bundle, DETAIL_REQUEST_CODE);
             }
         });
 
-        mSbCreateAdapter.setOnItemChildClickListener(new BaseQuickAdapter.OnItemChildClickListener() {
-            @Override
-            public void onItemChildClick(BaseQuickAdapter adapter, View view, int position) {
-                int viewId = view.getId();
-                CreatePluginListBean.PluginsBean pluginsBean = mSbCreateAdapter.getItem(position);
-                if (viewId == R.id.tvDel){ // 删除
-                    if (pluginsBean.getBuild_status() == 1){  // 如果添加成功，需要确认弹窗
-                        CenterAlertDialog alertDialog = CenterAlertDialog.newInstance(getResources().getString(R.string.mine_mine_plugin_del_tips_2), getResources().getString(R.string.common_cancel), getResources().getString(R.string.confirm), false);
-                        alertDialog.setConfirmListener(del -> {
-                            alertDialog.dismiss();
-                            removePlugin(pluginsBean, position);
-
-                        });
-                        alertDialog.show(SBCreateFragment.this);
-                    }else { // 如果添加失败，直接删除
-                        removePlugin(pluginsBean, position);
-                    }
+        mSbCreateAdapter.setOnItemChildClickListener((adapter, view, position) -> {
+            int viewId = view.getId();
+            CreatePluginListBean.PluginsBean pluginsBean = mSbCreateAdapter.getItem(position);
+            if (viewId == R.id.tvDel) { // 删除
+                if (pluginsBean.getBuild_status() == 1) {  // 如果添加成功，需要确认弹窗
+                    showAlertDialog(pluginsBean, position);
+                } else { // 如果添加失败，直接删除
+                    removePlugin(pluginsBean, position);
                 }
             }
         });
     }
 
+    private void showAlertDialog(CreatePluginListBean.PluginsBean pluginsBean, int position) {
+        String title = UiUtil.getString(R.string.mine_mine_plugin_del_tips_2);
+        String cancelStr = UiUtil.getString(R.string.common_cancel);
+        String confirmStr = UiUtil.getString(R.string.confirm);
+        CenterAlertDialog alertDialog = CenterAlertDialog.newInstance(title, cancelStr, confirmStr, false);
+        alertDialog.setConfirmListener(del -> {
+            alertDialog.dismiss();
+            removePlugin(pluginsBean, position);
+        });
+        alertDialog.show(SBCreateFragment.this);
+    }
+
     /**
      * 删除插件
+     *
      * @param pluginsBean
      * @param position
      */
-    private void removePlugin(CreatePluginListBean.PluginsBean pluginsBean, int position){
+    private void removePlugin(CreatePluginListBean.PluginsBean pluginsBean, int position) {
         pluginsBean.setLoading(true);
         mSbCreateAdapter.notifyItemChanged(position);
         mPresenter.removePlugin(pluginsBean.getId(), position);
         setNullView(CollectionUtil.isEmpty(mSbCreateAdapter.getData()));
     }
 
-
     /**
      * 上传插件弹窗
      */
-    private void initUploadPluginDialog(){
+    private void initUploadPluginDialog() {
         uploadPluginDialog = new UploadPluginDialog();
         uploadPluginDialog.setClickUploadListener(new UploadPluginDialog.OnClickUploadListener() {
             @Override
@@ -171,7 +160,7 @@ public class SBCreateFragment extends MVPBaseFragment<SBCreateContract.View, SBC
 
             @Override
             public void onConfirm(String filePath) {
-                if (!TextUtils.isEmpty(filePath)){
+                if (!TextUtils.isEmpty(filePath)) {
                     uploadPlugin(filePath);
                 }
             }
@@ -200,14 +189,9 @@ public class SBCreateFragment extends MVPBaseFragment<SBCreateContract.View, SBC
             if (requestCode == 1) {
                 Uri uri = data.getData();
                 String filePath = BaseFileUtil.getFilePathByUri(getBaseActivity(), uri);
-//            if (!filePath.endsWith(Constant.DOT_ZIP)){
-//                ToastUtil.show(UiUtil.getString(R.string.only_zip));
-//                return;
-//            }
-//            uploadPlugin(filePath);
                 LogUtil.e("onActivityResult=filePath:" + filePath);
                 uploadPluginDialog.resetUploadStatus(1, filePath);
-            }else if (requestCode == DETAIL_REQUEST_CODE){
+            } else if (requestCode == DETAIL_REQUEST_CODE) {
                 getData(true);
             }
         }
@@ -215,9 +199,10 @@ public class SBCreateFragment extends MVPBaseFragment<SBCreateContract.View, SBC
 
     /**
      * 上传插件
+     *
      * @param filePath
      */
-    private void uploadPlugin(String filePath){
+    private void uploadPlugin(String filePath) {
         NameValuePair nameValuePair = new NameValuePair("file", filePath, true);
         List<NameValuePair> requestData = new ArrayList<>();
         requestData.add(nameValuePair);
@@ -227,10 +212,11 @@ public class SBCreateFragment extends MVPBaseFragment<SBCreateContract.View, SBC
 
     /**
      * 获取数据
+     *
      * @param showLoading
      */
-    public void getData(boolean showLoading){
-        if (mPresenter!=null) {
+    public void getData(boolean showLoading) {
+        if (mPresenter != null) {
             List<NameValuePair> requestData = new ArrayList<>();
             requestData.add(new NameValuePair("list_type", String.valueOf(1)));
             mPresenter.getCreateList(requestData, showLoading);
@@ -242,33 +228,35 @@ public class SBCreateFragment extends MVPBaseFragment<SBCreateContract.View, SBC
      */
     @OnClick(R.id.tvAdd)
     void onClickAdd() {
-        if (uploadPluginDialog!=null && !uploadPluginDialog.isShowing()) {
+        if (uploadPluginDialog != null && !uploadPluginDialog.isShowing()) {
             uploadPluginDialog.show(this);
         }
     }
 
     /**
      * 创作列表成功
+     *
      * @param createPluginListBean
      */
     @Override
     public void getCreateListSuccess(CreatePluginListBean createPluginListBean) {
         refreshLayout.finishRefresh();
-        if (createPluginListBean!=null){
+        if (createPluginListBean != null) {
             List<CreatePluginListBean.PluginsBean> plugins = createPluginListBean.getPlugins();
-            if (CollectionUtil.isNotEmpty(plugins)){
+            if (CollectionUtil.isNotEmpty(plugins)) {
                 mSbCreateAdapter.setNewData(plugins);
                 setNullView(false);
-            }else {
+            } else {
                 setNullView(true);
             }
-        }else {
+        } else {
             setNullView(true);
         }
     }
 
     /**
      * 创作列表失败
+     *
      * @param errorCode
      * @param msg
      */
@@ -280,17 +268,18 @@ public class SBCreateFragment extends MVPBaseFragment<SBCreateContract.View, SBC
 
     /**
      * 上传插件成功
+     *
      * @param object
      */
     @Override
     public void uploadPluginSuccess(Object object) {
-//        uploadPluginDialog.resetUploadStatus(2);
         uploadPluginDialog.dismiss();
         getData(true);
     }
 
     /**
      * 上传插件失败
+     *
      * @param errorCode
      * @param msg
      */
@@ -301,6 +290,7 @@ public class SBCreateFragment extends MVPBaseFragment<SBCreateContract.View, SBC
 
     /**
      * 删除插件成功
+     *
      * @param position
      */
     @Override
@@ -313,6 +303,7 @@ public class SBCreateFragment extends MVPBaseFragment<SBCreateContract.View, SBC
 
     /**
      * 删除插件失败
+     *
      * @param errorCode
      * @param msg
      * @param position
@@ -324,7 +315,6 @@ public class SBCreateFragment extends MVPBaseFragment<SBCreateContract.View, SBC
         mSbCreateAdapter.notifyItemChanged(position);
         ToastUtil.show(msg);
     }
-
 
     /**
      * 有无无数据

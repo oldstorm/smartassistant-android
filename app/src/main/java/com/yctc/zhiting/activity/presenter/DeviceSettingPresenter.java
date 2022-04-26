@@ -6,6 +6,7 @@ import com.app.main.framework.httputil.RequestDataCallback;
 import com.yctc.zhiting.activity.contract.DeviceSettingContract;
 import com.yctc.zhiting.activity.model.DeviceSettingModel;
 import com.yctc.zhiting.bean.DeviceDetailBean;
+import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.entity.DeviceDetailResponseEntity;
 import com.yctc.zhiting.entity.mine.PermissionBean;
 
@@ -88,7 +89,8 @@ public class DeviceSettingPresenter extends BasePresenterImpl<DeviceSettingContr
     @Override
     public void updateName(int id, String name, int location_id) {
         mView.showLoadingView();
-        String body = "{\"name\":\""+ name+"\",\"location_id\":"+location_id+"}";
+        String idName = Constant.AREA_TYPE == 2 ? "department_id" : "location_id";
+        String body = "{\"name\":\""+ name+"\",\""+idName+"\":"+location_id+"}";
         model.updateName(id, body, new RequestDataCallback<Object>() {
             @Override
             public void onSuccess(Object obj) {

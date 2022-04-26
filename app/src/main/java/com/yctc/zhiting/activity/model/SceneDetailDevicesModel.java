@@ -23,9 +23,9 @@ public class SceneDetailDevicesModel implements SceneDetailDeviceContract.Model 
      * @param callback
      */
     @Override
-    public void getDeviceList(RequestDataCallback<RoomDeviceListBean> callback) {
+    public void getDeviceList(int type, RequestDataCallback<RoomDeviceListBean> callback) {
         List<NameValuePair> requestData = new ArrayList<>();
-        requestData.add(new NameValuePair("type", String.valueOf(1)));
+        requestData.add(new NameValuePair("type", String.valueOf(type)));
         HTTPCaller.getInstance().get(RoomDeviceListBean.class, HttpUrlConfig.getAddDeviceUrl(), requestData, callback);
     }
 

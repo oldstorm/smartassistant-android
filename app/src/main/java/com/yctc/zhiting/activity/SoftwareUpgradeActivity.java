@@ -12,7 +12,6 @@ import com.app.main.framework.baseview.MVPBaseActivity;
 import com.yctc.zhiting.R;
 import com.yctc.zhiting.activity.contract.SoftwareUpgradeContract;
 import com.yctc.zhiting.activity.presenter.SoftwareUpgradePresenter;
-import com.yctc.zhiting.dialog.CheckUpdateDialog;
 import com.yctc.zhiting.dialog.SACheckUpdateDialog;
 import com.yctc.zhiting.entity.mine.CurrentVersionBean;
 import com.yctc.zhiting.entity.mine.SoftWareVersionBean;
@@ -31,10 +30,11 @@ public class SoftwareUpgradeActivity extends MVPBaseActivity<SoftwareUpgradeCont
     TextView tvTitleBarText;
     @BindView(R.id.tvVersion)
     TextView tvVersion;
-    private CheckUpdateDialog dialog;
 
+    private int mType;
+    private String mLatestVersion;
+    private String mCurrentVersion = "";
     private SACheckUpdateDialog mSACheckUpdateDialog;
-    private String version;
 
     @Override
     protected int getLayoutId() {
@@ -49,54 +49,53 @@ public class SoftwareUpgradeActivity extends MVPBaseActivity<SoftwareUpgradeCont
     @Override
     protected void initIntent(Intent intent) {
         super.initIntent(intent);
-        int type = intent.getIntExtra("type", -1);
+        mType = intent.getIntExtra("type", -1);
         int titleId = R.string.home_firmware_upgrade;
-        if (type == 1) {
+        if (mType == 1) {
             titleId = R.string.home_software_upgrade;
-            mPresenter.getCurrentVersion();
+            mPresenter.getCurrentSoftWareVersion();
+        } else if (mType == 2) {
+            mPresenter.getCurrentFirmWareVersion();
         }
         tvTitleBarText.setText(titleId);
     }
-
 
     @OnClick({R.id.ivTitleBarLeft, R.id.tvCheckUpdate})
     public void onClick(View view) {
         if (view.getId() == R.id.ivTitleBarLeft) {
             finish();
         } else if (view.getId() == R.id.tvCheckUpdate) {
-            mPresenter.getCheckSoftWareVersion();
+            if (mType == 1) {
+                mPresenter.getCheckSoftWareVersion();
+            } else if (mType == 2) {
+                mPresenter.getFirmWareLatestVersion();
+            }
         }
     }
 
     @Override
     public void onCheckSoftWareVersionSuccess(SoftWareVersionBean bean) {
-        if (bean.getVersion().equals(bean.getLatest_version())) {
+        if (mCurrentVersion.equals(bean.getLatest_version())) {
             ToastUtil.show(UiUtil.getString(R.string.home_version_is_latest));
         } else {
-//            if (dialog == null) {
-//                dialog = CheckUpdateDialog.newInstance(bean.getLatest_version());
-//                dialog.setDialogListener(() -> {
-//                    SoftWareVersionBean request = new SoftWareVersionBean();
-//                    request.setVersion(bean.getLatest_version());
-//                    mPresenter.postSoftWareUpgrade(request);
-//                });
-//            }
-//            if (!dialog.isShowing())
-//                dialog.show(this);
-            if (mSACheckUpdateDialog==null){
+            if (mSACheckUpdateDialog == null) {
                 mSACheckUpdateDialog = SACheckUpdateDialog.newInstance(bean.getLatest_version());
-                mSACheckUpdateDialog.setUpdateListener(new SACheckUpdateDialog.OnUpdateListener() {
-                    @Override
-                    public void onUpdate() {
-                        SoftWareVersionBean request = new SoftWareVersionBean();
-                        request.setVersion(bean.getLatest_version());
-                        version = bean.getLatest_version();
-                        mSACheckUpdateDialog.setUpdateStatus(true);
+                mSACheckUpdateDialog.setUpdateListener(() -> {
+                    SoftWareVersionBean request = new SoftWareVersionBean();
+                    request.setVersion(bean.getLatest_version());
+                    mLatestVersion = bean.getLatest_version();
+                    mSACheckUpdateDialog.setUpdateStatus(true);
+                    if (mType == 1) {
                         mPresenter.postSoftWareUpgrade(request);
+                    } else if (mType == 2) {
+                        mPresenter.updateFirmWare(request);
                     }
+                    UiUtil.postDelayed(() -> {
+                        mSACheckUpdateDialog.dismiss();
+                    }, 200);
                 });
             }
-            if (!mSACheckUpdateDialog.isShowing()){
+            if (!mSACheckUpdateDialog.isShowing()) {
                 mSACheckUpdateDialog.show(this);
             }
         }
@@ -114,20 +113,22 @@ public class SoftwareUpgradeActivity extends MVPBaseActivity<SoftwareUpgradeCont
     @Override
     public void onSoftWareUpgradeSuccess() {
         ToastUtil.show(UiUtil.getString(R.string.home_update_success));
-        tvVersion.setText(String.format(UiUtil.getString(R.string.home_current_version), version));
-        mSACheckUpdateDialog.setUpdateStatus(false);
+        mCurrentVersion = mLatestVersion;
+        tvVersion.setText(String.format(UiUtil.getString(R.string.home_current_version), mLatestVersion));
+        //mSACheckUpdateDialog.setUpdateStatus(false);
         mSACheckUpdateDialog.dismiss();
     }
 
     @Override
     public void onSoftWareUpgradeFailed(int code, String msg) {
         ToastUtil.show(UiUtil.getString(R.string.home_update_failed));
-        mSACheckUpdateDialog.setUpdateStatus(false);
+        //mSACheckUpdateDialog.setUpdateStatus(false);
     }
 
     @Override
     public void onCurrentVersionSuccess(CurrentVersionBean data) {
-        tvVersion.setText(String.format(UiUtil.getString(R.string.home_current_version), data.getVersion()));
+        mCurrentVersion = data.getVersion();
+        tvVersion.setText(String.format(UiUtil.getString(R.string.home_current_version), mCurrentVersion));
     }
 
     @Override

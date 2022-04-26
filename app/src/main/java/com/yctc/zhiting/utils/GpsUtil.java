@@ -10,7 +10,8 @@ public class GpsUtil {
     public static boolean isEnabled(Context context){
         LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         boolean gps = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        return gps;
+        boolean networkLocation = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        return gps || networkLocation;
     }
 
     public static void openGPS(Context context){

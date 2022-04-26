@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.lihang.ShadowLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="@dimen/dp_255"
+    android:layout_height="wrap_content"
+    app:hl_cornerRadius="@dimen/dp_4"
+    app:hl_shadowColor="@color/color_1a151515"
+    app:hl_shadowLimit="@dimen/dp_5">
+
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/shape_white_c4"
+        android:padding="@dimen/dp_10"
+        android:text="@string/home_dl_bluetooth_connected"
+        android:textColor="@color/color_3f4663"
+        android:textSize="@dimen/textSize14" />
+
+</com.lihang.ShadowLayout>

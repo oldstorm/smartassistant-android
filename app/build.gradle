@@ -5,15 +5,16 @@ plugins {
 }
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 31
     buildToolsVersion "30.0.3"
 
     defaultConfig {
-        applicationId "com.yctc.zhiting"
+        applicationId "com.zhiting"
+        //applicationId "com.yctc.zhiting"
         minSdkVersion 23
         targetSdkVersion 30
-        versionCode 5
-        versionName "1.5.0"
+        versionCode 12
+        versionName "2.0.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -45,7 +46,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             resValue "string", "proof_of_possesion", "abcd1234"
         }
-        debug{
+        debug {
             resValue "string", "proof_of_possesion", "abcd1234"
         }
     }
@@ -65,11 +66,15 @@ android {
                 def date = new Date()
                 def s = new SimpleDateFormat("MM-dd-HH-mm");
                 def time = s.format(date);
-                outputFileName = "V${variant.versionName}-zhiting-${variant.name}-${time}.apk"
+                def name = "release"
+                if (applicationId == "com.zhiting") {
+                    name = "production"
+                }
+                outputFileName = "V${variant.versionName}-zhiting-${name}-${time}.apk"
+                //outputFileName = "V${variant.versionName}-zhiting-production-${time}.apk"
             }
     }
 }
-
 
 dependencies {
 
@@ -91,12 +96,31 @@ dependencies {
     implementation 'com.tencent.bugly:nativecrashreport:latest.release'
     //其中latest.release指代最新Bugly NDK版本号，也可以指定明确的版本号，例如3.0
 
-    // softAP
+    // softAP(wifi)
     implementation project(path: ':provisioning')
-    // blufi
+    // blufi(蓝牙)
     implementation 'com.github.EspressifApp:lib-blufi-android:2.3.4'
 
     // https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk16 pcks7padding加解密要用
     implementation 'org.bouncycastle:bcprov-jdk16:1.46'
 
+//    // PictureSelector basic (Necessary)
+//    implementation 'io.github.lucksiege:pictureselector:v3.0.4'
+//
+//    // image compress library (Not necessary)
+//    implementation 'io.github.lucksiege:compress:v3.0.4'
+//
+//    // uCrop library (Not necessary)
+//    implementation 'io.github.lucksiege:ucrop:v3.0.4'
+
+    // simple camerax library (Not necessary)
+//    implementation 'io.github.lucksiege:camerax:v3.0.4'
+
+    // 裁剪
+    implementation project(path: ':ucrop')
+    implementation project(path: ':calendarview')
+
+    implementation 'com.hyman:flowlayout-lib:1.1.2'
+
+    implementation 'top.zibin:Luban:1.1.8'
 }

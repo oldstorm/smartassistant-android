@@ -16,6 +16,9 @@ public class ServerConfigBean {
     private int port;
     private String access_token;
     private String area_id;
+    private String mode;
+    private String mqtt_server;
+    private String mqtt_password;
 
     public ServerConfigBean() {
     }
@@ -57,5 +60,29 @@ public class ServerConfigBean {
 
     public void setArea_id(String area_id) {
         this.area_id = area_id;
+    }
+
+    public String getMode() {
+        return mode;
+    }
+
+    public void setMode(String mode) {
+        this.mode = mode;
+    }
+
+    public String getMqtt_server() {
+        return mqtt_server;
+    }
+
+    public void setMqtt_server(String mqtt_server) {
+        this.mqtt_server = mqtt_server;
+    }
+
+    public String getMqtt_password() {
+        return mqtt_password;
+    }
+
+    public void setMqtt_password(String mqtt_password) {
+        this.mqtt_password = mqtt_password;
     }
 }

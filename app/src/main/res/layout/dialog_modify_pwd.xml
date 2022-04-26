@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/shape_white_c10">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/dp_16"
+        android:text="@string/mine_modify_pwd"
+        android:textColor="@color/color_3f4663"
+        android:textSize="@dimen/textSize16"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/dp_13"
+        android:layout_marginRight="@dimen/dp_23"
+        android:layout_marginTop="@dimen/dp_22"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="@dimen/dp_0"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="right"
+            android:text="@string/mine_old_pwd_colon"
+            android:textColor="@color/color_3f4663"
+            android:textSize="@dimen/textSize14"
+            android:textStyle="bold" />
+        <EditText
+            android:id="@+id/etOldPwd"
+            android:layout_width="@dimen/dp_0"
+            android:layout_height="wrap_content"
+            android:paddingTop="@dimen/dp_18"
+            android:paddingBottom="@dimen/dp_19"
+            android:paddingLeft="@dimen/dp_16"
+            android:paddingRight="@dimen/dp_16"
+            android:layout_weight="1.8"
+            android:background="@drawable/shape_eeeeee_c4"
+            android:inputType="textPassword"
+            android:singleLine="true"
+            android:textColorHint="@color/color_94A5BE"
+            android:hint="@string/mine_old_pwd_hint"
+            android:textColor="@color/color_3f4663"
+            android:textSize="@dimen/textSize14" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/dp_13"
+        android:layout_marginRight="@dimen/dp_23"
+        android:layout_marginTop="@dimen/dp_22"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="@dimen/dp_0"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="right"
+            android:text="@string/mine_new_pwd_colon"
+            android:textColor="@color/color_3f4663"
+            android:textSize="@dimen/textSize14"
+            android:textStyle="bold" />
+        <EditText
+            android:id="@+id/etNewPwd"
+            android:layout_width="@dimen/dp_0"
+            android:layout_height="wrap_content"
+            android:paddingTop="@dimen/dp_18"
+            android:paddingBottom="@dimen/dp_19"
+            android:paddingLeft="@dimen/dp_16"
+            android:paddingRight="@dimen/dp_16"
+            android:layout_weight="1.8"
+            android:background="@drawable/shape_eeeeee_c4"
+            android:inputType="textPassword"
+            android:singleLine="true"
+            android:textColorHint="@color/color_94A5BE"
+            android:hint="@string/mine_new_pwd_hint"
+            android:textColor="@color/color_3f4663"
+            android:textSize="@dimen/textSize14" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/dp_13"
+        android:layout_marginRight="@dimen/dp_23"
+        android:layout_marginTop="@dimen/dp_22"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <TextView
+            android:layout_width="@dimen/dp_0"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="right"
+            android:text="@string/mine_confirm_pwd"
+            android:textColor="@color/color_3f4663"
+            android:textSize="@dimen/textSize14"
+            android:textStyle="bold" />
+        <EditText
+            android:id="@+id/etConfirmPwd"
+            android:layout_width="@dimen/dp_0"
+            android:layout_height="wrap_content"
+            android:paddingTop="@dimen/dp_18"
+            android:paddingBottom="@dimen/dp_19"
+            android:paddingLeft="@dimen/dp_16"
+            android:paddingRight="@dimen/dp_16"
+            android:layout_weight="1.8"
+            android:background="@drawable/shape_eeeeee_c4"
+            android:inputType="textPassword"
+            android:singleLine="true"
+            android:textColorHint="@color/color_94A5BE"
+            android:hint="@string/mine_confirm_pwd_hint"
+            android:textColor="@color/color_3f4663"
+            android:textSize="@dimen/textSize14" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:layout_marginTop="@dimen/dp_23"
+        android:background="@color/color_DDDDDD" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:id="@+id/tvCancel"
+            android:layout_width="@dimen/dp_0"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingTop="@dimen/dp_18"
+            android:paddingBottom="@dimen/dp_18"
+            android:gravity="center"
+            android:text="@string/cancel"
+            android:textColor="@color/color_94A5BE"
+            android:textSize="@dimen/textSize14"
+            android:textStyle="bold" />
+        <View
+            android:layout_width="0.5dp"
+            android:layout_height="match_parent"
+            android:background="@color/color_DDDDDD" />
+        <TextView
+            android:id="@+id/tvConfirm"
+            android:layout_width="@dimen/dp_0"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingTop="@dimen/dp_18"
+            android:paddingBottom="@dimen/dp_18"
+            android:gravity="center"
+            android:text="@string/confirm"
+            android:textColor="@color/color_2da3f6"
+            android:textSize="@dimen/textSize14"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+</LinearLayout>

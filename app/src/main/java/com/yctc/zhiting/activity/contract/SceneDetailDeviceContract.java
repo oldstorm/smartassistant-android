@@ -9,7 +9,7 @@ import com.yctc.zhiting.entity.mine.RoomListBean;
 public interface SceneDetailDeviceContract {
     interface Model {
         void getRoomList(RequestDataCallback<RoomListBean> callback);
-        void getDeviceList(RequestDataCallback<RoomDeviceListBean> callback);
+        void getDeviceList(int type, RequestDataCallback<RoomDeviceListBean> callback);
     }
 
     interface View extends BaseView {
@@ -20,7 +20,7 @@ public interface SceneDetailDeviceContract {
     }
 
     interface Presenter extends BasePresenter<View> {
-        void getDeviceList();
+        void getDeviceList(int type);
         void getRoomList();
     }
 

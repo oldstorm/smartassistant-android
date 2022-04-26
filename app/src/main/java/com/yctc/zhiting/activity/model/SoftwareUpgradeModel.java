@@ -27,4 +27,19 @@ public class SoftwareUpgradeModel implements SoftwareUpgradeContract.Model {
     public void getCurrentVersion(RequestDataCallback<CurrentVersionBean> callback) {
         HTTPCaller.getInstance().get(CurrentVersionBean.class, HttpUrlConfig.getCurrentVersion(), callback);
     }
+
+    @Override
+    public void getFirmWareLatestVersion(RequestDataCallback<SoftWareVersionBean> callback) {
+        HTTPCaller.getInstance().get(SoftWareVersionBean.class, HttpUrlConfig.getFirmWareLatestVersion(), callback);
+    }
+
+    @Override
+    public void updateFirmWare(Request request, RequestDataCallback<String> callback) {
+        HTTPCaller.getInstance().post(String.class, HttpUrlConfig.getUpdateFirmWare(),request, callback);
+    }
+
+    @Override
+    public void getCurrentFirmWareVersion(RequestDataCallback<CurrentVersionBean> callback) {
+        HTTPCaller.getInstance().get(CurrentVersionBean.class, HttpUrlConfig.getCurrentFirmWareVersion(), callback);
+    }
 }

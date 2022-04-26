@@ -22,4 +22,15 @@ public class SettingModel implements SettingContract.Model {
     public void getUserInfo(int id, RequestDataCallback<MemberDetailBean> callback) {
         HTTPCaller.getInstance().get(MemberDetailBean.class, HttpUrlConfig.getUsers()+"/"+id, callback);
     }
+
+    /**
+     * 修改成员
+     * @param id
+     * @param body
+     * @param callback
+     */
+    @Override
+    public void updateMember(int id, String body, RequestDataCallback<Object> callback) {
+        HTTPCaller.getInstance().put(Object.class, HttpUrlConfig.getUsers()+"/"+id, body, callback);
+    }
 }

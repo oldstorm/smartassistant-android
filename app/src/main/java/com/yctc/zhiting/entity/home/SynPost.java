@@ -47,6 +47,11 @@ public class SynPost {
 
         private String name;
         private List<LocationBean> locations;
+        private List<LocationBean> departments;
+
+        public AreaBean(String name) {
+            this.name = name;
+        }
 
         public AreaBean(String name, List<LocationBean> locations) {
             this.name = name;
@@ -67,6 +72,14 @@ public class SynPost {
 
         public void setLocations(List<LocationBean> locations) {
             this.locations = locations;
+        }
+
+        public List<LocationBean> getDepartments() {
+            return departments;
+        }
+
+        public void setDepartments(List<LocationBean> departments) {
+            this.departments = departments;
         }
     }
 }

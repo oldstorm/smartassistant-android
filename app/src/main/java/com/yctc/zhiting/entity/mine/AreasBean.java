@@ -7,6 +7,7 @@ import java.util.List;
 
 public class AreasBean extends BaseEntity implements Serializable {
     private List<LocationBean> locations;
+    private List<LocationBean> departments;
 
     public List<LocationBean> getLocations() {
         return locations;
@@ -14,5 +15,13 @@ public class AreasBean extends BaseEntity implements Serializable {
 
     public void setLocations(List<LocationBean> locations) {
         this.locations = locations;
+    }
+
+    public List<LocationBean> getDepartments() {
+        return departments;
+    }
+
+    public void setDepartments(List<LocationBean> departments) {
+        this.departments = departments;
     }
 }

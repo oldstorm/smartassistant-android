@@ -20,6 +20,7 @@ public class HttpConfig {
     public static final String TOKEN_KEY = "smart-assistant-token";
     public static final String AREA_ID = "Area-ID";
     public static final String SA_ID = "SA-ID";
+    public static final String TRACEPARENT = "traceparent";
 
     //通用字段
     private List<NameValuePair> commonField = new ArrayList<>();
@@ -188,5 +189,19 @@ public class HttpConfig {
                 return;
             }
         }
+    }
+
+    /**
+     * headers是否有某键
+     * @param key
+     */
+    public static boolean hasCertainKey(String key) {
+        for (Header header : headers) {
+            String name = header.getName();
+            if (name.equals(key)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothDevice;
 
 import com.app.main.framework.entity.BaseEntity;
 import com.google.gson.annotations.SerializedName;
+import com.yctc.zhiting.entity.ws_request.WSAuthParamsBean;
 
 import java.util.List;
 
@@ -39,6 +40,11 @@ public class DeviceBean extends BaseEntity {
     private String port;
     @SerializedName("sa_id")
     private String sa_id;
+    private int area_type; // 添加sa设备时，需要该sa表示该家庭/公司的mode
+    private String iid;
+    private boolean auth_required;
+
+    private List<WSAuthParamsBean> auth_params; // 里面的type为homekit需要跳到设置pin码界面
 
     transient BluetoothDevice bluetoothDevice;
 
@@ -184,6 +190,38 @@ public class DeviceBean extends BaseEntity {
 
     public void setSa_id(String sa_id) {
         this.sa_id = sa_id;
+    }
+
+    public String getIid() {
+        return iid;
+    }
+
+    public void setIid(String iid) {
+        this.iid = iid;
+    }
+
+    public int getArea_type() {
+        return area_type;
+    }
+
+    public void setArea_type(int area_type) {
+        this.area_type = area_type;
+    }
+
+    public boolean isAuth_required() {
+        return auth_required;
+    }
+
+    public void setAuth_required(boolean auth_required) {
+        this.auth_required = auth_required;
+    }
+
+    public List<WSAuthParamsBean> getAuth_params() {
+        return auth_params;
+    }
+
+    public void setAuth_params(List<WSAuthParamsBean> auth_params) {
+        this.auth_params = auth_params;
     }
 
     class UserInfo extends BaseEntity {

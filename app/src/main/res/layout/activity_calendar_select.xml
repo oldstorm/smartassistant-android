@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/shape_white_top_c10"
+    android:orientation="vertical"
+    android:layerType="software">
+
+
+    <RelativeLayout
+        android:id="@+id/rl_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/tvClear"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:padding="@dimen/dp_15"
+            android:text="@string/clear_hint"
+            android:textColor="@color/color_3f4663"
+            android:textSize="@dimen/sp_16" />
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/select_date"
+            android:textColor="@color/color_3f4663"
+            android:textSize="@dimen/sp_16"
+            android:layout_centerInParent="true"
+            android:textStyle="bold"/>
+
+
+        <ImageView
+            android:id="@+id/ivClose"
+            android:layout_width="@dimen/dp_36"
+            android:layout_height="@dimen/dp_36"
+            android:layout_alignParentEnd="true"
+            android:padding="@dimen/dp_13"
+            android:src="@drawable/icon_close"
+            android:layout_centerVertical="true"/>
+
+    </RelativeLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="3px"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:layout_marginTop="7dp"
+        android:background="@color/eeeeee" />
+
+    <com.happy.todo.calendarview.CalendarRowView
+        android:id="@+id/day_names_header_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="@dimen/calendar_day_headers_paddingbottom">
+
+        <TextView
+            style="@style/CalendarCell.DayHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            style="@style/CalendarCell.DayHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            style="@style/CalendarCell.DayHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            style="@style/CalendarCell.DayHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            style="@style/CalendarCell.DayHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            style="@style/CalendarCell.DayHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            style="@style/CalendarCell.DayHeader"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </com.happy.todo.calendarview.CalendarRowView>
+
+    <com.happy.todo.calendarview.CalendarPickerView
+        android:id="@+id/calendar_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scrollbars="none"
+        app:tsquare_dayBackground="@drawable/calendar_bg_selector"
+        app:tsquare_displayDayNamesHeaderRow="false"
+        app:tsquare_dividerColor="@color/transparent"
+        app:tsquare_headerTextColor="@color/eeeeee" />
+
+
+    <Button
+        android:visibility="gone"
+        android:id="@+id/btn_next"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_50"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="15dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp"
+        android:layout_marginTop="15dp"
+        android:background="@drawable/bg_shape_f6f8fd_r10"
+        android:text="@string/ok_button"
+        android:textAllCaps="false"
+        android:textColor="@color/color_3f4663"
+        android:textSize="14sp"
+        android:textStyle="bold"/>
+</LinearLayout>

@@ -98,7 +98,16 @@ public class RoomAreaPresenter extends BasePresenterImpl<RoomAreaContract.View> 
                 super.onFailed(errorCode, errorMessage);
                 if (mView!=null){
                     mView.hideLoadingView();
-                    mView.requestFail(errorCode, errorMessage);
+                    mView.orderFail(errorCode, errorMessage);
+                }
+            }
+
+            @Override
+            public void onFailed(int errorCode, String errorMessage, String url) {
+                super.onFailed(errorCode, errorMessage, url);
+                if (mView!=null){
+                    mView.hideLoadingView();
+                    mView.orderFail(errorCode, errorMessage);
                 }
             }
         });

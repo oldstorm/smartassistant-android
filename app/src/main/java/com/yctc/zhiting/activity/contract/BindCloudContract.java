@@ -7,6 +7,7 @@ import com.app.main.framework.httputil.RequestDataCallback;
 import com.yctc.zhiting.entity.mine.CaptchaBean;
 import com.yctc.zhiting.entity.mine.HomeCompanyBean;
 import com.yctc.zhiting.entity.mine.InvitationCodeBean;
+import com.yctc.zhiting.entity.mine.LoginBean;
 import com.yctc.zhiting.entity.mine.MemberDetailBean;
 
 import java.util.List;
@@ -17,13 +18,13 @@ import java.util.List;
 public interface BindCloudContract {
     interface Model {
         void getCaptcha(List<NameValuePair> requestData, RequestDataCallback<CaptchaBean> callback);
-        void register(String body, RequestDataCallback<MemberDetailBean> callback);
+        void register(String body, RequestDataCallback<LoginBean> callback);
     }
 
     interface View extends BaseView {
         void getCaptchaSuccess(CaptchaBean captchaBean);
         void getCaptchaFail(int errorCode, String msg);
-        void registerSuccess(MemberDetailBean memberDetailBean);
+        void registerSuccess(LoginBean memberDetailBean);
         void registerFail(int errorCode, String msg);
     }
 

@@ -1012,7 +1012,7 @@ public class CreateSceneActivity extends MVPBaseActivity<CreateSceneContract.Vie
                             conditionBean.setLogoUrl(deviceInfoBean.getLogo_url());
                             conditionBean.setLocation(deviceInfoBean.getLocation_name());
                         }
-                        CreateScenePost.SceneConditionsBean.ConditionItemBean cib = new CreateScenePost.SceneConditionsBean.ConditionItemBean(id, conditionId, Constant.EQUAL, Constant.SWITCH, value, Constant.POWER);
+                        CreateScenePost.SceneConditionsBean.ConditionItemBean cib = new CreateScenePost.SceneConditionsBean.ConditionItemBean(id, conditionId, Constant.EQUAL, Constant.SWITCH, value, Constant.ON_OFF);
                         conditionBean.setScene_id(sceneConditionsBean.getScene_id());
                         conditionBean.setCondition_item(cib);
                         conditionBean.setId(sceneConditionsBean.getId());

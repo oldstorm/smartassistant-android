@@ -63,7 +63,7 @@ public class CenterAlertDialog extends CommonBaseDialog {
         return fragment;
     }
 
-    public static CenterAlertDialog newInstance(String title, String tip, boolean showLoading){
+    public static CenterAlertDialog newInstance(String title, String tip, boolean showLoading) {
         Bundle args = new Bundle();
         args.putString("title", title);
         args.putString("tip", tip);
@@ -73,7 +73,7 @@ public class CenterAlertDialog extends CommonBaseDialog {
         return fragment;
     }
 
-    public static CenterAlertDialog newInstance(String title,  String cancelStr, String confirmStr, boolean showLoading){
+    public static CenterAlertDialog newInstance(String title, String cancelStr, String confirmStr, boolean showLoading) {
         Bundle args = new Bundle();
         args.putString("title", title);
         args.putString("cancelStr", cancelStr);
@@ -83,7 +83,8 @@ public class CenterAlertDialog extends CommonBaseDialog {
         fragment.setArguments(args);
         return fragment;
     }
-    public static CenterAlertDialog newInstance(String title, String tip,  String cancelStr, String confirmStr, boolean showLoading){
+
+    public static CenterAlertDialog newInstance(String title, String tip, String cancelStr, String confirmStr, boolean showLoading) {
         Bundle args = new Bundle();
         args.putString("title", title);
         args.putString("tip", tip);
@@ -96,7 +97,7 @@ public class CenterAlertDialog extends CommonBaseDialog {
     }
 
 
-    public static CenterAlertDialog newInstance(String title, String tip, boolean showLoading, boolean showDelFolder){
+    public static CenterAlertDialog newInstance(String title, String tip, boolean showLoading, boolean showDelFolder) {
         Bundle args = new Bundle();
         args.putString("title", title);
         args.putString("tip", tip);
@@ -106,6 +107,7 @@ public class CenterAlertDialog extends CommonBaseDialog {
         fragment.setArguments(args);
         return fragment;
     }
+
 
     @Override
     protected int getLayoutResource() {
@@ -119,7 +121,7 @@ public class CenterAlertDialog extends CommonBaseDialog {
 
     @Override
     protected int obtainHeight() {
-         return WindowManager.LayoutParams.WRAP_CONTENT;
+        return WindowManager.LayoutParams.WRAP_CONTENT;
     }
 
     @Override
@@ -141,22 +143,28 @@ public class CenterAlertDialog extends CommonBaseDialog {
     protected void initView(View view) {
         tvTitle.setText(title);
         tvTip.setText(tip);
+        tvTip.setVisibility(TextUtils.isEmpty(tip) ? View.GONE : View.VISIBLE);
         llDelFolder.setVisibility(mShowDelFolder ? View.VISIBLE : View.GONE);
         if (!TextUtils.isEmpty(cancelStr))
-        tvCancel.setText(cancelStr);
+            tvCancel.setText(cancelStr);
         if (!TextUtils.isEmpty(confirmStr))
-        tvConfirm.setText(confirmStr);
+            tvConfirm.setText(confirmStr);
 
     }
+
 
     @OnClick(R.id.tvCancel)
-    void onClickCancel(){
+    void onClickCancel() {
+        if (cancelListener != null) {
+            cancelListener.onCancel();
+        }
         dismiss();
     }
+
     @OnClick(R.id.tvConfirm)
-    void onClickConfirm(){
-        if (confirmListener!=null){
-            if (showLoading){
+    void onClickConfirm() {
+        if (confirmListener != null) {
+            if (showLoading) {
                 tvConfirm.setVisibility(View.GONE);
                 rbConfirm.setVisibility(View.VISIBLE);
             }
@@ -165,12 +173,13 @@ public class CenterAlertDialog extends CommonBaseDialog {
     }
 
     @OnClick(R.id.llDelFolder)
-    void onClickDelFolder(){
+    void onClickDelFolder() {
         llDelFolder.setSelected(!llDelFolder.isSelected());
     }
 
 
     private OnConfirmListener confirmListener;
+    private OnCancelListener cancelListener;
 
     public OnConfirmListener getConfirmListener() {
         return confirmListener;
@@ -180,16 +189,32 @@ public class CenterAlertDialog extends CommonBaseDialog {
         this.confirmListener = confirmListener;
     }
 
+    public OnCancelListener getCancelListener() {
+        return cancelListener;
+    }
+
+    public void setCancelListener(OnCancelListener cancelListener) {
+        this.cancelListener = cancelListener;
+    }
+
     @Override
     public void onDismiss(@NonNull @NotNull DialogInterface dialog) {
         super.onDismiss(dialog);
-        if (dismissListener!=null){
+        if (showLoading) {
+            tvConfirm.setVisibility(View.VISIBLE);
+            rbConfirm.setVisibility(View.GONE);
+        }
+        if (dismissListener != null) {
             dismissListener.onDismiss();
         }
     }
 
-    public interface OnConfirmListener{
+    public interface OnConfirmListener {
         void onConfirm(boolean del);
+    }
+
+    public interface OnCancelListener {
+        void onCancel();
     }
 
     private OnDismissListener dismissListener;
@@ -202,7 +227,7 @@ public class CenterAlertDialog extends CommonBaseDialog {
         this.dismissListener = dismissListener;
     }
 
-    public interface OnDismissListener{
+    public interface OnDismissListener {
         void onDismiss();
     }
 }

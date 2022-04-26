@@ -22,6 +22,7 @@ public class DeviceTypeDeviceBean implements Serializable {
     private String logo;
     private String provisioning;
     private String plugin_id;
+    private String protocol;
 
     public DeviceTypeDeviceBean() {
     }
@@ -81,5 +82,13 @@ public class DeviceTypeDeviceBean implements Serializable {
 
     public void setPlugin_id(String plugin_id) {
         this.plugin_id = plugin_id;
+    }
+
+    public String getProtocol() {
+        return protocol;
+    }
+
+    public void setProtocol(String protocol) {
+        this.protocol = protocol;
     }
 }

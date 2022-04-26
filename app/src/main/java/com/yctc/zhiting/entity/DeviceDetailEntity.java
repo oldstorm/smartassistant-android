@@ -1,5 +1,6 @@
 package com.yctc.zhiting.entity;
 
+import com.yctc.zhiting.entity.home.DeviceLogoBean;
 import com.yctc.zhiting.entity.scene.SceneConditionAttrEntity;
 
 import java.util.List;
@@ -11,13 +12,16 @@ public class DeviceDetailEntity {
 
     private String name;
     private Integer id;
+    private String iid;
     private String logo_url;
     private String model;
     private AreaAndLocationBean area;
     private AreaAndLocationBean location;
+    private AreaAndLocationBean department;
     private PluginBean plugin;
     private List<SceneConditionAttrEntity> attributes;
     private PermissionsBean permissions;
+    private DeviceLogoBean logo;
 
     public String getName() {
         return name;
@@ -33,6 +37,14 @@ public class DeviceDetailEntity {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+
+    public String getIid() {
+        return iid;
+    }
+
+    public void setIid(String iid) {
+        this.iid = iid;
     }
 
     public String getLogo_url() {
@@ -67,6 +79,14 @@ public class DeviceDetailEntity {
         this.location = location;
     }
 
+    public AreaAndLocationBean getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(AreaAndLocationBean department) {
+        this.department = department;
+    }
+
     public PluginBean getPlugin() {
         return plugin;
     }
@@ -89,6 +109,14 @@ public class DeviceDetailEntity {
 
     public void setPermissions(PermissionsBean permissions) {
         this.permissions = permissions;
+    }
+
+    public DeviceLogoBean getLogo() {
+        return logo;
+    }
+
+    public void setLogo(DeviceLogoBean logo) {
+        this.logo = logo;
     }
 
     public static class AreaAndLocationBean{
@@ -117,6 +145,7 @@ public class DeviceDetailEntity {
         private String name;
         private String id;
         private String url;
+        private String control;
 
         public String getName() {
             return name;
@@ -140,6 +169,14 @@ public class DeviceDetailEntity {
 
         public void setUrl(String url) {
             this.url = url;
+        }
+
+        public String getControl() {
+            return control;
+        }
+
+        public void setControl(String control) {
+            this.control = control;
         }
     }
 

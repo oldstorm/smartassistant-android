@@ -7,29 +7,33 @@
     android:background="@color/white"
     android:orientation="vertical"
     tools:context=".activity.ScanDevice2Activity">
+
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="@dimen/dp_44"
         android:orientation="horizontal">
+
         <ImageView
             android:id="@+id/ivBack"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:src="@mipmap/m_back"
             android:paddingStart="@dimen/dp_16"
-            android:paddingEnd="@dimen/dp_8"/>
+            android:paddingEnd="@dimen/dp_8"
+            android:src="@mipmap/m_back" />
+
         <TextView
             android:id="@+id/tvTitleBarText"
             android:layout_width="@dimen/dp_150"
             android:layout_height="match_parent"
             android:layout_centerInParent="true"
-            android:singleLine="true"
             android:ellipsize="end"
             android:gravity="center"
+            android:singleLine="true"
+            android:text="@string/mine_home_add_device"
             android:textColor="@color/color_3F466"
             android:textSize="@dimen/textSize18"
-            android:text="@string/mine_home_add_device"
-            android:textStyle="bold"/>
+            android:textStyle="bold" />
+
         <TextView
             android:id="@+id/tvAgain"
             android:layout_width="wrap_content"
@@ -42,53 +46,57 @@
             android:textSize="@dimen/textSize14"
             android:textStyle="bold"
             android:visibility="gone"
-            tools:visibility="visible"/>
+            tools:visibility="visible" />
 
         <com.yctc.zhiting.widget.RadarScanView
             android:id="@+id/radarScanViewSmall"
             android:layout_width="@dimen/dp_20"
             android:layout_height="@dimen/dp_20"
-            android:layout_toLeftOf="@id/tvAgain"
             android:layout_centerVertical="true"
             android:layout_marginRight="@dimen/dp_8"
-            app:cntDotR="2"
-            app:cntDotColor="@color/color_74c2f9"
-            app:circleColor="@color/color_74c2f9"
-            app:lineColor="@color/color_74c2f9"
-            app:sweepColor="@color/color_74c2f9"
-            app:lineWidth="1"
-            app:circleNum="2"
-            app:showRaindrop="false"
+            android:layout_toLeftOf="@id/tvAgain"
             android:visibility="gone"
-            tools:visibility="visible"/>
+            app:circleColor="@color/color_74c2f9"
+            app:circleNum="2"
+            app:cntDotColor="@color/color_74c2f9"
+            app:cntDotR="2"
+            app:lineColor="@color/color_74c2f9"
+            app:lineWidth="1"
+            app:showRaindrop="false"
+            app:sweepColor="@color/color_74c2f9"
+            tools:visibility="visible" />
     </RelativeLayout>
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="@dimen/dp_0"
         android:layout_weight="1"
         android:orientation="vertical">
+
         <androidx.core.widget.NestedScrollView
             android:id="@+id/nestedScrollView"
             android:layout_width="@dimen/dp_0"
             android:layout_height="@dimen/dp_0"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
+            android:paddingBottom="@dimen/dp_20"
             app:layout_constraintBottom_toBottomOf="parent"
-            android:paddingBottom="@dimen/dp_20">
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical">
+
                 <com.yctc.zhiting.widget.RadarScanView
                     android:id="@+id/radarScanView"
                     android:layout_width="175dp"
                     android:layout_height="175dp"
                     android:layout_marginTop="@dimen/dp_32"
+                    app:dotNum="3"
                     app:layout_constraintLeft_toLeftOf="parent"
                     app:layout_constraintRight_toRightOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:dotNum="3"/>
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <ImageView
                     android:id="@+id/ivReport"
@@ -133,78 +141,94 @@
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvDevice"
-            android:layout_width="@dimen/dp_0"
+            android:layout_width="match_parent"
             android:layout_height="@dimen/dp_0"
-            android:paddingBottom="@dimen/dp_15"
             android:visibility="gone"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
             tools:listitem="@layout/item_add_device"
             tools:visibility="visible" />
     </androidx.constraintlayout.widget.ConstraintLayout>
+
     <View
         android:layout_width="match_parent"
         android:layout_height="@dimen/dp_10"
         android:background="@color/color_f6f8fd" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="@dimen/dp_0"
         android:layout_weight="1"
         android:orientation="horizontal">
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvDeviceCategory"
             android:layout_width="@dimen/dp_0"
-            android:layout_weight="1"
             android:layout_height="match_parent"
-            android:paddingTop="@dimen/dp_15"
+            android:layout_weight="1"
             android:paddingLeft="@dimen/dp_14"
+            android:paddingTop="@dimen/dp_15"
             android:paddingRight="@dimen/dp_10"
-            tools:listitem="@layout/item_device_category"/>
+            tools:listitem="@layout/item_device_category" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvDeviceSecondCategory"
+            android:layout_width="@dimen/dp_0"
+            android:layout_height="match_parent"
+            android:layout_weight="3"
+            tools:listitem="@layout/item_device_second_category">
+
+        </androidx.recyclerview.widget.RecyclerView>
+
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="@dimen/dp_0"
-            android:layout_weight="3"
             android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:layout_weight="3"
+            android:orientation="vertical"
+            android:visibility="gone">
+
             <TextView
                 android:id="@+id/tvName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/dp_15"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                tools:text="插座"
                 android:textColor="@color/color_3f4663"
                 android:textSize="@dimen/textSize12"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="插座" />
+
             <View
                 android:id="@+id/line1"
                 android:layout_width="@dimen/dp_0"
                 android:layout_height="0.5dp"
                 android:layout_marginLeft="@dimen/dp_16"
                 android:layout_marginRight="@dimen/dp_20"
+                android:background="@color/color_DDDDDD"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/tvName"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toLeftOf="@+id/tvName"
                 app:layout_constraintTop_toTopOf="@+id/tvName"
-                app:layout_constraintBottom_toBottomOf="@+id/tvName"
-                android:background="@color/color_DDDDDD"
-                android:visibility="gone"
-                tools:visibility="visible"/>
+                tools:visibility="visible" />
+
             <View
                 android:id="@+id/line2"
                 android:layout_width="@dimen/dp_0"
                 android:layout_height="0.5dp"
                 android:layout_marginLeft="@dimen/dp_18"
                 android:layout_marginRight="@dimen/dp_20"
+                android:background="@color/color_DDDDDD"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/tvName"
                 app:layout_constraintLeft_toRightOf="@+id/tvName"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toTopOf="@+id/tvName"
-                app:layout_constraintBottom_toBottomOf="@+id/tvName"
-                android:background="@color/color_DDDDDD"
-                android:visibility="gone"
-                tools:visibility="visible"/>
+                tools:visibility="visible" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvDeviceInCategory"
@@ -212,13 +236,13 @@
                 android:layout_height="@dimen/dp_0"
                 android:layout_marginTop="@dimen/dp_10"
                 android:paddingBottom="@dimen/dp_10"
+                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintLeft_toLeftOf="parent"
                 app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/tvName"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
                 app:spanCount="3"
-                tools:listitem="@layout/item_add_device_in_category"/>
+                tools:listitem="@layout/item_add_device_in_category" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </LinearLayout>
 </LinearLayout>

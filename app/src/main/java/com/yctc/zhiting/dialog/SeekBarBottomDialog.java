@@ -1,5 +1,6 @@
 package com.yctc.zhiting.dialog;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Gravity;
@@ -33,6 +34,8 @@ public class SeekBarBottomDialog extends CommonBaseDialog {
     SeekBar seekBar;
     @BindView(R.id.tvTitle)
     TextView tvTitle;
+    @BindView(R.id.tvUnit)
+    TextView tvUnit;
     @BindView(R.id.llOperator)
     LinearLayout llOperator;
 
@@ -40,10 +43,15 @@ public class SeekBarBottomDialog extends CommonBaseDialog {
     private String operator = "<";
     private String operatorName = "";
     private int val=0;
+    private int minVal=0;
+    private int maxVal=100;
 
     /**
      * 1.亮度
      * 2.色温
+     * 3.湿度
+     * 4.温度
+     * 5.窗帘位置
      */
     private int type;
     private String title;
@@ -81,7 +89,10 @@ public class SeekBarBottomDialog extends CommonBaseDialog {
     @Override
     protected void initArgs(Bundle arguments) {
         val = arguments.getInt("val", 0);
+        minVal = arguments.getInt("minVal", 0);
+        maxVal = arguments.getInt("maxVal", 100);
         operator = arguments.getString("operator");
+
     }
 
     @Override
@@ -89,6 +100,10 @@ public class SeekBarBottomDialog extends CommonBaseDialog {
         tvTitle.setText(title);
         tvValue.setText(val+"");
         seekBar.setProgress(val);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            seekBar.setMin(minVal);
+        }
+        seekBar.setMax(maxVal);
         if (TextUtils.isEmpty(operator)){
             operator = "<";
             operatorName = getResources().getString(R.string.scene_less);
@@ -113,8 +128,26 @@ public class SeekBarBottomDialog extends CommonBaseDialog {
             }
         }
 //        tvLess.setSelected(true);
+        tvUnit.setText(type == 4 ? UiUtil.getString(R.string.scene_temperature_unit) : UiUtil.getString(R.string.scene_percent_unit));
         llOperator.setVisibility(showOperator ? View.VISIBLE : View.GONE);
-        seekBar.setProgressDrawable(type == 1 ? UiUtil.getDrawable(R.drawable.seekbar_shape_2) : UiUtil.getDrawable(R.drawable.seekbar_shape));
+        int seekbarDrawable = R.drawable.seekbar_shape_2;
+        switch (type){
+            case 1:
+            case 3:
+                seekbarDrawable = R.drawable.seekbar_shape_2;
+                break;
+
+            case 2:
+                seekbarDrawable = R.drawable.seekbar_shape;
+                break;
+
+            case 4:
+            case 5:
+                seekbarDrawable = R.drawable.seekbar_shape_3;
+                break;
+
+        }
+        seekBar.setProgressDrawable(UiUtil.getDrawable(seekbarDrawable));
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {

@@ -1,47 +1,58 @@
 package com.yctc.zhiting.fragment;
 
+import static com.yctc.zhiting.config.Constant.CurrentHome;
+
 import android.content.Context;
 import android.net.wifi.WifiInfo;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
+import androidx.core.widget.NestedScrollView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager.widget.ViewPager;
 
+import com.app.main.framework.baseutil.LogUtil;
 import com.app.main.framework.baseutil.SpConstant;
 import com.app.main.framework.baseutil.SpUtil;
 import com.app.main.framework.baseutil.UiUtil;
 import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.MVPBaseFragment;
+import com.app.main.framework.event.FourZeroFourEvent;
 import com.app.main.framework.gsonutils.GsonConverter;
 import com.app.main.framework.httputil.NameValuePair;
 import com.app.main.framework.httputil.comfig.HttpConfig;
+import com.google.android.material.appbar.AppBarLayout;
 import com.scwang.smart.refresh.layout.SmartRefreshLayout;
 import com.yctc.zhiting.R;
+import com.yctc.zhiting.activity.CommonWebActivity;
 import com.yctc.zhiting.activity.FindSAGuideActivity;
 import com.yctc.zhiting.activity.HowCreateSceneActivity;
 import com.yctc.zhiting.activity.LogActivity;
 import com.yctc.zhiting.activity.SceneDetailActivity;
-import com.yctc.zhiting.adapter.SceneAdapter;
+import com.yctc.zhiting.adapter.SceneFragmentStatePagerAdapter;
+import com.yctc.zhiting.adapter.TabAdapter;
 import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.config.HttpUrlConfig;
 import com.yctc.zhiting.db.DBManager;
 import com.yctc.zhiting.dialog.HomeSelectDialog;
 import com.yctc.zhiting.dialog.RemovedTipsDialog;
 import com.yctc.zhiting.entity.FindSATokenBean;
+import com.yctc.zhiting.entity.TabBean;
 import com.yctc.zhiting.entity.mine.HomeCompanyBean;
 import com.yctc.zhiting.entity.mine.PermissionBean;
 import com.yctc.zhiting.entity.scene.SceneBean;
 import com.yctc.zhiting.entity.scene.SceneListBean;
+import com.yctc.zhiting.event.AfterFindIPEvent;
 import com.yctc.zhiting.event.HomeSelectedEvent;
 import com.yctc.zhiting.event.PermissionEvent;
+import com.yctc.zhiting.event.RefreshSceneEvent;
 import com.yctc.zhiting.event.SocketStatusEvent;
 import com.yctc.zhiting.fragment.contract.SceneFragmentContract;
 import com.yctc.zhiting.fragment.presenter.SceneFragmentPresenter;
@@ -54,6 +65,7 @@ import com.yctc.zhiting.utils.IntentConstant;
 import com.yctc.zhiting.utils.UserUtils;
 import com.yctc.zhiting.websocket.IWebSocketListener;
 import com.yctc.zhiting.websocket.WSocketManager;
+import com.yctc.zhiting.widget.NoScrollViewPager;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -68,9 +80,6 @@ import butterknife.OnClick;
 import okhttp3.Response;
 import okhttp3.WebSocket;
 
-import static com.yctc.zhiting.config.Constant.CurrentHome;
-import static com.yctc.zhiting.config.Constant.wifiInfo;
-
 /**
  * 首页-场景
  */
@@ -81,20 +90,8 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
     ImageView ivRefresh;
     @BindView(R.id.ivReconnect)
     ImageView ivReconnect;
-    @BindView(R.id.rvManual)
-    RecyclerView rvManual;
-    @BindView(R.id.rvAutomatic)
-    RecyclerView rvAutomatic;
-    @BindView(R.id.viewData)
-    View viewData;
     @BindView(R.id.viewEmpty)
     View viewEmpty;
-    @BindView(R.id.tvManual)
-    TextView tvManual;
-    @BindView(R.id.tvAutomatic)
-    TextView tvAutomatic;
-    @BindView(R.id.refreshLayout)
-    SmartRefreshLayout refreshLayout;
     @BindView(R.id.tvMyHome)
     TextView tvMyHome;
     @BindView(R.id.refresh)
@@ -117,28 +114,40 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
     ImageView ivGo;
     @BindView(R.id.rlInvalid)
     RelativeLayout rlInvalid;
+    @BindView(R.id.llReconnect)
+    LinearLayout llReconnect;
 
-    private SceneAdapter manualAdapter;  // 手动
-    private SceneAdapter automaticAdapter; // 自动
+    @BindView(R.id.vpContent)
+    NoScrollViewPager vpContent;
+    @BindView(R.id.tvSort)
+    TextView tvSort;
+    @BindView(R.id.rvTab)
+    RecyclerView rvTab;
+    @BindView(R.id.appBarLayout)
+    AppBarLayout appBarLayout;
+    @BindView(R.id.llTab)
+    LinearLayout llTab;
+    @BindView(R.id.nsvEmpty)
+    NestedScrollView nsvEmpty;
 
-    private int type; //区分手动和自动提示文案
-    private boolean checked; //区分自动开关提示文案
-    private boolean hasAddP; //添加场景权限
-    private boolean hasUpdateP; // 修改场景的权限
-    private boolean hasDelP; // 删除场景的权限
+    private int mCurrentItem; // 当前项
 
     private WeakReference<Context> mContext;
     private DBManager dbManager;
-    private Handler mainThreadHandler;
-    private boolean notFirst;
 
+    private boolean notFirst;
     private boolean hasLocal;
     private boolean showLoading;
-
-    private IWebSocketListener mWebSocketListener;
-
+    private boolean hasAddP; //添加场景权限
+    public static boolean hasUpdateP; // 修改场景的权限
+    public static boolean hasDelP; // 删除场景的权限
     private boolean needLoadData = true; // 是否加载数据
 
+    private TabAdapter mTabAdapter; // tab适配器
+    private List<TabBean> tabData = new ArrayList<>();  // tab数据
+    private IWebSocketListener mWebSocketListener;
+    private List<SceneItemFragment> mFragments = new ArrayList<>();
+    private SceneFragmentStatePagerAdapter commonFragmentPagerAdapter;
 
     @Override
     protected int getLayoutId() {
@@ -154,40 +163,35 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
     protected void initUI() {
         mContext = new WeakReference<>(getActivity());
         dbManager = DBManager.getInstance(mContext.get());
-        mainThreadHandler = new Handler(Looper.getMainLooper());
-        initRvManual();
-        initRvAutomatic();
+        appBarLayout.addOnOffsetChangedListener((appBarLayout, verticalOffset) -> {
+            int colorId = UiUtil.getColor(R.color.white);
+            float fraction = Math.abs(verticalOffset * 1.0f) / appBarLayout.getTotalScrollRange();
+            int alpha = changeAlpha(colorId, fraction);
+            appBarLayout.setBackgroundColor(alpha);
+        });
+        setNextStatus(false);
         initWebSocket();
         showSaStatus();
-        refreshLayout.setOnRefreshListener(refreshLayout -> getData(false));
-        setRefreshAndLoadMore();
-    }
-
-    /**
-     * 设置刷新/加载更多
-     */
-    private void setRefreshAndLoadMore() {
-        refreshLayout.setEnableRefresh(!HomeUtil.tokenIsInvalid);
+        initTabLayout();
     }
 
     /**
      * sa状态
      */
     private void showSaStatus() {
-        String homeMacAddress = "";
-        if (CurrentHome != null && !TextUtils.isEmpty(CurrentHome.getMac_address()))
-            homeMacAddress = CurrentHome.getMac_address();
-        if (wifiInfo != null) {
-            handleTipStatus(CurrentHome.isIs_bind_sa() && (TextUtils.isEmpty(homeMacAddress) ? true : !homeMacAddress.equals(wifiInfo.getBSSID())));
-        } else {
-            handleTipStatus(CurrentHome.isIs_bind_sa());
+        if (CurrentHome != null) {
+            if (CurrentHome.isIs_bind_sa()) {
+                handleTipStatus(!HomeUtil.isSAEnvironment());
+            } else {
+                handleTipStatus(false);
+            }
         }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        if (notFirst) {
+        if (notFirst && isVisible()) {
             wsConnectStatus(WSocketManager.isConnecting);
         }
         notFirst = true;
@@ -212,7 +216,6 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onMessageEvent(HomeSelectedEvent event) {
-        setRefreshAndLoadMore();
         if (!HomeUtil.tokenIsInvalid && needLoadData)
             homeChange();
         tvMyHome.setText(CurrentHome.getName());
@@ -228,6 +231,12 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(SocketStatusEvent event) {
         handleTipStatus(event.isShowTip());
+    }
+
+    // 重试/创建场景
+    private void setNextStatus(boolean enabled) {
+        llReconnect.setEnabled(enabled);
+        llReconnect.setAlpha(llReconnect.isEnabled() ? 1 : 0.5f);
     }
 
     /**
@@ -262,85 +271,11 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
         ivRefresh.setVisibility(View.GONE);
         tvRefresh.setVisibility(View.GONE);
         viewTips.setVisibility(View.VISIBLE);
-        viewData.setVisibility(View.GONE);
         viewEmpty.setVisibility(View.GONE);
+        llTab.setVisibility(View.GONE);
+        vpContent.setVisibility(View.GONE);
         rlInvalid.setVisibility(View.VISIBLE);
-    }
-
-    /**
-     * 手动
-     */
-    private void initRvManual() {
-        rvManual.setLayoutManager(new LinearLayoutManager(getContext()));
-        manualAdapter = new SceneAdapter(0);
-        rvManual.setAdapter(manualAdapter);
-
-        manualAdapter.setOnItemClickListener((adapter, view, position) -> {
-            SceneBean sceneBean = manualAdapter.getItem(position);
-            if ((WSocketManager.isConnecting && HomeUtil.isSAEnvironment()) || UserUtils.isLogin()) {
-                if (hasUpdateP) { // 有权限才进
-                    if (HomeUtil.notLoginAndSAEnvironment()) {
-                        return;
-                    }
-                    Bundle bundle = new Bundle();
-                    bundle.putInt(IntentConstant.ID, sceneBean.getId());
-                    bundle.putBoolean(IntentConstant.REMOVE_SCENE, hasDelP);
-                    switchToActivity(SceneDetailActivity.class, bundle);
-                } else {
-                    ToastUtil.show(getResources().getString(R.string.scene_no_modify_permission));
-                }
-            }
-        });
-        manualAdapter.setOnItemChildClickListener((adapter, view, position) -> {
-            if (view.getId() == R.id.tvPerform) { // 执行
-                if (manualAdapter.getItem(position).isControl_permission()) {
-                    type = 0;
-                    manualAdapter.getItem(position).setPerforming(true);
-                    manualAdapter.notifyItemChanged(position);
-                    mPresenter.perform(manualAdapter.getItem(position).getId(), true);
-                } else {
-                    ToastUtil.show(getResources().getString(R.string.scene_no_control_permission));
-                }
-            }
-        });
-    }
-
-    /**
-     * 自动
-     */
-    private void initRvAutomatic() {
-        rvAutomatic.setLayoutManager(new LinearLayoutManager(getContext()));
-        automaticAdapter = new SceneAdapter(1);
-        rvAutomatic.setAdapter(automaticAdapter);
-        automaticAdapter.setOnItemClickListener((adapter, view, position) -> {
-            SceneBean sceneBean = automaticAdapter.getItem(position);
-            if (WSocketManager.isConnecting) {
-                if (hasUpdateP) { // 有权限才进
-                    if (HomeUtil.notLoginAndSAEnvironment()) {
-                        return;
-                    }
-                    Bundle bundle = new Bundle();
-                    bundle.putInt(IntentConstant.ID, sceneBean.getId());
-                    bundle.putBoolean(IntentConstant.REMOVE_SCENE, hasDelP);
-                    switchToActivity(SceneDetailActivity.class, bundle);
-                } else {
-                    ToastUtil.show(getResources().getString(R.string.scene_no_modify_permission));
-                }
-            }
-        });
-        automaticAdapter.setOnItemChildClickListener((adapter, view, position) -> {
-            if (view.getId() == R.id.ivSwitch) { // 无权限开关
-                ToastUtil.show(getResources().getString(R.string.scene_no_control_permission));
-            } else if (view.getId() == R.id.llSwitch) { // 开关
-                SceneBean sceneBean = automaticAdapter.getItem(position);
-                sceneBean.setIs_on(!sceneBean.isIs_on());
-                sceneBean.setPerforming(true);
-                automaticAdapter.notifyItemChanged(position);
-                type = 1;
-                checked = sceneBean.isIs_on();
-                mPresenter.perform(sceneBean.getId(), sceneBean.isIs_on());
-            }
-        });
+        nsvEmpty.setVisibility(View.VISIBLE);
     }
 
     /**
@@ -371,15 +306,10 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
     private void wsConnectStatus(boolean isConnect) {
         ivLog.setEnabled(HomeUtil.isSAEnvironment() || UserUtils.isLogin());
         ivAddScene.setEnabled(HomeUtil.isSAEnvironment() || UserUtils.isLogin());
-        boolean status = UserUtils.isLogin() ? true : HomeUtil.isSAEnvironment();
-        if (manualAdapter != null) {
-            manualAdapter.setStatus(status);
-        }
-        if (automaticAdapter != null) {
-            automaticAdapter.setStatus(status);
-        }
+
         if (HomeUtil.tokenIsInvalid) {
             rlInvalid.setVisibility(View.VISIBLE);
+            nsvEmpty.setVisibility(View.VISIBLE);
             return;
         }
         if (HomeUtil.isSAEnvironment() || UserUtils.isLogin()) {//sa环境或登录sc
@@ -389,10 +319,9 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
         } else if (!CurrentHome.isIs_bind_sa()) {
             setNullView(true);
         }
-
     }
 
-    @OnClick({R.id.llRefresh, R.id.llReconnect, R.id.tvMyHome, R.id.ivLog, R.id.ivAddScene, R.id.llHow, R.id.viewTips})
+    @OnClick({R.id.llRefresh, R.id.llReconnect, R.id.tvMyHome, R.id.ivLog, R.id.ivAddScene, R.id.llHow, R.id.tvTips, R.id.viewTips, R.id.tvSort})
     void onClick(View view) {
         switch (view.getId()) {
             case R.id.llRefresh:  // 刷新
@@ -401,6 +330,7 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
                     getData(true);
                 } else {
                     WSocketManager.getInstance().start();
+                    LogUtil.e("WSocketManager5==");
                 }
                 break;
 
@@ -414,6 +344,7 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
                 } else {
                     AnimationUtil.rotationAnim(ivReconnect, 500, R.drawable.icon_scene_refreshing_white, R.drawable.icon_scenerefresh_white);
                     WSocketManager.getInstance().start();
+                    LogUtil.e("WSocketManager6==");
                 }
                 break;
 
@@ -434,55 +365,118 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
                 switchToActivity(HowCreateSceneActivity.class, bundle);
                 break;
 
+            case R.id.tvTips:  // 离线帮助
+                if (!HomeUtil.tokenIsInvalid) {
+                    Bundle offlineBundle = new Bundle();
+                    offlineBundle.putInt(IntentConstant.WEB_URL_TYPE, 4);
+                    switchToActivity(CommonWebActivity.class, offlineBundle);
+                }
+                break;
+
             case R.id.viewTips:
                 if (HomeUtil.tokenIsInvalid) {
                     switchToActivity(FindSAGuideActivity.class);
                 }
                 break;
+
+            case R.id.tvSort:  // 排序
+                sort(true);
+                break;
         }
     }
 
+    /**
+     * 排序场景
+     */
+    private void sort(boolean click) {
+        boolean isSelected = tvSort.isSelected();
+        vpContent.setScroll(isSelected);
+        tvSort.setText(isSelected ? UiUtil.getString(R.string.scene_sort) : UiUtil.getString(R.string.scene_finish));
+        if (CollectionUtil.isNotEmpty(mFragments) && click)
+            mFragments.get(mCurrentItem).setSorting(!isSelected);
+        tvSort.setSelected(!isSelected);
+    }
+
+    /**
+     * 家庭列表弹窗
+     */
     private void showHomeDialog() {
-        HomeSelectDialog homeSelectDialog = new HomeSelectDialog(HomeFragment.mHomeList);
+        if (CollectionUtil.isNotEmpty(HomeFragment2.mHomeList)) {
+            for (HomeCompanyBean home : HomeFragment2.mHomeList) {
+                home.setSelected(home.getLocalId() == CurrentHome.getLocalId() || (home.getArea_id() > 0 && home.getArea_id() == CurrentHome.getArea_id()));
+            }
+        }
+        HomeSelectDialog homeSelectDialog = new HomeSelectDialog(HomeFragment2.mHomeList);
         homeSelectDialog.setClickItemListener(homeCompanyBean -> {
-            HomeFragment.homeLocalId = homeCompanyBean.getLocalId();
+            hasAddP = false;
+            HomeUtil.isInLAN = false;
+            HomeFragment2.homeLocalId = homeCompanyBean.getLocalId();
             CurrentHome = homeCompanyBean;
             HomeUtil.tokenIsInvalid = false;
             needLoadData = false;
             EventBus.getDefault().post(new HomeSelectedEvent());
             SpUtil.put(SpConstant.SA_TOKEN, homeCompanyBean.getSa_user_token());
-//            homeChange();
+            SpUtil.put(SpConstant.AREA_ID, String.valueOf(homeCompanyBean.getId()));
+
             homeSelectDialog.dismiss();
-            HttpUrlConfig.baseSAUrl = homeCompanyBean.getSa_lan_address();
+            String saLanAddress = homeCompanyBean.getSa_lan_address();
+            HttpUrlConfig.baseSAUrl = TextUtils.isEmpty(saLanAddress) ? "" : saLanAddress;
             HttpUrlConfig.apiSAUrl = HttpUrlConfig.baseSAUrl + HttpUrlConfig.API;
             //检测接口是否有用
-            if (CurrentHome.isIs_bind_sa() && TextUtils.isEmpty(CurrentHome.getMac_address()) && !TextUtils.isEmpty(CurrentHome.getSa_lan_address())) { // 绑定了sa，mac地址为空，sa_lan_address不为空
+            if (CurrentHome.isIs_bind_sa() && TextUtils.isEmpty(CurrentHome.getBSSID()) && !TextUtils.isEmpty(CurrentHome.getSa_lan_address())) { // 绑定了sa，mac地址为空，sa_lan_address不为空
                 checkUrl();
             } else {
-                WSocketManager.getInstance().start();
+                if (HomeUtil.isSAEnvironment() || UserUtils.isLogin()) {
+                    WSocketManager.getInstance().start();
+                } else {
+                    setNullView(true);
+                }
+                LogUtil.e("WSocketManager7==");
             }
             showSaStatus();
         });
         homeSelectDialog.show(this);
     }
 
-    private void checkUrl() {
-        AllRequestUtil.checkUrl(CurrentHome.getSa_lan_address(), new AllRequestUtil.onCheckUrlListener() {
-            @Override
-            public void onSuccess() {
-                WifiInfo wifiInfo = Constant.wifiInfo;
-                if (wifiInfo != null && wifiInfo.getBSSID() != null)
-                    CurrentHome.setMac_address(wifiInfo.getBSSID());
-                dbManager.updateHomeMacAddress(CurrentHome.getLocalId(), wifiInfo.getBSSID());
-                WSocketManager.getInstance().start();
-            }
+    /**
+     * 找回ip地址后
+     *
+     * @param event
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(AfterFindIPEvent event) {
+        checkUrl();
+    }
 
-            @Override
-            public void onError() {
-                CurrentHome.setMac_address("");
-                WSocketManager.getInstance().start();
-            }
-        });
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(RefreshSceneEvent event) {
+        getData(false);
+    }
+
+    private void checkUrl() {
+        if (TextUtils.isEmpty(CurrentHome.getSa_lan_address())) {
+            EventBus.getDefault().post(new FourZeroFourEvent());
+        } else {
+            AllRequestUtil.checkUrl(CurrentHome.getSa_lan_address(), new AllRequestUtil.onCheckUrlListener() {
+                @Override
+                public void onSuccess() {
+                    WifiInfo wifiInfo = Constant.wifiInfo;
+                    if (wifiInfo != null && wifiInfo.getBSSID() != null) {
+                        CurrentHome.setBSSID(wifiInfo.getBSSID());
+                        dbManager.updateHomeMacAddress(CurrentHome.getLocalId(), wifiInfo.getBSSID());
+                    }
+                    WSocketManager.getInstance().start();
+                    LogUtil.e("WSocketManager8==");
+                }
+
+                @Override
+                public void onError() {
+                    CurrentHome.setBSSID("");
+                    WSocketManager.getInstance().start();
+                    LogUtil.e("WSocketManager9==");
+                }
+            });
+        }
     }
 
     /**
@@ -505,7 +499,7 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
      */
     private void getData(boolean showLoading) {
         if (CurrentHome != null) {
-            if (CurrentHome.isIs_bind_sa() && (HomeUtil.isSAEnvironment() || UserUtils.isLogin())) {
+            if (HomeUtil.isSAEnvironment() || UserUtils.isLogin()) {
                 this.showLoading = showLoading;
                 HttpConfig.addHeader(CurrentHome.getSa_user_token());
                 if (mPresenter != null) {
@@ -514,8 +508,6 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
             } else {
                 loadLocalScene();
             }
-        } else {
-            refreshLayout.finishRefresh();
         }
     }
 
@@ -526,7 +518,9 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
      */
     @Override
     public void getSceneListSuccess(SceneListBean data) {
-        refreshLayout.finishRefresh();
+        if (CollectionUtil.isNotEmpty(mFragments)) {
+            mFragments.get(mCurrentItem).setRefreshLayoutEnable();
+        }
         if (data != null) {
             saveScenes(data);
             loadData(data);
@@ -541,24 +535,46 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
      * @param data
      */
     private void loadData(SceneListBean data) {
-        if (CollectionUtil.isNotEmpty(data.getManual()) || CollectionUtil.isNotEmpty(data.getAuto_run())) {
+        List<SceneBean> manualSceneData = data.getManual();
+        List<SceneBean> autoSceneData = data.getAuto_run();
+        tvSort.setSelected(true);
+        sort(false);
+        if (CollectionUtil.isNotEmpty(manualSceneData) || CollectionUtil.isNotEmpty(autoSceneData)) {
             setNullView(false);
-            if (CollectionUtil.isNotEmpty(data.getManual())) {
-                tvManual.setVisibility(View.VISIBLE);
-                rvManual.setVisibility(View.VISIBLE);
-                manualAdapter.setNewData(data.getManual());
+            tabData.clear();
+            mFragments.clear();
+            if (CollectionUtil.isNotEmpty(manualSceneData)) {  // 手动不为空
+                if (!TabBean.TAB_AUTOMATIC.isSelected())
+                    TabBean.TAB_MANUAL.setSelected(true);
+                tabData.add(TabBean.TAB_MANUAL);
+                SceneItemFragment sceneItemFragment = SceneItemFragment.getInstance(0, manualSceneData);
+                mFragments.add(sceneItemFragment);
             } else {
-                tvManual.setVisibility(View.GONE);
-                rvManual.setVisibility(View.GONE);
+                TabBean.TAB_MANUAL.setSelected(false);
             }
-            if (CollectionUtil.isNotEmpty(data.getAuto_run())) {
-                tvAutomatic.setVisibility(View.VISIBLE);
-                rvAutomatic.setVisibility(View.VISIBLE);
-                automaticAdapter.setNewData(data.getAuto_run());
+            if (CollectionUtil.isNotEmpty(autoSceneData)) {  // 自动不为空
+                if (!TabBean.TAB_MANUAL.isSelected())
+                    TabBean.TAB_AUTOMATIC.setSelected(true);
+                tabData.add(TabBean.TAB_AUTOMATIC);
+                SceneItemFragment sceneItemFragment = SceneItemFragment.getInstance(1, autoSceneData);
+                mFragments.add(sceneItemFragment);
             } else {
-                tvAutomatic.setVisibility(View.GONE);
-                rvAutomatic.setVisibility(View.GONE);
+                TabBean.TAB_AUTOMATIC.setSelected(false);
             }
+            commonFragmentPagerAdapter.updateFragments(mFragments);
+            if (CollectionUtil.isNotEmpty(tabData)) {
+                for (int i = 0; i < tabData.size(); i++) {
+                    TabBean tabBean = tabData.get(i);
+                    if (tabBean.isSelected()) {
+                        mCurrentItem = i;
+                        break;
+                    }
+                }
+                vpContent.setCurrentItem(mCurrentItem);
+            } else {
+                mCurrentItem = 0;
+            }
+            mTabAdapter.notifyDataSetChanged();
         } else {
             setNullView(true);
         }
@@ -572,20 +588,19 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
      */
     @Override
     public void getSceneListError(int errorCode, String msg) {
-        refreshLayout.finishRefresh();
+        LogUtil.e("SceneFragment错误码："+errorCode);
         setNullView(true);
+        if (CollectionUtil.isNotEmpty(mFragments)) {
+            mFragments.get(mCurrentItem).setRefreshLayoutEnable();
+        }
     }
 
     /**
      * 执行成功
      */
     @Override
-    public void performSuccess() {
+    public void performSuccess(int position) {
         String tip = UiUtil.getString(R.string.scene_perform_success);
-        if (type == 1) {
-            tip = checked ? UiUtil.getString(R.string.scene_perform_has_been_opened) : UiUtil.getString(R.string.scene_perform_has_been_closed);
-        }
-        getData(true);
         ToastUtil.show(tip);
     }
 
@@ -596,9 +611,8 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
      * @param msg
      */
     @Override
-    public void performFail(int errorCode, String msg) {
-        if (errorCode == 5012) {
-//            showRemovedTipsDialog();
+    public void performFail(int errorCode, int position, String msg) {
+        if (errorCode == 5012 || errorCode == 5027) {
             findSAToken();
         } else {
             ToastUtil.show(msg);
@@ -607,8 +621,10 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
 
     @Override
     public void onPermissionsFail(int errorCode, String msg) {
-        if (errorCode == 5012) {
-//            showRemovedTipsDialog();
+        if (CollectionUtil.isNotEmpty(mFragments)) {
+            mFragments.get(mCurrentItem).setRefreshLayoutEnable();
+        }
+        if (errorCode == 5012 || errorCode == 5027) {
             findSAToken();
         }
     }
@@ -631,25 +647,25 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
      * 移除家庭
      */
     private void showRemovedTipsDialog() {
+        HomeUtil.isInLAN = false;
         if (notFirst) {
-            RemovedTipsDialog removedTipsDialog = new RemovedTipsDialog(CurrentHome.getName());
+            RemovedTipsDialog removedTipsDialog = new RemovedTipsDialog(String.format(UiUtil.getString(R.string.common_remove_home), CurrentHome.getName()));
             removedTipsDialog.show(this);
             dbManager.removeFamilyByToken(CurrentHome.getSa_user_token());
-            if (CollectionUtil.isNotEmpty(HomeFragment.mHomeList)) {
-                for (HomeCompanyBean homeCompanyBean : HomeFragment.mHomeList) {
+            if (CollectionUtil.isNotEmpty(HomeFragment2.mHomeList)) {
+                for (HomeCompanyBean homeCompanyBean : HomeFragment2.mHomeList) {
                     if (!TextUtils.isEmpty(homeCompanyBean.getSa_user_token()) && homeCompanyBean.getSa_user_token().equalsIgnoreCase(CurrentHome.getSa_user_token())) {
-                        HomeFragment.mHomeList.remove(homeCompanyBean);
+                        HomeFragment2.mHomeList.remove(homeCompanyBean);
                         break;
                     }
                 }
             }
-            if (CollectionUtil.isNotEmpty(HomeFragment.mHomeList)) {  // 如果还有家庭
-                CurrentHome = HomeFragment.mHomeList.get(0);
+            if (CollectionUtil.isNotEmpty(HomeFragment2.mHomeList)) {  // 如果还有家庭
+                CurrentHome = HomeFragment2.mHomeList.get(0);
                 refreshHome();
             } else {  // 如果没有家庭，就新建一个
                 createLocalHome();
             }
-
         }
     }
 
@@ -666,22 +682,20 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
      * 创建本地将他
      */
     private void createLocalHome() {
-        UiUtil.starThread(new Runnable() {
-            @Override
-            public void run() {
-                HomeCompanyBean homeCompanyBean = new HomeCompanyBean(1, getResources().getString(R.string.main_my_home));
-                homeCompanyBean.setIs_bind_sa(false);
-                homeCompanyBean.setSa_user_token(null);
-                homeCompanyBean.setSa_lan_address(null);
-                homeCompanyBean.setUser_id(1);
-                homeCompanyBean.setSelected(true);
-                long count = dbManager.insertHomeCompany(homeCompanyBean, null, false);
-                UiUtil.runInMainThread(() -> {
-                    CurrentHome = homeCompanyBean;
-                    HomeFragment.mHomeList.add(homeCompanyBean);
-                    refreshHome();
-                });
-            }
+        UiUtil.starThread(() -> {
+            HomeCompanyBean homeCompanyBean = new HomeCompanyBean(1, getResources().getString(R.string.main_my_home));
+            homeCompanyBean.setIs_bind_sa(false);
+            homeCompanyBean.setSa_user_token(null);
+            homeCompanyBean.setSa_lan_address(null);
+            homeCompanyBean.setUser_id(1);
+            homeCompanyBean.setSelected(true);
+            homeCompanyBean.setArea_type(Constant.HOME_MODE);
+            long count = dbManager.insertHomeCompany(homeCompanyBean, null, false);
+            UiUtil.runInMainThread(() -> {
+                CurrentHome = homeCompanyBean;
+                HomeFragment2.mHomeList.add(homeCompanyBean);
+                refreshHome();
+            });
         });
     }
 
@@ -700,6 +714,7 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
                 hasAddP = pb.isAdd_scene();
                 hasUpdateP = pb.isUpdate_scene();
                 hasDelP = pb.isDelete_scene();
+                tvSort.setVisibility(hasUpdateP ? View.VISIBLE : View.GONE);
             }
         }
         needLoadData = true;
@@ -717,12 +732,7 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
             String saToken = findSATokenBean.getSa_token();
             CurrentHome.setSa_user_token(saToken);
             getData(false);
-            UiUtil.starThread(new Runnable() {
-                @Override
-                public void run() {
-                    dbManager.updateSATokenByLocalId(CurrentHome.getLocalId(), saToken);
-                }
-            });
+            UiUtil.starThread(() -> dbManager.updateSATokenByLocalId(CurrentHome.getLocalId(), saToken));
         }
     }
 
@@ -762,9 +772,12 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
      */
     private void setNullView(boolean visible) {
         if (CurrentHome == null) return;
+        setNextStatus(HomeUtil.isSAEnvironment() || UserUtils.isLogin());
         rlInvalid.setVisibility(View.GONE);
-        viewData.setVisibility(visible ? View.GONE : View.VISIBLE);
         viewEmpty.setVisibility(visible ? View.VISIBLE : View.GONE);
+        nsvEmpty.setVisibility(visible ? View.VISIBLE : View.GONE);
+        llTab.setVisibility(visible ? View.GONE : View.VISIBLE);
+        vpContent.setVisibility(visible ? View.GONE : View.VISIBLE);
         if ((HomeUtil.isSAEnvironment() && CurrentHome.isIs_bind_sa()) || !CurrentHome.isIs_bind_sa() || UserUtils.isLogin()) {
             ivEmpty.setImageResource(R.drawable.icon_scene_null);
             tvEmpty.setText(UiUtil.getString(R.string.scene_not));
@@ -808,7 +821,6 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
         } else {
             setNullView(true);
         }
-        refreshLayout.finishRefresh();
     }
 
     @Override
@@ -831,5 +843,57 @@ public class SceneFragment extends MVPBaseFragment<SceneFragmentContract.View, S
 
     @Override
     public void selectTab() {
+    }
+
+    /**
+     * 初始化频道
+     */
+    private void initTabLayout() {
+        commonFragmentPagerAdapter = new SceneFragmentStatePagerAdapter(getChildFragmentManager());
+        vpContent.setAdapter(commonFragmentPagerAdapter);
+
+        vpContent.setScroll(true);
+        rvTab.setLayoutManager(new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false));
+        mTabAdapter = new TabAdapter();
+        mTabAdapter.setNewData(tabData);
+        rvTab.setAdapter(mTabAdapter);
+        mTabAdapter.setOnItemClickListener((adapter, view, position) -> {
+            if (tvSort.isSelected()) return;
+            setTabStatus(position);
+            vpContent.setCurrentItem(position);
+        });
+        vpContent.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                setTabStatus(position);
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
+    }
+
+    /**
+     * 设置tab的状态
+     *
+     * @param position
+     */
+    private void setTabStatus(int position) {
+        mCurrentItem = position;
+        TabBean tabBean = mTabAdapter.getItem(position);
+        if (tabBean == null) return;
+        if (tabBean.isSelected()) return;
+        for (TabBean tb : mTabAdapter.getData()) {
+            tb.setSelected(false);
+        }
+        tabBean.setSelected(true);
+        mTabAdapter.notifyDataSetChanged();
     }
 }

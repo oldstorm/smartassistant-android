@@ -69,7 +69,6 @@ public class SACheckUpdateDialog extends CommonBaseDialog {
     void onClick(View view){
         int viewId = view.getId();
         switch (viewId){
-
             case R.id.llUpdate: // 更新
                 if (updateListener!=null){
                     updateListener.onUpdate();
@@ -90,7 +89,6 @@ public class SACheckUpdateDialog extends CommonBaseDialog {
         tvUpdate.setVisibility(updating ? View.GONE : View.VISIBLE);
         rbUpdate.setVisibility(updating ? View.VISIBLE : View.GONE);
         llUpdate.setEnabled(!updating);
-
     }
 
     private OnUpdateListener updateListener;
@@ -102,5 +100,4 @@ public class SACheckUpdateDialog extends CommonBaseDialog {
     public interface OnUpdateListener{
         void onUpdate();
     }
-
 }

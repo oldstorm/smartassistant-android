@@ -43,7 +43,7 @@ public class GlideConfing<T> {
 
     public GlideConfing userHead() {
         type = LoadType.USER_HEAD;
-        requestOptions.error(R.mipmap.profile_user_img).placeholder(R.mipmap.profile_user_img);
+        requestOptions.error(R.mipmap.icon_default_avatar).placeholder(R.mipmap.icon_default_avatar);
         return this;
     }
 

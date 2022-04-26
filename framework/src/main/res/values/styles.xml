@@ -23,7 +23,7 @@
     <!--&lt;!&ndash; 应用启动页(StartingWindow)的theme &ndash;&gt;-->
     <style name="AppTheme.StartingWindowTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:statusBarColor">@color/white</item>
-        <item name="android:windowBackground">@mipmap/fantastia_startpage</item>
+        <item name="android:windowBackground">@mipmap/icon_app</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:navigationBarColor">@color/white</item>

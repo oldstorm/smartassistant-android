@@ -12,6 +12,7 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textSize">@dimen/sp_14</item>
         <item name="android:textColor">@color/color_3F4663</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
     <style name="line_eeeeee">
@@ -68,6 +69,10 @@
         <!-- 去除标题 -->
         <item name="android:windowNoTitle">true</item>
 
+    </style>
+
+    <style name="checkBoxStyle">
+        <item name="android:button">@drawable/selector_circle_check</item>
     </style>
 
 </resources>

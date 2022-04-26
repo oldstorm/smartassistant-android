@@ -60,3 +60,7 @@ ScreenUtil.fitNotchScreen(getContext(),rootView);
 
 7、防止键盘将控件顶起
 android:windowSoftInputMode="adjustNothing|stateHidden"
+
+8.获取临时通道只需要header添加 area_id,不需要token
+
+9、打包记得 HttpBaseUrl 切换正式地址

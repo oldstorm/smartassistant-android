@@ -50,6 +50,10 @@ public class LoggerInterceptor implements Interceptor {
             LogUtil.e(tag, "url : " + clone.request().url());
             LogUtil.e(tag, "code : " + clone.code());
             LogUtil.e(tag, "protocol : " + clone.protocol());
+            Headers headers = clone.headers();
+            if (headers != null && headers.size() > 0) {
+                LogUtil.e(tag, "Response_headers : " + headers.toString());
+            }
             if (!TextUtils.isEmpty(clone.message()))
                 LogUtil.e(tag, "message : " + clone.message());
 

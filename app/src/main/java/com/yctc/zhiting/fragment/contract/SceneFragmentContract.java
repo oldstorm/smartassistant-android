@@ -21,8 +21,8 @@ public interface SceneFragmentContract {
     interface View extends BaseView {
         void getSceneListSuccess(SceneListBean data);
         void getSceneListError(int errorCode, String msg);
-        void performSuccess();
-        void performFail(int errorCode, String msg);
+        void performSuccess(int position);
+        void performFail(int errorCode, int position, String msg);
         void onPermissionsFail(int errorCode, String msg);
         void getPermissionsSuccess(PermissionBean permissionBean);
         void getSATokenSuccess(FindSATokenBean findSATokenBean);
@@ -31,7 +31,7 @@ public interface SceneFragmentContract {
 
     interface Presenter extends BasePresenter<View> {
         void getSceneList(boolean showLoading);
-        void perform(int id, boolean execute);
+        void perform(int id, int position, boolean execute);
         void getPermissions(int id);
         void getSAToken(int userId, List<NameValuePair> requestData);
     }

@@ -89,6 +89,7 @@ public class FindCertificateDialog extends CommonBaseDialog implements View.OnCl
 
     @Override
     protected void initView(View view) {
+        setCancelable(false);
         clAllow.setOnClickListener(this);
         clNoAllow.setOnClickListener(this);
         tvCancel.setOnClickListener(this);

@@ -6,6 +6,7 @@ import com.app.main.framework.httputil.RequestDataCallback;
 import com.app.main.framework.httputil.request.Request;
 import com.yctc.zhiting.bean.DeviceDetailBean;
 import com.yctc.zhiting.entity.mine.CurrentVersionBean;
+import com.yctc.zhiting.entity.mine.FirmWareVersionBean;
 import com.yctc.zhiting.entity.mine.PermissionBean;
 import com.yctc.zhiting.entity.mine.SoftWareVersionBean;
 
@@ -16,6 +17,12 @@ public interface SoftwareUpgradeContract {
         void postSoftWareUpgrade(Request request, RequestDataCallback<String> callback);
 
         void getCurrentVersion(RequestDataCallback<CurrentVersionBean> callback);
+
+        void getFirmWareLatestVersion(RequestDataCallback<SoftWareVersionBean> callback);
+
+        void updateFirmWare(Request request, RequestDataCallback<String> callback);
+
+        void getCurrentFirmWareVersion(RequestDataCallback<CurrentVersionBean> callback);
     }
 
     interface View extends BaseView {
@@ -37,6 +44,12 @@ public interface SoftwareUpgradeContract {
 
         void postSoftWareUpgrade(SoftWareVersionBean request);
 
-        void getCurrentVersion();
+        void getCurrentSoftWareVersion();
+
+        void getFirmWareLatestVersion();
+
+        void updateFirmWare(SoftWareVersionBean request);
+
+        void getCurrentFirmWareVersion();
     }
 }

@@ -23,7 +23,9 @@ import com.yctc.zhiting.entity.mine.LocationBean;
 import com.yctc.zhiting.entity.mine.PermissionBean;
 import com.yctc.zhiting.event.LocationEvent;
 import com.yctc.zhiting.request.AddRoomRequest;
+import com.yctc.zhiting.request.ModifyDeviceDepartmentRequest;
 import com.yctc.zhiting.request.ModifyDeviceRequest;
+import com.yctc.zhiting.utils.CollectionUtil;
 import com.yctc.zhiting.utils.IntentConstant;
 
 import org.greenrobot.eventbus.EventBus;
@@ -66,6 +68,7 @@ public class UpdateDeviceLocationActivity extends MVPBaseActivity<UpdateDeviceLo
         initRecyclerView();
         mPresenter.getPermissions(Constant.CurrentHome.getUser_id());
         mPresenter.getAreaList();
+
     }
 
     @Override
@@ -73,6 +76,7 @@ public class UpdateDeviceLocationActivity extends MVPBaseActivity<UpdateDeviceLo
         super.initIntent(intent);
         mDeviceId = intent.getIntExtra(IntentConstant.ID, 0);
         mLocationId = intent.getIntExtra(IntentConstant.RA_ID, 0);
+        tvAdd.setText(Constant.AREA_TYPE == 2 ? UiUtil.getString(R.string.mine_add_department) : UiUtil.getString(R.string.mine_add_room));
         mDeviceName = intent.getStringExtra(IntentConstant.NAME);
     }
 
@@ -102,7 +106,7 @@ public class UpdateDeviceLocationActivity extends MVPBaseActivity<UpdateDeviceLo
      * 返回
      */
     @OnClick(R.id.ivBack)
-    void onClickBack(){
+    void onClickBack() {
         onBackPressed();
     }
 
@@ -110,7 +114,7 @@ public class UpdateDeviceLocationActivity extends MVPBaseActivity<UpdateDeviceLo
      * 添加房间
      */
     @OnClick(R.id.tvAdd)
-    void onClickAdd(){
+    void onClickAdd() {
         showAddAreaDialog();
     }
 
@@ -118,7 +122,7 @@ public class UpdateDeviceLocationActivity extends MVPBaseActivity<UpdateDeviceLo
      * 完成
      */
     @OnClick(R.id.tvComplete)
-    void onClickComplete(){
+    void onClickComplete() {
         complete();
     }
 
@@ -126,8 +130,8 @@ public class UpdateDeviceLocationActivity extends MVPBaseActivity<UpdateDeviceLo
      * 添加房间、区域对话框
      */
     private void showAddAreaDialog() {
-        String title = UiUtil.getString(R.string.mine_room_name);
-        String tip = UiUtil.getString(R.string.mine_input_room_name);
+        String title = UiUtil.getString(Constant.AREA_TYPE == Constant.COMPANY_MODE ? R.string.mine_department_name : R.string.mine_room_name);
+        String tip = UiUtil.getString(Constant.AREA_TYPE == Constant.COMPANY_MODE ? R.string.mine_input_department_name : R.string.mine_input_room_name);
 
         EditBottomDialog editBottomDialog = EditBottomDialog.newInstance(title, tip, null, 1);
         editBottomDialog.setClickSaveListener(content -> {
@@ -140,14 +144,20 @@ public class UpdateDeviceLocationActivity extends MVPBaseActivity<UpdateDeviceLo
      * 完成
      */
     private void complete() {
-        Request request = new ModifyDeviceRequest(mDeviceName, mLocationId);
+        Request request = null;
+        if (Constant.AREA_TYPE == Constant.COMPANY_MODE) {
+            request = new ModifyDeviceDepartmentRequest(mDeviceName, mLocationId);
+        }else {
+            request = new ModifyDeviceRequest(mDeviceName, mLocationId);
+        }
         mPresenter.updateDeviceName(String.valueOf(mDeviceId), request);
     }
 
     @Override
     public void getPermissionsSuccess(PermissionBean permissionBean) {
-        if (permissionBean!=null){
-            tvAdd.setVisibility(permissionBean.getPermissions().isAdd_location() ? View.VISIBLE : View.GONE);
+        if (permissionBean != null) {
+            boolean hasAddPermission = Constant.AREA_TYPE == Constant.COMPANY_MODE ? permissionBean.getPermissions().isAdd_department() : permissionBean.getPermissions().isAdd_location();
+            tvAdd.setVisibility(hasAddPermission ? View.VISIBLE : View.GONE);
         }
     }
 
@@ -158,17 +168,32 @@ public class UpdateDeviceLocationActivity extends MVPBaseActivity<UpdateDeviceLo
 
     @Override
     public void onAreasSuccess(AreasBean data) {
-        if (data != null && data.getLocations() != null && data.getLocations().size() > 0) {
-            mLocationList = data.getLocations();
-            if (mLocationId > 0) {
-                for (int i = 0; i < mLocationList.size(); i++) {
-                    if (mLocationList.get(i).getId() == mLocationId) {
-                        mLocationList.get(i).setCheck(true);
-                        break;
+        if (Constant.AREA_TYPE == Constant.COMPANY_MODE) {
+            if (data!=null && CollectionUtil.isNotEmpty(data.getDepartments())){
+                mLocationList = data.getDepartments();
+                if (mLocationId > 0) {
+                    for (int i = 0; i < mLocationList.size(); i++) {
+                        if (mLocationList.get(i).getId() == mLocationId) {
+                            mLocationList.get(i).setCheck(true);
+                            break;
+                        }
                     }
                 }
+                mPositionAdapter.setNewData(mLocationList);
             }
-            mPositionAdapter.setNewData(mLocationList);
+        } else {
+            if (data != null && data.getLocations() != null && data.getLocations().size() > 0) {
+                mLocationList = data.getLocations();
+                if (mLocationId > 0) {
+                    for (int i = 0; i < mLocationList.size(); i++) {
+                        if (mLocationList.get(i).getId() == mLocationId) {
+                            mLocationList.get(i).setCheck(true);
+                            break;
+                        }
+                    }
+                }
+                mPositionAdapter.setNewData(mLocationList);
+            }
         }
     }
 
@@ -190,7 +215,8 @@ public class UpdateDeviceLocationActivity extends MVPBaseActivity<UpdateDeviceLo
     @Override
     public void onUpdateDeviceNameSuccess() {
         EventBus.getDefault().post(new LocationEvent(lId, lName));
-        onBackPressed();
+        setResult(RESULT_OK);
+        finish();
     }
 
     @Override

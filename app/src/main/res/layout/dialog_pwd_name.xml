@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/shape_white_c10">
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/dp_24"
+        android:text="@string/home_dl_finger_print_name"
+        android:textColor="@color/color_3f4663"
+        android:textSize="@dimen/textSize16"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/dp_22"
+        android:layout_marginRight="@dimen/dp_25"
+        android:layout_marginTop="@dimen/dp_22"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <TextView
+            android:id="@+id/tvName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="right"
+            android:text="@string/home_dl_finger_print_name"
+            android:textColor="@color/color_3f4663"
+            android:textSize="@dimen/textSize14"
+            android:textStyle="bold" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="right"
+            android:text="："
+            android:textColor="@color/color_3f4663"
+            android:textSize="@dimen/textSize14"
+            android:textStyle="bold" />
+        <EditText
+            android:id="@+id/etPwdName"
+            android:layout_width="@dimen/dp_0"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/dp_10"
+            android:paddingTop="@dimen/dp_18"
+            android:paddingBottom="@dimen/dp_19"
+            android:paddingLeft="@dimen/dp_16"
+            android:paddingRight="@dimen/dp_16"
+            android:layout_weight="1.8"
+            android:gravity="left"
+            android:background="@drawable/shape_f5f5f5_c4"
+            android:singleLine="true"
+            android:textColorHint="@color/color_94A5BE"
+            android:hint="@string/home_dl_please_input"
+            android:textColor="@color/color_94A5BE"
+            android:textSize="@dimen/textSize14" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:layout_marginTop="@dimen/dp_25"
+        android:background="@color/color_DDDDDD" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:id="@+id/tvCancel"
+            android:layout_width="@dimen/dp_0"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingTop="@dimen/dp_18"
+            android:paddingBottom="@dimen/dp_18"
+            android:gravity="center"
+            android:text="@string/cancel"
+            android:textColor="@color/color_94A5BE"
+            android:textSize="@dimen/textSize14"
+            android:textStyle="bold" />
+        <View
+            android:layout_width="0.5dp"
+            android:layout_height="match_parent"
+            android:background="@color/color_DDDDDD" />
+        <TextView
+            android:id="@+id/tvConfirm"
+            android:layout_width="@dimen/dp_0"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingTop="@dimen/dp_18"
+            android:paddingBottom="@dimen/dp_18"
+            android:gravity="center"
+            android:text="@string/confirm"
+            android:textColor="@color/color_2da3f6"
+            android:textSize="@dimen/textSize14"
+            android:textStyle="bold" />
+    </LinearLayout>
+</LinearLayout>

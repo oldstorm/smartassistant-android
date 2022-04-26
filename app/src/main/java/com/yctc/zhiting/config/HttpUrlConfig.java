@@ -3,10 +3,11 @@ package com.yctc.zhiting.config;
 import android.text.TextUtils;
 
 import com.app.main.framework.baseutil.LogUtil;
+import com.app.main.framework.baseutil.TraceUtil;
+import com.app.main.framework.config.HttpBaseUrl;
 import com.app.main.framework.httputil.comfig.HttpConfig;
 import com.yctc.zhiting.utils.HomeUtil;
 import com.yctc.zhiting.utils.UserUtils;
-
 
 public class HttpUrlConfig {
     //public static final String HTTP = BuildConfig.HTTP;
@@ -14,23 +15,22 @@ public class HttpUrlConfig {
     //public static String baseUrl = "http://yapi.yctc.tech/mock/61/";
     //public static String baseUrl = "http://192.168.0.112:8088/";//马健
     //public static String baseUrl = "http://192.168.0.188:8088/";//伟杰
-
     //public static String baseUrl = "http://192.168.0.182:8088/";//巫力宏
     //public static String baseSCUrl = "http://192.168.0.182:9097/";//巫力宏
-
     //public static String baseSAUrl = "http://192.168.0.84:8088/";//测试服务SA1 ip
     //public static String baseUrl = "http://192.168.0.82:8088/";//测试服务SA2 ip
     //public static String baseSAUrl = "http://sa.zhitingtech.com/";//测试服务器SA1 域名
 
-    public static String baseSAUrl = "http://192.168.22.123:9020";//测试服务器SA
-    public static String baseSCUrl = "https://scgz.zhitingtech.com";//测试服务SC
-//    public static String baseSAUrl = "http://192.168.22.106:37965";//测试服务器SA
-//    public static String baseSCUrl = "http://192.168.22.76:9097";//测试服务SC
+    //public static String baseSCUrl = "http://192.168.22.84:8082";//测试服务SC
+    //public static String baseSCUrl = "http://192.168.22.110:9097";//力宏测试服务SC
+    //public static String baseSAUrl = "http://192.168.22.106:37965";//测试服务器SA
+    //public static String baseSCUrl = "http://192.168.22.76:9097";//测试服务SC
+
     public static final String API = "/api/";
-    public static String apiSCUrl = baseSCUrl +API;//测试服务SC api
-    public static String apiSAUrl = baseSAUrl +API;//测试服务器SA api
-
-
+    public static String baseSAUrl = HttpBaseUrl.baseSAUrl;//测试服务器SA
+    public static String baseSCUrl = HttpBaseUrl.baseSCUrl;//测试服务SC
+    public static String apiSCUrl = baseSCUrl + API;//测试服务SC api
+    public static String apiSAUrl = baseSAUrl + API + HttpBaseUrl.VERSION;//测试服务器SA api
 
     //只走SA
     private static String getSAServerUrl(String url) {
@@ -40,11 +40,12 @@ public class HttpUrlConfig {
         if (url.contains(Constant.NO_AREA_ID)) {//不需要添加area_id接口
             url = url.replace(Constant.NO_AREA_ID, "");
             HttpConfig.clearHear(HttpConfig.AREA_ID);
-        }else{
+        } else {
             long homeId = HomeUtil.getHomeId();
             HttpConfig.addAreaIdHeader(HttpConfig.AREA_ID, String.valueOf(homeId));
         }
-        return apiSAUrl + url;
+        HttpConfig.addAreaIdHeader(HttpConfig.TRACEPARENT, getTraceParentVal());
+        return apiSAUrl + HttpBaseUrl.VERSION + url;
     }
 
     //只走SC
@@ -66,7 +67,8 @@ public class HttpUrlConfig {
                 HttpConfig.clearHear(HttpConfig.TOKEN_KEY);
             }
         }
-        return apiSCUrl + url;
+        HttpConfig.addAreaIdHeader(HttpConfig.TRACEPARENT, getTraceParentVal());
+        return apiSCUrl + HttpBaseUrl.VERSION + url;
     }
 
     public static String getSCServerNeedBindIdUrl(String url) {
@@ -81,7 +83,8 @@ public class HttpUrlConfig {
         } else {//移除
             HttpConfig.clearHear(HttpConfig.TOKEN_KEY);
         }
-        return apiSCUrl + url;
+        HttpConfig.addAreaIdHeader(HttpConfig.TRACEPARENT, getTraceParentVal());
+        return apiSCUrl + HttpBaseUrl.VERSION + url;
     }
 
     //根据条件判断走SA/SC
@@ -105,7 +108,17 @@ public class HttpUrlConfig {
      * @return
      */
     private static String getSCServerUrlWithoutHead(String url) {
-        return apiSCUrl + url;
+        return apiSCUrl + HttpBaseUrl.VERSION + url;
+    }
+
+    /**
+     * 生成traceparent
+     * @return
+     */
+    public static String getTraceParentVal(){
+        String traceparentVal = "00-" + TraceUtil.getHexdiglc(32) + "-" + TraceUtil.getHexdiglc(16) + "-01";
+        LogUtil.e("traceparentVal=========="+traceparentVal);
+        return traceparentVal;
     }
 
     /**
@@ -154,6 +167,15 @@ public class HttpUrlConfig {
     }
 
     /**
+     * 家庭/物业详情
+     *
+     * @return
+     */
+    public static String getAreaDetailUrl() {
+        return getACServerUrl(HttpUrlParams.areas);
+    }
+
+    /**
      * 房间/位置默认勾选列表
      *
      * @return
@@ -163,7 +185,7 @@ public class HttpUrlConfig {
     }
 
     /**
-     * 房间/成员列表
+     * 用户列表
      *
      * @return
      */
@@ -213,7 +235,6 @@ public class HttpUrlConfig {
     public static String getSync() {
         return getSAServerUrl(HttpUrlParams.sync);
     }
-
 
     /**
      * 房间/区域
@@ -459,37 +480,41 @@ public class HttpUrlConfig {
 
     /**
      * 通过sc找回sa的用户凭证
+     *
      * @param id 用户id
      * @return
      */
-    public static String getSAToken(int id){
+    public static String getSAToken(int id) {
         HttpConfig.clearHear(HttpConfig.AREA_ID);
         HttpConfig.clearHear(HttpConfig.TOKEN_KEY);
-        return apiSCUrl+HttpUrlParams.users + "/" + id + "/" + HttpUrlParams.sa_token;
+        return apiSCUrl + HttpUrlParams.users + "/" + id + "/" + HttpUrlParams.sa_token;
     }
 
     /**
      * 上传插件
+     *
      * @return
      */
-    public static String getUploadPlugin(){
+    public static String getUploadPlugin() {
         return getSAServerUrl(HttpUrlParams.upload_plugins);
     }
 
     /**
      * 设备分类
+     *
      * @return
      */
-    public static String getDeviceType(){
+    public static String getDeviceType() {
         return getACServerUrl(HttpUrlParams.device_types);
     }
 
     /**
      * 获取设备access_token
+     *
      * @return
      */
-    public static String getDeviceAccessToken(){
-        return apiSCUrl+HttpUrlParams.device_access_token+ Constant.ONLY_SC;
+    public static String getDeviceAccessToken() {
+        return apiSCUrl + HttpUrlParams.device_access_token + Constant.ONLY_SC;
     }
 
     /**
@@ -512,42 +537,244 @@ public class HttpUrlConfig {
 
     /**
      * 获取更新版本版本信息
+     *
      * @return
      */
     public static String getSoftWareVersion() {
-        return getSAServerUrl(HttpUrlParams.software_version);
+        return getACServerUrl(HttpUrlParams.software_version);
+    }
+
+    public static String getFirmWareLatestVersion() {
+        return getACServerUrl(HttpUrlParams.firmware_latest_version);
     }
 
     /**
      * 获取当前版本信息
+     *
      * @return
      */
     public static String getCurrentVersion() {
-        return getSAServerUrl(HttpUrlParams.current_version);
+        return getACServerUrl(HttpUrlParams.current_version);
+    }
+
+    public static String getCurrentFirmWareVersion() {
+        return getACServerUrl(HttpUrlParams.current_firmware_version);
     }
 
     /**
-     *升级软件
+     * 升级软件
+     *
      * @return
      */
     public static String getUpgradeSoftWare() {
-        return getSAServerUrl(HttpUrlParams.upgrade_software);
+        return getACServerUrl(HttpUrlParams.upgrade_software);
+    }
+
+    public static String getUpdateFirmWare() {
+        return getACServerUrl(HttpUrlParams.update_firm_ware);
     }
 
     /**
      * 安装/更新插件
+     *
      * @param name
      * @return
      */
-    public static String getAddOrUpdatePlugin(String name){
+    public static String getAddOrUpdatePlugin(String name) {
         return getSAServerUrl(HttpUrlParams.brand + "/" + name + "/" + HttpUrlParams.plugins);
     }
 
     /**
      * 品牌创作插件
+     *
      * @return
      */
-    public static String getCreatePluginList(){
+    public static String getCreatePluginList() {
         return getACServerUrl(HttpUrlParams.create_plugin);
+    }
+
+    /**
+     * 设备一级分类
+     *
+     * @return
+     */
+    public static String getDeviceFirstType() {
+        return getACServerUrl(HttpUrlParams.device_types_major);
+    }
+
+    /**
+     * 设备二级分类
+     *
+     * @return
+     */
+    public static String getDeviceSecondType() {
+        return getACServerUrl(HttpUrlParams.device_types_minor);
+    }
+
+    /**
+     * 部门
+     *
+     * @return
+     */
+    public static String getDepartments() {
+        return getACServerUrl(HttpUrlParams.departments);
+    }
+
+    /**
+     * 获取家庭迁移地址
+     *
+     * @return
+     */
+    public static String getMigration() {
+        return getACServerUrl(HttpUrlParams.migration);
+    }
+
+    /**
+     * 迁移云端家庭到本地
+     *
+     * @return
+     */
+    public static String getCloudMigration() {
+        return getACServerUrl(HttpUrlParams.cloud_migration);
+    }
+
+    /**
+     * 获取扩展列表
+     *
+     * @return
+     */
+    public static String getExtensions() {
+        return getACServerUrl(HttpUrlParams.extensions);
+    }
+
+    /**
+     * 忘记密码
+     *
+     * @return
+     */
+    public static String getForgetPwd() {
+        return getSCServerUrl(HttpUrlParams.forget_password);
+    }
+
+    /**
+     * 注销家庭列表地址
+     *
+     * @return
+     */
+    public static String getUnregisterAreas(int userId) {
+        return getSCServerUrl(HttpUrlParams.users + "/" + userId + "/" + HttpUrlParams.unregister_areas);
+    }
+
+    /**
+     * 删除SA
+     *
+     * @return
+     */
+    public static String getDeleteSaUrl(long homeId) {
+        return getACServerUrl(HttpUrlParams.areas + "/" + homeId + "/" + HttpUrlParams.delete_sa);
+    }
+
+    /**
+     * 上传头像
+     *
+     * @param sc
+     * @return
+     */
+    public static String getUploadAvatarUrl(boolean sc) {
+        if (sc) {
+            return apiSCUrl + HttpUrlParams.users + "/" + UserUtils.getCloudUserId() + "/" + HttpUrlParams.file_upload + Constant.ONLY_SC;
+        } else {
+            return getACServerUrl(HttpUrlParams.files);
+        }
+    }
+
+    /**
+     * app升级版本信息
+     *
+     * @return
+     */
+    public static String getAppVersionInfo() {
+        return getSCServerUrl(HttpUrlParams.update_apk_url);
+    }
+
+    /**
+     * 设备图标
+     *
+     * @return
+     */
+    public static String getLogo(int id) {
+        return getACServerUrl(HttpUrlParams.devices + "/" + id + "/" + HttpUrlParams.logo);
+    }
+
+    /**
+     * @return
+     */
+    public static String getCheck() {
+        return getACServerUrl(HttpUrlParams.check);
+    }
+
+    /**
+     * 获取SA支持的最低Api版本
+     *
+     * @return
+     */
+    public static String getSupportApi() {
+        return getSCServerUrl(HttpUrlParams.common_service_software_support_api);
+    }
+
+    /**
+     * 获取App支持的最低Api版本
+     *
+     * @return
+     */
+    public static String getAppSupportApi() {
+        return getSCServerUrl(HttpUrlParams.common_service_app_support_api);
+    }
+
+    /**
+     * 第三方云绑定列表
+     *
+     * @return
+     */
+    public static String getThirdParty(boolean sc) {
+        return sc ? (getSCServerUrl(HttpUrlParams.cloud_list) + Constant.ONLY_SC) : getACServerUrl(HttpUrlParams.apps);
+    }
+
+    /**
+     * 解绑第三方云
+     *
+     * @return
+     */
+    public static String getCloudUnbind(String appId, String areaId) {
+        return getACServerUrl(HttpUrlParams.apps + "/" + appId + "/" + HttpUrlParams.apps_unbind_areas + "/" + areaId);
+    }
+
+    /**
+     * 问题反馈-获取列表
+     *
+     * @param userId
+     * @return
+     */
+    public static String getFeedbackList(int userId) {
+        return getSCServerUrlWithoutHead(HttpUrlParams.users + "/" + userId + "/" + HttpUrlParams.feedbacks) + Constant.ONLY_SC;
+    }
+
+    /**
+     * 问题反馈-获取详情
+     *
+     * @param userId
+     * @param feedbackId
+     * @return
+     */
+    public static String getFeedbackDetail(int userId, int feedbackId) {
+        return getSCServerUrlWithoutHead(HttpUrlParams.users + "/" + userId + "/" + HttpUrlParams.feedbacks + "/" + feedbackId) + Constant.ONLY_SC;
+    }
+
+    /**
+     * 反馈上传文件
+     * @return
+     */
+    public static String getFileUpload() {
+        return getSCServerUrlWithoutHead(HttpUrlParams.users + "/" + UserUtils.getCloudUserId() + "/" + HttpUrlParams.file_upload) + Constant.ONLY_SC;
     }
 }

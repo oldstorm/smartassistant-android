@@ -111,7 +111,6 @@ public class QRCodeDialog extends CommonBaseDialog {
                 getContext().sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse("file://"
                         + picFile)));
                 ToastUtil.show(getContext().getResources().getString(R.string.mine_save_success));
-                dismiss();
             }
         });
     }

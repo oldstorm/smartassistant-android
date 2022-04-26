@@ -4,6 +4,7 @@ import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Paint.Align;
@@ -16,6 +17,7 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 
 import com.app.main.framework.baseutil.UiUtil;
@@ -57,6 +59,8 @@ public class PickerView extends View {
     private Handler mHandler = new ScrollHandler(this);
 
     private String label; // 标签单位
+    private int leftOffset; // 左偏移
+    private int labelOffset; // 单位偏移量
 
     /**
      * 自动回滚到中间的速度
@@ -109,9 +113,19 @@ public class PickerView extends View {
     }
 
     public PickerView(Context context, AttributeSet attrs) {
-        super(context, attrs);
+        this(context, attrs, 0);
+    }
 
+    public PickerView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
         mContext = context;
+        if (attrs != null) {
+            TypedArray mTypedArray = context.obtainStyledAttributes(attrs, R.styleable.PickerView);
+            leftOffset = mTypedArray.getInt(R.styleable.PickerView_pc_leftOffset, 0);
+            label = mTypedArray.getString(R.styleable.PickerView_pc_label);
+            labelOffset = mTypedArray.getInt(R.styleable.PickerView_pc_label_offset, 0);
+            mTypedArray.recycle();
+        }
         initPaint();
     }
 
@@ -131,7 +145,7 @@ public class PickerView extends View {
         labelPaint.setStyle(Style.FILL);
         labelPaint.setTypeface(Typeface.DEFAULT_BOLD);
         labelPaint.setColor(UiUtil.getColor(R.color.color_94A5BE));
-        labelPaint.setTextSize(UiUtil.getDimens(R.dimen.textSize14));
+        labelPaint.setTextSize(UiUtil.sp2px(14));
 
     }
 
@@ -185,7 +199,8 @@ public class PickerView extends View {
         // text 居中绘制，mHalfHeight + offsetY 是 text 的中心坐标
         Paint.FontMetrics fm = mPaint.getFontMetrics();
         float baseline = mHalfHeight + offsetY - (fm.top + fm.bottom) / 2f;
-        canvas.drawText(text, mHalfWidth, baseline, mPaint);
+        float x = leftOffset>0 ? mHalfWidth-mHalfWidth/leftOffset : mHalfWidth;
+        canvas.drawText(text, x, baseline, mPaint);
     }
 
     /**
@@ -198,7 +213,8 @@ public class PickerView extends View {
         canvas.drawLine(0.0f, (float) (mHalfHeight-UiUtil.getDimens(R.dimen.dp_25)), (float)(mHalfWidth*2), (float)(mHalfHeight-UiUtil.getDimens(R.dimen.dp_25)), linePaint);
         canvas.drawLine(0.0f, (float) (mHalfHeight+UiUtil.getDimens(R.dimen.dp_25)), (float)(mHalfWidth*2), (float)(mHalfHeight+UiUtil.getDimens(R.dimen.dp_25)), linePaint);
         if (!TextUtils.isEmpty(label)) {
-            canvas.drawText(label, mHalfWidth + mHalfWidth / 3, baseline, labelPaint);
+            float labelX = labelOffset > 0 ? mHalfWidth + mHalfWidth / labelOffset : mHalfWidth + mHalfWidth / 3;
+            canvas.drawText(label, labelX, baseline, labelPaint);
         }
     }
 
@@ -382,6 +398,8 @@ public class PickerView extends View {
     public void setLabel(String label) {
         this.label = label;
     }
+
+
 
     /**
      * 执行滚动动画

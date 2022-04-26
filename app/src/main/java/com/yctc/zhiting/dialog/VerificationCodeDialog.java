@@ -70,8 +70,9 @@ public class VerificationCodeDialog extends CommonBaseDialog implements View.OnC
             ClipData clipData = ClipData.newPlainText(null, code);
             clipboard.setPrimaryClip(clipData);
             ToastUtil.show(getActivity().getString(R.string.mine_copy_success));
+        } else {
+            dismiss();
         }
-        dismiss();
     }
 
     @Override

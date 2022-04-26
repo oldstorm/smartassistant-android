@@ -9,6 +9,8 @@ import com.yctc.zhiting.activity.contract.HCDetailContract;
 import com.yctc.zhiting.activity.contract.HomeCompanyContract;
 import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.config.HttpUrlConfig;
+import com.yctc.zhiting.entity.DepartmentListBean;
+import com.yctc.zhiting.entity.ExtensionBean;
 import com.yctc.zhiting.entity.FindSATokenBean;
 import com.yctc.zhiting.entity.mine.HomeCompanyBean;
 import com.yctc.zhiting.entity.mine.HomeCompanyListBean;
@@ -17,6 +19,7 @@ import com.yctc.zhiting.entity.mine.InvitationCodeBean;
 import com.yctc.zhiting.entity.mine.MemberDetailBean;
 import com.yctc.zhiting.entity.mine.MembersBean;
 import com.yctc.zhiting.entity.mine.PermissionBean;
+import com.yctc.zhiting.entity.mine.RemoveHCBean;
 import com.yctc.zhiting.entity.mine.RolesBean;
 import com.yctc.zhiting.entity.mine.VerificationCodeBean;
 import com.yctc.zhiting.request.AddHCRequest;
@@ -35,7 +38,7 @@ public class HCDetailModel implements HCDetailContract.Model {
      */
     @Override
     public void getDetail(long id, RequestDataCallback<HomeCompanyBean> callback) {
-        HTTPCaller.getInstance().get(HomeCompanyBean.class, HttpUrlConfig.getAreasUrl() + "/" + id, callback);
+        HTTPCaller.getInstance().get(HomeCompanyBean.class, HttpUrlConfig.getAreaDetailUrl() + "/" + id, callback);
     }
 
     /**
@@ -56,7 +59,7 @@ public class HCDetailModel implements HCDetailContract.Model {
      */
     @Override
     public void updateName(long id, String name, RequestDataCallback<Object> callback) {
-        HTTPCaller.getInstance().put(Object.class, HttpUrlConfig.getAreasUrl() + "/" + id, name, callback);
+        HTTPCaller.getInstance().put(Object.class, HttpUrlConfig.getAreaDetailUrl() + "/" + id, name, callback);
     }
 
     /**
@@ -87,8 +90,8 @@ public class HCDetailModel implements HCDetailContract.Model {
      * @param callback
      */
     @Override
-    public void delHomeCompany(long id, String body, RequestDataCallback<Object> callback) {
-        HTTPCaller.getInstance().delete(Object.class, HttpUrlConfig.getDelHomeCompany(id), body, callback);
+    public void delHomeCompany(long id, String body, RequestDataCallback<RemoveHCBean> callback) {
+        HTTPCaller.getInstance().delete(RemoveHCBean.class, HttpUrlConfig.getDelHomeCompany(id), body, callback);
     }
 
     /**
@@ -144,5 +147,23 @@ public class HCDetailModel implements HCDetailContract.Model {
     @Override
     public void getVerificationCode(RequestDataCallback<VerificationCodeBean> callback) {
         HTTPCaller.getInstance().post(VerificationCodeBean.class, HttpUrlConfig.getVerificationCode(), "", callback);
+    }
+
+    /**
+     * 部门列表
+     * @param callback
+     */
+    @Override
+    public void getDepartmentList(RequestDataCallback<DepartmentListBean> callback) {
+        HTTPCaller.getInstance().get(DepartmentListBean.class, HttpUrlConfig.getDepartments(),callback);
+    }
+
+    /**
+     * 扩展列表
+     * @param callback
+     */
+    @Override
+    public void getExtensions(RequestDataCallback<ExtensionBean> callback) {
+        HTTPCaller.getInstance().get(ExtensionBean.class, HttpUrlConfig.getExtensions(), callback);
     }
 }

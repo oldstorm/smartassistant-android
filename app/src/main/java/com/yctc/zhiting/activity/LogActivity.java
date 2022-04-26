@@ -121,7 +121,7 @@ public class LogActivity extends MVPBaseActivity<LogContract.View, LogPresenter>
                     if (logBean.getDate().equals(lb.getDate())){
                         logBean.getItems().addAll(lb.getItems());
                     }else {
-                        logAdapter.getData().add(logBean);
+                        logAdapter.getData().add(lb);
                     }
                 }
                 logAdapter.notifyDataSetChanged();

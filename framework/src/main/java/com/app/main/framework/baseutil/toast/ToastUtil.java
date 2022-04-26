@@ -1,5 +1,6 @@
 package com.app.main.framework.baseutil.toast;
 
+import android.content.Context;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.widget.Toast;
@@ -34,6 +35,8 @@ public class ToastUtil {
 
     public static void showCenter(String message) {
         if (TextUtils.isEmpty(message)) return;
+        if (TOAST != null) TOAST.cancel();
+        init();
         TOAST.setText(message)
                 .setGravity(Gravity.CENTER, 0, 0)
                 .show();
@@ -52,5 +55,12 @@ public class ToastUtil {
 
     public static void showBottom(@StringRes int resId) {
         showBottom(UiUtil.getString(resId));
+    }
+
+    public static void showBottom(String message, int yOffset) {
+        if (TextUtils.isEmpty(message)) return;
+        TOAST.setText(message)
+                .setGravity(Gravity.CENTER | Gravity.BOTTOM, 0, yOffset)
+                .show();
     }
 }

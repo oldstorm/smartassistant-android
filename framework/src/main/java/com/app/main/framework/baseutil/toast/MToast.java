@@ -10,7 +10,7 @@ import com.app.main.framework.R;
 
 public class MToast {
 
-    private Toast mToast;
+    private static Toast mToast;
 
     private MToast(Context context, CharSequence text, int duration) {
         View v = LayoutInflater.from(context).inflate(R.layout.toast_framelayout, null);
@@ -24,6 +24,12 @@ public class MToast {
         mToast.setDuration(duration);
         mToast.setView(v);
 
+    }
+
+    public static void cancel(){
+        if(mToast!=null){
+            mToast.cancel();
+        }
     }
 
     public static MToast makeText(Context context, CharSequence text, int duration) {

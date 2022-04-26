@@ -14,6 +14,7 @@ public class DateUtil {
     public static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     public static final String DATE_YEAR_MONTH_DAY_HOUR_MINUTE = "yyyy-MM-dd HH:mm";
     public static final String DATE_FORMAT_YMD = "yyyy-MM-dd";
+    public static final String DATE_FORMAT_YMD_SPLIT_DOT = "yyyy.MM.dd";
     public static final String SERVCE_DATE_FORMAT = "yyyy/MM/dd HH:mm:ss";
     public static final String DATE_FORMAT1 = "MM-dd-yy HH:mm";
     public static final String ORDER_TIME_ORDER_LIST = "MMM dd,yyyy HH:mm";

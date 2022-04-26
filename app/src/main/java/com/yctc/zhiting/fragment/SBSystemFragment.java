@@ -1,7 +1,6 @@
 package com.yctc.zhiting.fragment;
 
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -12,8 +11,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.MVPBaseFragment;
-import com.app.main.framework.httputil.NameValuePair;
-import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.scwang.smart.refresh.layout.SmartRefreshLayout;
 import com.scwang.smart.refresh.layout.api.RefreshLayout;
 import com.scwang.smart.refresh.layout.listener.OnRefreshLoadMoreListener;
@@ -38,7 +35,7 @@ import butterknife.BindView;
 /**
  * 支持品牌系统碎片
  */
-public class SBSystemFragment extends MVPBaseFragment<SBSystemContract.View, SBSystemPresenter> implements SBSystemContract.View{
+public class SBSystemFragment extends MVPBaseFragment<SBSystemContract.View, SBSystemPresenter> implements SBSystemContract.View {
 
     @BindView(R.id.refreshLayout)
     SmartRefreshLayout refreshLayout;
@@ -51,11 +48,9 @@ public class SBSystemFragment extends MVPBaseFragment<SBSystemContract.View, SBS
     @BindView(R.id.tvEmpty)
     TextView tvEmpty;
 
-
     private SupportBrandAdapter supportBrandAdapter;
 
-
-    public static SBSystemFragment getInstance(){
+    public static SBSystemFragment getInstance() {
         return new SBSystemFragment();
     }
 
@@ -83,13 +78,10 @@ public class SBSystemFragment extends MVPBaseFragment<SBSystemContract.View, SBS
         supportBrandAdapter = new SupportBrandAdapter(false);
         rvBrand.setLayoutManager(new LinearLayoutManager(getContext()));
         rvBrand.setAdapter(supportBrandAdapter);
-        supportBrandAdapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
-                Bundle bundle = new Bundle();
-                bundle.putSerializable(IntentConstant.BEAN, supportBrandAdapter.getItem(position));
-                switchToActivity(BrandDetailActivity.class, bundle);
-            }
+        supportBrandAdapter.setOnItemClickListener((adapter, view, position) -> {
+            Bundle bundle = new Bundle();
+            bundle.putSerializable(IntentConstant.BEAN, supportBrandAdapter.getItem(position));
+            switchToActivity(BrandDetailActivity.class, bundle);
         });
         supportBrandAdapter.setOnItemChildClickListener((adapter, view, position) -> {
             operatePluginByHttp(view, position);
@@ -100,7 +92,7 @@ public class SBSystemFragment extends MVPBaseFragment<SBSystemContract.View, SBS
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
-        if (isVisibleToUser){
+        if (isVisibleToUser) {
             getData(true);
         }
     }
@@ -109,19 +101,19 @@ public class SBSystemFragment extends MVPBaseFragment<SBSystemContract.View, SBS
      * 获取数据
      */
     public void getData(boolean showLoading) {
-        if (mPresenter!=null)
-        mPresenter.getBrandList(requestData, showLoading);
+        if (mPresenter != null)
+            mPresenter.getBrandList(requestData, showLoading);
     }
 
     /**
      * 通过http操作插件
+     *
      * @param view
      * @param position
      */
-    private void operatePluginByHttp(View view, int position){
+    private void operatePluginByHttp(View view, int position) {
         BrandsBean brandsBean = supportBrandAdapter.getItem(position);
         if (view.getId() == R.id.tvUpdate) {
-            List<Long> pIds = new ArrayList<>();
             List<String> plugins = new ArrayList<>();
             for (int i = 0; i < brandsBean.getPlugins().size(); i++) {
                 PluginsBean pluginsBean = brandsBean.getPlugins().get(i);
@@ -153,8 +145,10 @@ public class SBSystemFragment extends MVPBaseFragment<SBSystemContract.View, SBS
     public void getBrandListFail(int errorCode, String msg) {
         ToastUtil.show(msg);
         setFinish();
+        if (errorCode == 404) {
+            setNullView(true);
+        }
     }
-
 
     @Override
     public void addOrUpdatePluginsSuccess(OperatePluginBean operatePluginBean, int position) {

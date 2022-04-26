@@ -80,7 +80,7 @@ public class NormalWebActivity extends MVPBaseActivity<NormalWebContract.View, N
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
             view.loadUrl(url);
-            LogUtil.e(TAG + "shouldOverrideUrlLoading");
+            LogUtil.e(TAG + "shouldOverrideUrlLoading:"+url);
             return true;
         }
 

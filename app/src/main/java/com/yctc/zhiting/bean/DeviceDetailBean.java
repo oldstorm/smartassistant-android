@@ -33,6 +33,7 @@ public class DeviceDetailBean {
 
         private int id;
         private LocationBean location;
+        private LocationBean department;
         private String logo_url;
         private String model;
         private String name;
@@ -54,6 +55,14 @@ public class DeviceDetailBean {
 
         public void setLocation(LocationBean location) {
             this.location = location;
+        }
+
+        public LocationBean getDepartment() {
+            return department;
+        }
+
+        public void setDepartment(LocationBean department) {
+            this.department = department;
         }
 
         public String getLogo_url() {

@@ -1,13 +1,17 @@
 package com.yctc.zhiting.activity;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
+import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.ImageView;
 
 import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.camera.view.PreviewView;
 
 import com.app.main.framework.baseutil.LogUtil;
@@ -31,6 +35,8 @@ import com.king.zxing.DefaultCameraScan;
 import com.king.zxing.ViewfinderView;
 import com.king.zxing.util.LogUtils;
 import com.king.zxing.util.PermissionUtils;
+import com.king.zxing.util.QRCodeParseUtils;
+import com.yalantis.ucrop.util.FileUtils;
 import com.yctc.zhiting.R;
 import com.yctc.zhiting.activity.contract.ScanContract;
 import com.yctc.zhiting.activity.presenter.ScanPresenter;
@@ -46,9 +52,11 @@ import com.yctc.zhiting.entity.mine.InvitationCheckBean;
 import com.yctc.zhiting.entity.mine.UserInfoBean;
 import com.yctc.zhiting.event.HomeEvent;
 import com.yctc.zhiting.event.HomeSelectedEvent;
+import com.yctc.zhiting.fragment.HomeFragment2;
 import com.yctc.zhiting.request.BindCloudRequest;
 import com.yctc.zhiting.utils.AllRequestUtil;
 import com.yctc.zhiting.utils.JwtUtil;
+import com.yctc.zhiting.utils.StringUtil;
 import com.yctc.zhiting.utils.UserUtils;
 import com.yctc.zhiting.utils.jwt.JwtBean;
 import com.yctc.zhiting.utils.statusbarutil.StatusBarUtil;
@@ -59,11 +67,14 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.yctc.zhiting.config.Constant.CurrentHome;
 import static com.yctc.zhiting.config.Constant.wifiInfo;
 
 public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanPresenter> implements CameraScan.OnScanResultCallback, ScanContract.View {
 
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 0X86;
+    private static final int WRITE_PERMISSION_REQUEST_CODE = 0X87;
+    private static final int OPEN_PHOTO_ALBUM_REQUEST_CODE = 0X87;
     protected PreviewView previewView;
     protected ViewfinderView viewfinderView;
     private CameraScan mCameraScan;
@@ -81,6 +92,8 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
     private CenterAlertDialog alertDialog;
     private String mTempChannelUrl;//临时通道地址
     private String saId; // sa设备的id
+    private int area_type;
+    private ImageView ivOpenPhotoAlbum;
 
     @Override
     protected boolean isLoadTitleBar() {
@@ -109,6 +122,7 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
     public void initUI() {
         StatusBarUtil.setStatusBarDarkTheme(this, false);
         previewView = findViewById(getPreviewViewId());
+        ivOpenPhotoAlbum = findViewById(R.id.ivOpenPhotoAlbum);
         ivBack = findViewById(R.id.ivBack);
         ScreenUtil.fitNotchScreen(this, ivBack);
         initAlertDialog();
@@ -122,6 +136,33 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
         ivBack.setOnClickListener(v -> {
             finish();
         });
+
+        ivOpenPhotoAlbum.setOnClickListener(view -> checkReadWritePermission());
+    }
+
+    private void checkReadWritePermission() {
+        if (PermissionUtils.checkPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            openPhotoAlbum();
+        } else {
+            LogUtils.d("checkPermissionResult != PERMISSION_GRANTED");
+            PermissionUtils.requestPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE, WRITE_PERMISSION_REQUEST_CODE);
+        }
+    }
+
+    /**
+     * 打开相册
+     */
+    private void openPhotoAlbum() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT)
+                .setType("image/*")
+                .addCategory(Intent.CATEGORY_OPENABLE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            String[] mimeTypes = {"image/jpeg", "image/png"};
+            intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+        }
+
+        startActivityForResult(Intent.createChooser(intent, getString(R.string.label_select_picture)), OPEN_PHOTO_ALBUM_REQUEST_CODE);
     }
 
     /**
@@ -218,6 +259,22 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == CAMERA_PERMISSION_REQUEST_CODE) {
             requestCameraPermissionResult(permissions, grantResults);
+        } else if (requestCode == WRITE_PERMISSION_REQUEST_CODE) {
+            requestWritePermissionResult(permissions, grantResults);
+        }
+    }
+
+    /**
+     * 获取读取权限
+     *
+     * @param permissions
+     * @param grantResults
+     */
+    private void requestWritePermissionResult(String[] permissions, int[] grantResults) {
+        if (PermissionUtils.requestPermissionsResult(Manifest.permission.READ_EXTERNAL_STORAGE, permissions, grantResults)) {
+            openPhotoAlbum();
+        } else {
+            finish();
         }
     }
 
@@ -289,7 +346,15 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
      */
     @Override
     public boolean onScanResultCallback(Result result) {
-        String scanResult = result.getText();
+        if (result != null && result.getText() != null) {
+            String scanResult = result.getText();
+            handleScanResult(scanResult);
+        }
+        return true;
+    }
+
+    private void handleScanResult(String scanResult) {
+        if (TextUtils.isEmpty(scanResult)) return;
         mCameraScan.setAnalyzeImage(false);
         mCameraScan.stopCamera();
         viewfinderView.setScan(false);
@@ -299,7 +364,6 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
         } else { // 二维码中不包含 qr_code，则说明扫码失败
             showTipsDialog();
         }
-        return true;
     }
 
     /**
@@ -310,7 +374,7 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
     private void checkToken(String scanResult) {
         UiUtil.starThread(() -> {
             mQRCodeBean = GsonConverter.getGson().fromJson(scanResult, GenerateCodeJson.class);
-            saToken = dbManager.getSaTokenByUrl(mQRCodeBean.getUrl());
+
             String qrCode = mQRCodeBean.getQr_code();
             String body = "{\"qr_code\":\"" + qrCode + "\", \"nickname\":\"" + nickname + "\"}";
             JwtBean jwtBean = JwtUtil.decodeJwt(qrCode);
@@ -319,12 +383,15 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
                 JwtBean.JwtBody jwtBody = jwtBean.getJwtBody();
                 areaId = jwtBody.getArea_id();
                 saId = jwtBody.getSa_id();
-
+                area_type = jwtBody.getArea_type();
                 mQRCodeBean.setSaId(jwtBody.getSa_id());
             } else {
                 ToastUtil.show(getResources().getString(R.string.home_jwt_decode_fail));
                 resetScan(false);
                 return;
+            }
+            if (saId != null) {
+                saToken = dbManager.getSaTokenBySAID(saId);
             }
             if (areaId > 0) {
                 mQRCodeBean.setArea_id(areaId);
@@ -419,6 +486,7 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
             homeCompanyBean.setUser_id(invitationCheckBean.getUser_info().getUser_id());
             homeCompanyBean.setSa_user_token(invitationCheckBean.getUser_info().getToken());
             homeCompanyBean.setSa_id(saId);
+            homeCompanyBean.setArea_type(area_type);
             IdBean idBean = invitationCheckBean.getArea_info();
             long areaId = 0;
             if (idBean != null) {
@@ -427,28 +495,36 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
             }
             if (wifiInfo != null && channelEntity == null) {  // wifi信息不为空且没有走临时通道时
                 homeCompanyBean.setSs_id(wifiInfo.getSSID());
-                homeCompanyBean.setMac_address(wifiInfo.getBSSID());
+                homeCompanyBean.setBSSID(StringUtil.getBssid());
             }
             HttpConfig.addAreaIdHeader(HttpConfig.AREA_ID, String.valueOf(homeCompanyBean.getArea_id()));
             HttpConfig.addAreaIdHeader(HttpConfig.TOKEN_KEY, homeCompanyBean.getSa_user_token());
+
             Constant.CurrentHome = homeCompanyBean;
             if (channelEntity != null) {
                 SpUtil.put(SpConstant.SA_TOKEN, homeCompanyBean.getSa_user_token());
                 TempChannelUtil.saveTempChannelUrl(channelEntity);
             }
+
             HomeCompanyBean checkHome = dbManager.queryHomeCompanyByAreaId(areaId); // 根据areaId查找家庭
-            LogUtil.e("CaptureNewActivity="+GsonConverter.getGson().toJson(homeCompanyBean));
             if (checkHome == null) {  // 没有加入过，加入数据库
-                insertHome(homeCompanyBean);
-            } else {  // 加入过，更新数据库
-                dbManager.updateHomeCompanyByAreaId(homeCompanyBean);
+                AllRequestUtil.bindCloudWithoutCreateHome(homeCompanyBean, channelEntity, homeCompanyBean.getSa_lan_address(), homeId -> {
+                    CurrentHome.setId(homeId);
+                    homeCompanyBean.setId(homeId);
+                    insertHome(homeCompanyBean);
+                });
+            } else {// 加入过，更新数据库
+                CurrentHome.setId(checkHome.getId());
                 homeCompanyBean.setId(checkHome.getId());
+                dbManager.updateHomeCompanyByAreaId(homeCompanyBean);
+                HomeFragment2.homeLocalId = checkHome.getLocalId();
                 UiUtil.runInMainThread(() -> toMain());
             }
-//            AllRequestUtil.createHomeBindSC(homeCompanyBean, channelEntity);
-//            AllRequestUtil.bindCloudWithoutCreateHome(homeCompanyBean, channelEntity);
+            //AllRequestUtil.createHomeBindSC(homeCompanyBean, channelEntity);
         });
     }
+
+
 
     /**
      * 插入家庭
@@ -456,6 +532,7 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
     private void insertHome(HomeCompanyBean hcb) {
         long id = dbManager.insertHomeCompany(hcb, null, insertWifiInfo);
         homeCompanyBean.setLocalId(id);
+        HomeFragment2.homeLocalId = id;
         UiUtil.runInMainThread(() -> {
             toMain();
         });
@@ -533,5 +610,21 @@ public class CaptureNewActivity extends MVPBaseActivity<ScanContract.View, ScanP
     @Override
     public void createHomeSCFail(int errorCode, String msg) {
         ToastUtil.show(msg);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (data == null) return;
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == OPEN_PHOTO_ALBUM_REQUEST_CODE) {
+                String imageUrl = FileUtils.getPath(this, data.getData());
+                LogUtil.e(TAG + "onActivityResult=imageUrl=" + imageUrl);
+                QRCodeParseUtils.parsePhoto(this, imageUrl, result -> {
+                    LogUtil.e(TAG + "onActivityResult=result=" + result);
+                    handleScanResult(result);
+                });
+            }
+        }
     }
 }

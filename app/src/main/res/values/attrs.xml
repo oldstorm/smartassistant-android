@@ -63,4 +63,19 @@
         <attr name="cet_spacing" format="dimension|reference" />
     </declare-styleable>
 
+    <declare-styleable name="DLStatusView">
+        <attr name="dl_status_resource" format="reference|integer" />
+        <attr name="dl_surround_line_color" format="color" />
+        <attr name="dl_dot_color" format="color" />
+        <attr name="dl_dot_num" format="integer" />
+        <attr name="dl_show_arc" format="boolean" />
+        <attr name="dl_show_dot" format="boolean" />
+        <attr name="dl_flicker" format="float" />
+    </declare-styleable>
+
+    <declare-styleable name="PickerView">
+        <attr name="pc_leftOffset" format="integer" />
+        <attr name="pc_label" format="string" />
+        <attr name="pc_label_offset" format="integer" />
+    </declare-styleable>
 </resources>

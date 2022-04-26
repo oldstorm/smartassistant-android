@@ -1,5 +1,12 @@
-<resources>
-    <string name="app_name">智汀家庭云</string>
+<resources xmlns:tools="http://schemas.android.com/tools">
+        <string name="app_name">智汀家庭云</string>
+<!--    <string name="app_name">智汀测试</string>-->
+
+    <string name="guide_next_1">下一步 (1/4)</string>
+    <string name="guide_next_2">下一步 (2/4)</string>
+    <string name="guide_next_3">下一步 (3/4)</string>
+    <string name="guide_next_4">完成 (4/4)</string>
+
     <string name="main_home">家居</string>
     <string name="main_scene">场景</string>
     <string name="main_mine">我的</string>
@@ -10,12 +17,16 @@
     <string name="main_agreement">确认授权即视为同意《用户授权协议》</string>
     <string name="main_auth_failed">授权失败,请登录后再授权</string>
     <string name="main_confirm_auth">确认授权</string>
-    <string name="main_agree">同意将智汀家庭云（%s）的以下信息授权给智汀家庭云盘</string>
+    <string name="main_agree">同意将智汀家庭云（%s）的登录状态及以下家庭/公司信息授权给智汀云盘</string>
     <string name="main_login_fail">登录失败</string>
     <string name="main_exit_tip">再点击一次退出</string>
     <string name="main_home_is_not_bind_with_sa">当前家庭未绑定SA</string>
+    <string name="main_home_company_include">家庭/公司包括：</string>
+    <string name="main_need_open_location">该功能建议打开位置信息</string>
+    <string name="main_account_cancelled">云端账号已被注销</string>
 
-    <string name="mine_home_company">家庭/公司</string>
+    <string name="mine_home_company">家庭</string>
+    <string name="mine_home_company_2">家庭/公司</string>
     <string name="mine_brand">支持品牌</string>
     <string name="mine_third_party">第三方平台</string>
     <string name="mine_language">语言</string>
@@ -26,28 +37,29 @@
     <string name="mine_avatar">头像</string>
     <string name="mine_nickname">昵称</string>
     <string name="mine_add_area">添加家庭、公司等区域</string>
-    <string name="mine_input_area">请输入家庭/公司名称</string>
+    <string name="mine_input_area">请输入家庭名称</string>
     <string name="mine_room">房间/区域：</string>
-    <string name="mine_add_room">添加房间/区域</string>
+    <string name="mine_add_room">添加房间</string>
     <string name="mine_add">添加</string>
     <string name="mine_save">保存</string>
-    <string name="mine_room_name">房间/区域名称</string>
-    <string name="mine_input_room_name">请输入房间/区域名称</string>
+    <string name="mine_room_name">房间名称</string>
+    <string name="mine_input_room_name">请输入房间名称</string>
     <string name="mine_modify_nickname">修改昵称</string>
     <string name="mine_input_nickname">请输入昵称</string>
     <string name="mine_greater_six">昵称不能少于6位</string>
     <string name="mine_save_success">保存成功</string>
     <string name="mine_save_fail">保存失败</string>
     <string name="mine_home_company_name">家庭/公司名称</string>
+    <string name="mine_crm_system">客户管理</string>
 
 
     <string name="mine_name">名称</string>
     <string name="mine_qr_code">二维码</string>
-    <string name="mine_room_area">房间/区域</string>
+    <string name="mine_room_area">房间</string>
     <string name="mine_member_num">成员（%s人）</string>
     <string name="mine_quit_family">退出家庭</string>
-    <string name="mine_room_area_add">添加房间/区域</string>
-    <string name="mine_room_area_manage">房间/区域管理</string>
+    <string name="mine_room_area_add">添加房间</string>
+    <string name="mine_room_area_manage">房间管理</string>
     <string name="mine_room_del_tip">删除后，该家庭/公司下的全部设备自动解除绑定</string>
     <string name="mine_room_exit_tip">退出后，不能查看并控制该家庭的房间设备</string>
     <string name="mine_role">角色</string>
@@ -76,6 +88,7 @@
     <string name="mine_president_office">总裁办</string>
     <string name="mine_add_success">添加成功</string>
     <string name="mine_remove">删除</string>
+    <string name="mine_remove_home">删除家庭</string>
     <string name="mine_remove_success">删除成功</string>
     <string name="mine_remove_fail">删除失败</string>
     <string name="mine_home">我的家</string>
@@ -90,18 +103,26 @@
     <string name="mine_have_removed">删除成功</string>
     <string name="mine_qrcode_failed">生成二维码失败</string>
     <string name="mine_setting">设置</string>
-    <string name="mine_web_user_password">可用以下用户名和密码登录网页专业版</string>
+    <string name="mine_web_user_password">可用以下用户名和密码登录网页专业版，局域网下可查看专业版地址</string>
     <string name="mine_username">用户名</string>
     <string name="mine_unsetting">未设置</string>
     <string name="mine_password">密码</string>
     <string name="mine_set">已设置</string>
-    <string name="mine_input_username">输入用户名</string>
-    <string name="mine_input_password">输入密码</string>
+    <string name="mine_input_username">请输入用户名</string>
+    <string name="mine_input_password">请输入密码</string>
     <string name="mine_username_length_must_be_greater_than_6">用户名不能少于6位</string>
     <string name="mine_password_length_must_be_greater_than_6">密码不能少于6位</string>
     <string name="mine_set_successfully">设置成功</string>
     <string name="mine_username_chinese_cannot_be_entered">用户名不能输入中文</string>
     <string name="mine_password_chinese_cannot_be_entered">密码不能输入中文</string>
+    <string name="mine_the_old_room">老人房</string>
+    <string name="mine_the_child_room">儿童房</string>
+    <string name="mine_balcony">阳台</string>
+    <string name="mine_cloakroom">衣帽间</string>
+    <string name="mine_remove_department_ask">确定删除该部门吗？</string>
+    <string name="mine_remove_department_tip">删除部门，不会把成员删除</string>
+    <string name="mine_edit_success">编辑成功</string>
+    <string name="mine_edit_fail">编辑失败</string>
 
 
     <string name="mine_home_add_device">添加设备</string>
@@ -150,6 +171,157 @@
     <string name="mine_uploading_now">正在上传</string>
     <string name="mine_uploading_fail">上传失败，</string>
     <string name="mine_format_incorrect">插件包格式不正确</string>
+    <string name="mine_add_home">添加家庭</string>
+    <string name="mine_add_company">添加公司</string>
+    <string name="mine_input_name_of_company">请输入公司名称</string>
+    <string name="mine_add_department">添加部门</string>
+    <string name="mine_department_colon">部门：</string>
+    <string name="mine_department_name">部门名称</string>
+    <string name="mine_input_department_name">请输入部门名称</string>
+    <string name="mine_dissolve_company">解散公司</string>
+    <string name="mine_exit_company">退出公司</string>
+    <string name="mine_department">部门</string>
+    <string name="mine_company">公司</string>
+    <string name="mine_add_member">添加成员</string>
+    <string name="mine_department_settings">部门设置</string>
+    <string name="mine_department_manager">部门主管</string>
+    <string name="mine_remove_department">删除部门</string>
+    <string name="mine_select_department">选择部门</string>
+    <string name="default_department_1">总经办</string>
+    <string name="default_department_2">行政部</string>
+    <string name="default_department_3">市场部</string>
+    <string name="default_department_4">研发部</string>
+    <string name="default_department_5">财务部</string>
+    <string name="default_department_6">销售部</string>
+    <string name="default_department_7">法务部</string>
+    <string name="default_department_8">采购部</string>
+    <string name="default_department_9">会议室</string>
+    <string name="experience_center">体验中心</string>
+    <string name="experience_center_content">为了方便您更好地了解我们的智能设备功能和服务，我们为您提供了一系列的体验设备，你可以在【我的】-【支持品牌】-【体验品牌】添加【体验设备】插件，添加后就可以通过扫描或手动添加体验设备了，快去了解和体验我们的智能设备吧。</string>
+    <string name="experience_center_1">1.添加体验设备插件</string>
+    <string name="experience_center_2">2.添加体验设备</string>
+    <string name="experience_center_3">3.体验设备</string>
+    <string name="mine_company_duplicate">部门名称重复</string>
+    <string name="mine_please_add_one_department_at_least">请添加至少一个部门</string>
+    <string name="mine_quit_company">退出公司</string>
+    <string name="mine_confirm_dissolve_company">确定解散公司吗？</string>
+    <string name="mine_confirm_dissolve_company_tip">解散后，公司下的全部设备自动解除绑定，部门及员工信息全部丢失</string>
+    <string name="mine_confirm_exit_company">确定退出该公司吗？</string>
+    <string name="mine_please_select_department">请选择所在部门</string>
+    <string name="mine_not_divided">未划分</string>
+    <string name="mine_not_save_tip">信息未保存，是否退出？</string>
+    <string name="mine_people">%s人</string>
+    <string name="mine_empty_member">暂无成员</string>
+    <string name="mine_department_duplicate">部门名称重复</string>
+    <string name="mine_confirm_count">确定(%s)</string>
+    <string name="mine_add_member_success">添加成员成功</string>
+    <string name="mine_not_set">未设置</string>
+    <string name="mine_company_name">公司名称</string>
+    <string name="mine_home_name">家庭名称</string>
+    <string name="mine_area_not_support">该区域暂不支持</string>
+    <string name="mine_account_and_security">账号与安全</string>
+    <string name="mine_pwd_modify">密码修改</string>
+    <string name="mine_account_cancellation">账号注销</string>
+    <string name="mine_old_pwd">旧密码</string>
+    <string name="mine_please_input_old_pwd">请输入旧密码</string>
+    <string name="mine_new_pwd">新密码</string>
+    <string name="mine_please_input_new_pwd">请输入新密码（6-20位）</string>
+    <string name="mine_please_input_new_pwd_2">请输入新密码</string>
+    <string name="mine_confirm_new_pwd">确认新密码</string>
+    <string name="mine_confirm_new_pwd_hint">确认新密码（6-20位）</string>
+    <string name="mine_please_input_confirm_new_pwd">请输入确认密码</string>
+    <string name="mine_two_pwd_is_different">两次新密码输入不一致</string>
+    <string name="mine_pwd_at_least_6">密码不能少于6位</string>
+    <string name="mine_pwd_modified_login_again">密码已修改，请重新登录。</string>
+    <string name="mine_pwd_modified_fail">密码修改失败，请稍后重试。</string>
+    <string name="mine_account_apply_cancellation">账号（%s）正在申请注销</string>
+    <string name="mine_network_config">在智汀家庭云APP内完成产品联网配置</string>
+    <string name="mine_del_following_home">删除以下公司/家庭</string>
+    <string name="mine_quit_following_home">退出以下公司/家庭</string>
+    <string name="mine_forever_cancellation">永久注销，无法登录</string>
+    <string name="mine_account_once_cancelled">账号一旦注销，无法登录，且会解除第三方账号的绑定关系</string>
+    <string name="mine_all_product_data_cannot_found">所有产品数据将无法找回</string>
+    <string name="mine_after_account_cancelled">注销后账号在智汀系产品内的云端数据将无法找回</string>
+    <string name="mine_zhiting_account">智汀云账号通用但不限于以下产品：</string>
+    <string name="mine_zhiting_family_cloud">智汀家庭云</string>
+    <string name="mine_zhiting_yunpan">智汀云盘</string>
+    <string name="mine_apply_cancel">申请注销</string>
+    <string name="mine_professional_address">专业版地址</string>
+    <string name="mine_copy">复制</string>
+    <string name="mine_professional_address_note">ip地址可能会因为重新接入网络等原因改变，如果如无法访问请刷新页面获取最新地址</string>
+    <string name="mine_modify_pwd">修改密码</string>
+    <string name="mine_old_pwd_colon">旧密码：</string>
+    <string name="mine_old_pwd_hint">请输入旧密码</string>
+    <string name="mine_new_pwd_colon">新密码：</string>
+    <string name="mine_new_pwd_hint">请输入新密码</string>
+    <string name="mine_confirm_pwd">确认新密码：</string>
+    <string name="mine_confirm_pwd_hint">请确认新密码</string>
+    <string name="mine_confirm_new_pwd_different">两次新密码输入不一致</string>
+    <string name="mine_input_verification_code_hint">请输入验证码</string>
+    <string name="mine_get_verification_code">获取验证码</string>
+    <string name="mine_confirm_cancellation">确定注销</string>
+    <string name="mine_confirm_cancellation_success">账号已注销，如需继续使用智汀云服务，可重新绑定云。</string>
+    <string name="mine_confirm_cancellation_fail">账号注销失败，请稍后重试</string>
+    <string name="mine_forget_pwd">忘记密码</string>
+    <string name="mine_forget_pwd_note">如果你已忘记密码，可通过手机重新设置密码</string>
+    <string name="mine_new_pwd_hint_limit">请输入新密码（6-20位，包含字母和数字）</string>
+    <string name="mine_confirm_pwd_hint_limit">请确认新密码（6-20位，包含字母和数字）</string>
+    <string name="mine_pwd_reset_success">密码已重新设置，请使用新密码登录</string>
+    <string name="mine_pwd_modified">密码已更改，请重新登录</string>
+    <string name="mine_update_username">修改用户名</string>
+    <string name="mine_username_colon">用户名：</string>
+    <string name="mine_username_colon_hint">请输入用户名</string>
+    <string name="mine_account_cancellation_tips">账号注销为风险操作，需要获取你的手机（%s）验证码进行验证</string>
+    <string name="mine_authorize_fail">授权失败</string>
+    <string name="mine_network_error">网络异常，请检查网络</string>
+    <string name="mine_remove_error">移除出错</string>
+    <string name="mine_removing_tips">删除数据和云盘文件需要一定时间，已为你后台运行，可在首页切换家庭/公司查看删除情况</string>
+    <string name="mine_after_cancellation">注销后，你的账号将进行以下处理：</string>
+    <string name="mine_supply_chain">供应链管理</string>
+    <string name="mine_modify_avatar">更换头像</string>
+    <string name="mine_modify_success">修改成功</string>
+    <string name="mine_modify_fail">修改失败</string>
+    <string name="mine_file_is_not_support">暂不支持文件格式</string>
+    <string name="mine_revoke_authorization">解除授权</string>
+    <string name="mine_after_revoke_authorization">解除授权后，“%s”无法继续获得你的相关信息或权限。</string>
+    <string name="mine_authorization_has_been_revoked">已解除授权</string>
+    <string name="mine_failed_to_revoke_authorization">解除授权失败</string>
+    <string name="mine_feedback">问题反馈</string>
+    <string name="mine_my_feedback">我的反馈</string>
+    <string name="mine_no_feedback_record">暂无反馈记录</string>
+    <string name="mine_type">类型</string>
+    <string name="mine_select_type">选择分类</string>
+    <string name="mine_description">描述</string>
+    <string name="mine_meet_problem">遇到问题</string>
+    <string name="mine_advise_suggest">提建议/意见</string>
+    <string name="mine_app_problem">应用问题</string>
+    <string name="mine_register_login_problem">注册与登录问题</string>
+    <string name="mine_user_data_problem">用户数据问题</string>
+    <string name="mine_device_problem">设备问题</string>
+    <string name="mine_scene_problem">场景问题</string>
+    <string name="mine_other_problem">其他问题</string>
+    <string name="mine_please_describe_the_problem_in_detail">请具体描述遇到的问题</string>
+    <string name="mine_add_picture_or_video">添加图片或视频（选填）</string>
+    <string name="mine_add_picture">添加图片</string>
+    <string name="mine_add_picture_or_video_constrict">最多9张，建议视频不超过1分钟</string>
+    <string name="mine_contact_information">联系方式</string>
+    <string name="mine_contact_information_hint">为快速解决问题，请留下你的联系方式</string>
+    <string name="mine_agree_with_engineers">同意工程师查看智慧中心/应用/设备相关信息，以便准确诊断问题</string>
+    <string name="mine_agreed_with_engineers">已同意工程师查看当前智慧中心、APP、设备的日志信息，以便准确诊断问题</string>
+    <string name="mine_submit">提交</string>
+    <string name="mine_I_want_feedback">我要反馈</string>
+    <string name="mine_app_function_suggest">应用功能建议</string>
+    <string name="mine_device_function_suggest">设备功能建议</string>
+    <string name="mine_scene_function_suggest">场景功能建议</string>
+    <string name="mine_other_function_suggest">其他意见与建议</string>
+    <string name="mine_feedback_detail">反馈详情</string>
+    <string name="mine_category">分类</string>
+    <string name="mine_feedback_file_restrict">文件大小不能超过50M</string>
+    <string name="mine_feedback_success">谢谢您的反馈，我们将持续为您改进</string>
+    <string name="mine_remove_quit_family">删除/退出家庭</string>
+    <string name="mine_dissolve_quit_company">解散/退出公司</string>
+    <string name="mine_invalid_login_tip">当前终端无凭证或已过期，请登录后再进行操作</string>
+    <string name="mine_invalid_professional_tip">当前终端无凭证或已过期，请在局域网使用电脑访问专业版进行操作</string>
 
     <string name="home_online">在线</string>
     <string name="home_offline">离线</string>
@@ -160,7 +332,7 @@
     <string name="home_add_device">添加智能设备</string>
     <string name="home_retry">重试</string>
     <string name="home_connect_fail">智慧中心连接失败！</string>
-    <string name="home_switch">切换家庭</string>
+    <string name="home_switch">切换家庭/公司</string>
     <string name="home_setting">设置</string>
     <string name="home_device_name">设备名称</string>
     <string name="home_add_area">添加房间/区域</string>
@@ -168,6 +340,7 @@
     <string name="home_input_device_name_tip">请输入设备名称</string>
     <string name="home_device_name_lenght_tip">设备名称不能大于20个字符</string>
     <string name="home_device_location">设备位置</string>
+    <string name="home_change_icon">更换图标</string>
 
     <string name="home_device_detail">设备详情</string>
     <string name="home_device_del">删除设备</string>
@@ -200,8 +373,24 @@
     <string name="home_please_connect_wifi_of_device">请先连接要置网设备的热点</string>
     <string name="home_blue_tooth_disabled">蓝牙服务已关闭</string>
     <string name="home_guide_user_to_open_bluetooth">你需要打开蓝牙权限，才可以正常使用，请到设置>智汀家庭云中开启蓝牙服务。</string>
-    <string name="home_download_plugin_package_fail">下载插件包失败</string>
+    <string name="home_download_plugin_package_fail">下载插件包失败,请稍后重试</string>
     <string name="please_add_intelligent_center_or_login_before_adding_device">请添加智慧中心或登录后再添加设备</string>
+    <string name="home_area_move_address_fail">获取迁移云端家庭地址失败</string>
+    <string name="home_area_move_fail">迁移云端家庭到本地失败</string>
+    <string name="home_water">检测水浸</string>
+    <string name="home_no_water">检测无水</string>
+    <string name="home_color">彩色</string>
+    <string name="home_offline_help">离线帮助</string>
+    <string name="home_change_home">切换家庭</string>
+    <string name="home_upgrade_now">现在升级</string>
+    <string name="home_go_to_profession">进入专业版</string>
+    <string name="home_ask_upgrade_app">APP版本过低，无法访问当前家庭/公司的智慧中心 ，需要升级到最新版。</string>
+    <string name="home_ask_upgrade_sa">当前家庭/公司的智慧中心软件版本过低，APP暂无法访问，你可以通过专业版访问，请尽快联系拥有者升级。</string>
+    <string name="home_download_progress">下载中（%s）</string>
+    <string name="home_install">安装</string>
+    <string name="home_downloading">下载中...</string>
+    <string name="home_downloading_error">出错了（重试）</string>
+    <string name="home_check_network">请检查网络连接</string>
 
     <string name="scene_not">暂无场景</string>
     <string name="scene_reconnect">重新连接</string>
@@ -309,6 +498,35 @@
     <string name="scene_no_modify_permission">暂无修改权限</string>
     <string name="scene_end_greater_than_begin">结束时间需大于开始时间</string>
     <string name="scene_device_offline">设备离线</string>
+    <string name="scene_percent_unit">%</string>
+    <string name="scene_temperature_unit">℃</string>
+    <string name="scene_humidity">湿度</string>
+    <string name="scene_temperature">温度</string>
+    <string name="scene_status">状态</string>
+    <string name="scene_check_moving">检测到动作时</string>
+    <string name="scene_check_watering">检测到浸水时</string>
+    <string name="scene_close_to_open">由关闭变为打开时</string>
+    <string name="scene_open_to_close">由打开变为关闭时</string>
+    <string name="scene_powers_1">一键</string>
+    <string name="scene_powers_2">二键</string>
+    <string name="scene_powers_3">三键</string>
+    <string name="scene_guard">守护</string>
+    <string name="scene_open_at_home">开启在家模式</string>
+    <string name="scene_open_out_home">开启离家模式</string>
+    <string name="scene_open_sleep">开启睡眠模式</string>
+    <string name="scene_close_guard">关闭守护模式</string>
+    <string name="scene_curtain_position">窗帘位置</string>
+    <string name="scene_curtain_open">开启窗帘</string>
+    <string name="scene_curtain_close">关闭窗帘</string>
+    <string name="scene_curtain_open_percent">打开窗帘百分比</string>
+    <string name="scene_curtain_status">窗帘状态</string>
+    <string name="scene_single_click">单击</string>
+    <string name="scene_double_click">双击</string>
+    <string name="scene_triple_click">长按</string>
+    <string name="scene_sort">排序</string>
+    <string name="scene_finish">完成</string>
+    <string name="scene_order_success">排序成功</string>
+    <string name="scene_order_fail">排序失败</string>
 
     <string name="brand_count">共%s个插件</string>
     <string name="brand_versionCode">版本号：v</string>
@@ -319,6 +537,7 @@
     <string name="login_please_input_password">请输入密码</string>
     <string name="login_please_input_password_6_20">密码（6-20位）</string>
     <string name="login_bind_cloud">绑定云</string>
+    <string name="login_bind">绑定</string>
     <string name="login_verification_code">验证码</string>
     <string name="login_please_input_verification_code">请输入验证码</string>
     <string name="login_bind_cloud_please_input_password">请输入密码（6-20位，包含字母和数字）</string>
@@ -364,7 +583,7 @@
     <string name="device_info">{\"service\":\"get_attributes\",\"domain\":\"%s\",\"identity\":\"%s\",\"id\":%d}</string>
     <string name="device_switch">{\"service_data\":{\"attributes\":[{\"val\":\"%s\",\"instance_id\":%d,\"attribute\":\"power\"}]},\"id\":%d,\"identity\":\"%s\",\"service\":\"set_attributes\",\"domain\":\"%s\"}</string>
     <string name="device_set_attr">{\"service_data\":{\"attributes\":[{\"val\":\"%s\",\"instance_id\":%d,\"attribute\":\""%s\"}]},\"id\":%d,\"identity\":\"%s\",\"service\":\"set_attributes\",\"domain\":\"%s\"}</string>
-
+    <string name="homekit_device_set_attr">{\"service_data\":{\"pin\":\"%s\"},\"id\":%d,\"identity\":\"%s\",\"service\":\"connect\",\"domain\":\"%s\"}</string>
 
     <string name="common_server_error">服务端错误</string>
     <string name="common_network_connect_failed">网络连接失败</string>
@@ -392,12 +611,12 @@
     <string name="failed">失败</string>
 
     <string name="only_zip">只能上传zip格式文件</string>
-    <string name="home_find_user_certificate">找回用户凭证</string>
-    <string name="home_find_certificate_tip">用户凭证是访问智慧中心的密钥，请选择 是否允许成员通过云端找回凭证。</string>
+    <string name="home_find_user_certificate">用户凭证</string>
+    <string name="home_find_certificate_tip">用户凭证是访问智慧中心的密钥，请选择是否允许成员通过云端获取或找回凭证。</string>
     <string name="home_allow_find">允许找回</string>
-    <string name="home_allow_find_tip">成员可以在任何手机/平板连接智慧中心</string>
+    <string name="home_allow_find_tip">成员可以在任何客户端找回凭证连接智慧中心</string>
     <string name="home_no_allow_find">不允许找回</string>
-    <string name="home_no_allow_find_tip">成员更换手机/平板或卸载APP后无法再次连接</string>
+    <string name="home_no_allow_find_tip">成员可以在有凭证的客户端连接智慧中心，但卸载APP后无法再次连接</string>
     <string name="home_find_certificate_warn_tip">拥有者可以到专业版-家居-智慧中心修改</string>
     <string name="mine_verification_code">验证码</string>
     <string name="mine_create_code">生成</string>
@@ -412,21 +631,97 @@
     <string name="home_update_failed">更新失败</string>
     <string name="home_get_update_info_failed">获取更新信息失败</string>
     <string name="home_version_is_latest">当前已是最新版本</string>
+    <string name="home_switch_open_vertical_bar">开</string>
+    <string name="home_switch_close_vertical_bar">关</string>
+    <string name="home_security_protecting">安全守护中</string>
+    <string name="home_close_to_door_lock">请尽量靠近门锁</string>
+    <string name="home_expand">展开</string>
+    <string name="home_shrink">收起</string>
+    <string name="home_look_log">查看日志</string>
+    <string name="home_all_event">全部事件</string>
+    <string name="home_dl_log">门锁日志</string>
+    <string name="home_use_after_add">请在门锁本地添加一种验证方式后使用</string>
+    <string name="home_added">我已添加</string>
+    <string name="home_add">添加</string>
+    <string name="home_valid_pwd">有效期内密码</string>
+    <string name="home_disposable_pwd">一次性密码</string>
+    <string name="home_disposable_pwd_add">生成一次性密码</string>
+    <string name="home_disposable_pwd_add_tip">密码永久失效，在有效期内仅可使用一次，使用后失效。</string>
+    <string name="home_please_input_six_pwd">请输入6位开锁密码</string>
+    <string name="home_generate">生成</string>
+    <string name="home_copy_pwd">复制密码</string>
+    <string name="home_bind_auth">绑定验证</string>
+    <string name="home_add_user">添加用户</string>
+    <string name="home_user_manage">用户管理</string>
+    <string name="home_dl_auth_tips">以下验证方式已在门锁本地添加但未绑定到用户，请绑定</string>
+    <string name="home_dl_bulk_binding">批量绑定</string>
+    <string name="home_dl_bind">绑定</string>
+    <string name="home_dl_remove">删除</string>
+    <string name="home_dl_auth_way">验证方式</string>
+    <string name="home_dl_manager">管理员</string>
+    <string name="home_dl_user">普通用户</string>
+    <string name="home_dl_visitor">常访客</string>
+    <string name="home_dl_forced_user">胁迫用户</string>
+    <string name="home_dl_setting">门锁设置</string>
+    <string name="home_dl_user_detail">用户详情</string>
+    <string name="home_dl_valid_period_with_colon">有效时段：</string>
+    <string name="home_dl_valid_date_with_colon">有效日期：</string>
+    <string name="home_dl_add_from_unbind">从未绑定中选择添加</string>
+    <string name="home_dl_add_from_door_lock">在门锁本地添加</string>
+    <string name="home_dl_add_finger_print">添加指纹</string>
+    <string name="home_dl_add_password">添加密码</string>
+    <string name="home_dl_add_nfc">添加NFC</string>
+    <string name="please_input_password_name">请输入密码名称</string>
+    <string name="please_input_dl_password_hint">请输入6位开锁密码</string>
+    <string name="home_dl_valid_date">有效日期</string>
+    <string name="home_dl_valid_period">有效时段</string>
+    <string name="home_dl_add_fail">添加失败</string>
+    <string name="home_dl_pwd_existed">密码已存在</string>
+    <string name="home_dl_exit">退出</string>
+    <string name="home_dl_retry">重试</string>
+    <string name="home_dl_meihui">美汇智居智能门锁</string>
+    <string name="home_dl_your_pwd_card">你的密码卡</string>
+    <string name="home_dl_copy_pwd">复制密码</string>
+    <string name="home_dl_save_to_album">保存到相册</string>
+    <string name="home_dl_add_success">添加成功！已生成周期性密码</string>
+    <string name="home_dl_remove_ask">确定删除“%s”吗？</string>
+    <string name="home_dl_disposable_full">一次性密码数量已满，请使用或删除其他有效期内密码后重试</string>
+    <string name="home_dl_disposable_visitor_full">常访客密码数量已满，请删除其他常访客密码后重试</string>
+    <string name="home_dl_add_now">现在添加</string>
+    <string name="home_dl_no_user">暂无用户可绑定，请添加用户后再绑定。</string>
+    <string name="home_dl_remove_user_tip">删除后，该用户下的所有开锁方式将被清空，是否确认删除？</string>
+    <string name="home_dl_finger_print_name">指纹名称</string>
+    <string name="home_dl_please_input">请输入%s</string>
+    <string name="home_dl_forced_user_tip">胁迫指纹/密码/NFC仅用于被胁迫开锁的情况下，触发报警，请不要录入已有的或用于日常开锁的指纹/密码/NFC</string>
+    <string name="home_dl_bluetooth_connected">手机蓝牙已连接：已获取到门锁最新记录</string>
+    <string name="home_dl_bluetooth_disconnected">手机蓝牙未连接：连接后，可获取到门锁最新记录</string>
+    <string name="home_dl_add_auth_step">添加验证方式步骤:</string>
+    <string name="home_dl_select_valid_period">选择有效时段</string>
+    <string name="home_dl_to">至</string>
+    <string name="home_dl_exit_add_pwd_success_tip">退出后此密码不可查询，请确保已分享此密码。</string>
 
     <string name="user_agreement_and_privacy_policy">用户协议与隐私政策</string>
-    <string name="user_agreement_and_privacy_policy_content">我们深知隐私对您的重要性，为了更全面地呈现我们收集和使用您个人信息的相关情况，我们根据最新法律法规的要求，对用户协议和隐私政策进行了详细的修订。当您点击【同意】即代表您已充分阅读、理解并接受更新过的《用户协议》和《隐私政策》的全部内容。请花一些时间熟悉我们的隐私政策，如果您有任何问题，请随时联系我们。</string>
+    <string name="user_agreement_and_privacy_policy_content">我们深知隐私对您的重要性，为了更全面地呈现我们收集和使用您个人信息的相关情况，我们根据最新法律法规的要求，对用户协议和隐私政策进行了详细的修订。当您勾选同意即代表您已充分阅读、理解并接受更新过的《用户协议》和《隐私政策》的全部内容。请花一些时间熟悉我们的隐私政策，如果您有任何问题，请随时联系我们。</string>
     <string name="user_agreement">用户协议</string>
     <string name="and">与</string>
     <string name="privacy_policy">隐私政策</string>
     <string name="disagree">不同意</string>
     <string name="agree">同意</string>
+    <string name="agree_and_continue">同意并继续</string>
     <string name="login_represent_agree_agreement_policy">登录即代表你已同意智汀家庭云用户协议、隐私政策</string>
     <string name="login_read_and_agree">阅读并同意智汀家庭云用户协议、隐私政策</string>
+    <string name="login_have_read_and_agreed">我已阅读并同意</string>
+    <string name="login_please_check_user_agreement">请勾选同意《用户协议》与《隐私政策》</string>
+    <string name="login_you_need_agree_to_continue">您需要同意本隐私政策才能继续使用智汀家庭云</string>
+    <string name="login_you_don_not_agree_result">若您不同意本隐私政策，很遗憾我们将无法为您提供服务。</string>
+    <string name="login_read_agreement">查看协议</string>
+    <string name="login_still_disagree">仍不同意</string>
 
     <string name="please_select_home">请选择家庭</string>
     <string name="family_without_intelligent_center">当前家庭无智慧中心，请添加智慧中心后重新授权</string>
     <string name="exit_family_please_select_again">你已退出该家庭，请重新选择一个家庭进行授权</string>
     <string name="invalid_token_please_find_back">当前客户端无凭证，请找回凭证后重新授权。</string>
+    <string name="invalid_token_find_back">当前终端无凭证或已过期，可通过云端找回凭证。</string>
     <string name="how_to_find">如何找回</string>
     <string name="please_check_agreement">请阅读并勾选协议</string>
     <string name="home_current_version">当前版本：%s</string>
@@ -436,9 +731,125 @@
     <string name="add_fail">添加失败</string>
 
     <string name="check_update">检查更新</string>
+    <string name="other">其它</string>
+    <string name="home_door_close">已关闭</string>
+    <string name="home_door_open">已打开</string>
+    <string name="home_person_move">有人移动</string>
+    <string name="mine_company_invite_code_tip">选择部门和角色生成邀请码，即可邀请员工加入，邀请码10分钟内有效</string>
+    <string name="home_department">部门</string>
+    <string name="home_select_department">请选择部门</string>
+    <string name="home_role">角色</string>
+    <string name="home_select_role">请选择角色</string>
+    <string name="mine_invite_login_tip">请先添加智慧中心或登录</string>
+    <string name="mine_login_tip">请在局域网内或登录后使用</string>
+    <string name="home_delete_device">删除设备</string>
+    <string name="home_delete_cloud_sa">删除智慧中心将同时删除非智汀品牌的所有设备，是否删除？</string>
+    <string name="home_delete_local_sa">删除智慧中心将同时%s“%s”，是否删除？</string>
+    <string name="home_delete_cloud_folder">同时删除智汀云盘存储的文件</string>
+    <string name="mine_login_verificate">短信验证码登录</string>
+    <string name="mine_login_password">密码登录</string>
+    <string name="home_add_device_no_homekit_failed">请检查并确保：\n1、设备正常供电\n2、设备网络连接正常</string>
+    <string name="mine_home_add_device_connect_failed">设备添加失败！</string>
+    <string name="home_create_cloud_home">同时创建云端%s</string>
+    <string name="home_removing_sa">正在移除</string>
+    <string name="home_remove_sa_error">移除出错</string>
+    <string name="home_remove_sa_success">移除成功</string>
+    <string name="login_please_input_captcha">请输入验证码</string>
+    <string name="home_add_device_homekit_failed">请检查并确保：\n1、设备正常供电;\n2、设备与智慧中心处于同一局域网\n3、设备未被其他中心枢纽连接</string>
+    <string name="home_delete_home">删除家庭</string>
+    <string name="home_delete_company">解散公司</string>
+    <string name="home_name">家庭</string>
+    <string name="home_company_name">公司</string>
+    <string name="home_login_tip">登录后可同步%s信息到云端</string>
+    <string name="home_cloud_delete_tip">你可以选择创建云端%s进行信息同步，同步的信息有：\n美汇智居设备、场景、房间、角色和成员信息</string>
+    <string name="home_battery_tip">电量过低，请及时更换电池</string>
+    <string name="home_bluetooth_connected">蓝牙连接</string>
+    <string name="home_bluetooth_disconnected">蓝牙未连接</string>
+    <string name="home_exception">异常</string>
 
     <string-array name="support_brand_title">
         <item>系统</item>
         <item>创作</item>
     </string-array>
+
+    <string name="toast_cannot_retrieve_selected_image">无法检索所选图像</string>
+    <string name="toast_cannot_retrieve_cropped_image">无法检索裁剪的图像</string>
+    <string name="toast_unexpected_error">未知错误</string>
+    <string name="label_select_picture">选择图片</string>
+    <string name="app_check_update">版本更新</string>
+    <string name="app_once_update">立即更新</string>
+    <string name="app_no_update_exit">不更新并退出</string>
+    <string name="app_latest_version">当前已是最新版本</string>
+    <string name="app_update_now">正在更新...</string>
+    <string name="common_cancel1">取消</string>
+    <string name="app_update_version">可更新版本:%s\n更新内容：</string>
+    <string name="app_update_error">下载失败</string>
+
+
+    <string-array name="feedback_type">
+        <item>@string/mine_app_problem</item>
+        <item>@string/mine_register_login_problem</item>
+        <item>@string/mine_user_data_problem</item>
+        <item>@string/mine_device_problem</item>
+        <item>@string/mine_scene_problem</item>
+        <item>@string/mine_other_problem</item>
+        <item>@string/mine_app_function_suggest</item>
+        <item>@string/mine_device_function_suggest</item>
+        <item>@string/mine_scene_function_suggest</item>
+        <item>@string/mine_other_function_suggest</item>
+    </string-array>
+
+    <string-array name="dl_auth_way_title">
+        <item>管理员</item>
+        <item>普通用户</item>
+        <item>常访客</item>
+        <item>胁迫用户</item>
+    </string-array>
+
+    <string name="home_setup_hint1">房间管理</string>
+    <string name="home_setup_hint2">设备排序</string>
+    <string name="home_setup_hint3_1">隐藏离线设备</string>
+    <string name="home_setup_hint3_2">显示所有设备</string>
+    <string name="home_setup_hint4">常用设备设置</string>
+    <string name="home_sort_save">保存</string>
+    <string name="devices_setting_hint1">非常用的设备</string>
+    <string name="devices_setting_hint2">常用的设备</string>
+    <string name="devices_setting_hint3">设备名称</string>
+    <string name="devices_setting_hint4">设备位置</string>
+    <string name="devices_setting_hint5">添加房间/区域</string>
+    <string name="devices_setting_hint6">设置为常用设备</string>
+
+
+    <string name="door_setting_hint1">门锁设备处于安全考虑，暂只支持当前手机使用。</string>
+    <string name="door_setting_hint2">门锁本地功能介绍</string>
+    <string name="door_setting_hint3">语言选择</string>
+    <string name="door_setting_hint4">门锁音量</string>
+    <string name="door_setting_hint5">双重验证</string>
+    <string name="door_setting_hint6">开启后，需要验证指纹、密码、NFC其中两种开锁方式才能开门。</string>
+    <string name="door_setting_hint7">常开模式</string>
+    <string name="door_setting_hint8">开启后，不需要使用任何验证方式都可以开门。使用指纹、密码、
+NFC、APP开锁一次后自动关闭。上提把手，把原来没有打出来
+的方舌打出来也可以关闭</string>
+
+    <string name="door_setting_hint9">此功能为门锁本地端开启</string>
+    <string name="door_setting_hint10">功能介绍</string>
+    <string name="door_setting_hint11">启用后，仅管理员指纹、管理员密码、管理员NFC、手机蓝牙和机械钥匙可开锁。门内可正常开锁。开门一次后反锁失效。</string>
+    <string name="door_setting_hint12">开启后，可防止他人使用非法工具通过猫眼孔开锁。门内无法通过握把开锁，门外开锁功能正常。</string>
+
+    <string name="door_setting_hint13">反锁</string>
+    <string name="door_setting_hint14">防猫眼</string>
+    <string name="door_setting_lan_cn">中文</string>
+    <string name="door_setting_lan_es">英文</string>
+
+    <string name="week_title1">日</string>
+    <string name="week_title2">一</string>
+    <string name="week_title3">二</string>
+    <string name="week_title4">三</string>
+    <string name="week_title5">四</string>
+    <string name="week_title6">五</string>
+    <string name="week_title7">六</string>
+    <string name="select_date">选择日期</string>
+    <string name="clear_hint">清除</string>
+    <string name="not_tip_again">不再提示</string>
+
 </resources>

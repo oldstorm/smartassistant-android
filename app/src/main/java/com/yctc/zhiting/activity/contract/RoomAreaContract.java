@@ -23,6 +23,7 @@ public interface RoomAreaContract {
         void orderRoomSuccess();
         void getPermissionsSuccess(PermissionBean permissionBean);
         void requestFail(int errorCode, String msg);
+        void orderFail(int errorCode, String msg);
     }
 
     interface Presenter extends BasePresenter<View> {

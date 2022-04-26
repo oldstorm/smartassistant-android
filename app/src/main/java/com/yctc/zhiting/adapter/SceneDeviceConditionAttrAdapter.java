@@ -15,6 +15,6 @@ public class SceneDeviceConditionAttrAdapter extends BaseQuickAdapter<SceneCondi
 
     @Override
     protected void convert(BaseViewHolder helper, SceneConditionAttrEntity item) {
-        helper.setText(R.id.tvDeviceName, StringUtil.attr2String(item.getAttribute(), mContext));
+        helper.setText(R.id.tvDeviceName, StringUtil.attr2String(item.getType(), mContext));
     }
 }

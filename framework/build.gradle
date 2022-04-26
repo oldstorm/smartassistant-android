@@ -56,4 +56,6 @@ dependencies {
     api 'me.jessyan:autosize:1.1.2'
     // gif
     api 'pl.droidsonroids.gif:android-gif-drawable:1.2.+'
+    //下载插件
+    api 'com.liulishuo.filedownloader:library:1.7.7'
 }

@@ -43,7 +43,7 @@ public class Application extends BaseApplication {
         CrashReport.UserStrategy strategy = new CrashReport.UserStrategy(context);
         strategy.setUploadProcess(processName == null || processName.equals(packageName));
         // 初始化Bugly
-        CrashReport.initCrashReport(context, "829795a10f", BuildConfig.DEBUG, strategy);
+        CrashReport.initCrashReport(context, "a076441dd1", BuildConfig.DEBUG, strategy);
     }
 
     /**

@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.TextView;
 
@@ -13,7 +12,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.app.main.framework.baseutil.UiUtil;
 import com.app.main.framework.dialog.CommonBaseDialog;
-import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.yctc.zhiting.R;
 import com.yctc.zhiting.adapter.ListBottomAdapter;
 import com.yctc.zhiting.bean.ListBottomBean;

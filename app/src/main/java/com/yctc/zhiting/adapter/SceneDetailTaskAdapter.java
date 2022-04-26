@@ -1,5 +1,6 @@
 package com.yctc.zhiting.adapter;
 
+import android.graphics.Color;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageView;
@@ -12,6 +13,7 @@ import com.app.main.framework.imageutil.GlideUtil;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.yctc.zhiting.R;
+import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.entity.scene.SceneConditionAttrEntity;
 import com.yctc.zhiting.entity.scene.SceneControlSceneInfoEntity;
 import com.yctc.zhiting.entity.scene.SceneDeviceInfoEntity;
@@ -37,6 +39,8 @@ public class SceneDetailTaskAdapter extends BaseQuickAdapter<SceneTaskEntity, Ba
         helper.addOnClickListener(R.id.llContent);
         helper.addOnClickListener(R.id.tvDel);
         boolean notLast = helper.getAdapterPosition()<getData().size()-1;
+        int color = 0;
+        boolean hasColor = false;
         /***********************获取控件************************/
         LinearLayout llContent = helper.getView(R.id.llContent);
         TextView tvDel = helper.getView(R.id.tvDel);
@@ -75,13 +79,16 @@ public class SceneDetailTaskAdapter extends BaseQuickAdapter<SceneTaskEntity, Ba
                     }
                     if (val!=null) {
                         try {
-                            switch (sceneConditionAttrEntity.getAttribute()) {
-                                case "power": // 开关
+                            switch (sceneConditionAttrEntity.getType()) {
+                                case Constant.ON_OFF: // 开关
+//                                case Constant.powers_1:
+//                                case Constant.powers_2:
+//                                case Constant.powers_3:
                                     String switched = StringUtil.switchStatus2String((String) val, mContext);
                                     title = title + switched + (i < attrSize - 1 ? "、" : "");
                                     break;
 
-                                case "brightness":  // 亮度
+                                case Constant.brightness:  // 亮度
                                     int brightness = 0;
                                     if (val != null) {
                                         brightness = AttrUtil.getPercentVal(min, max, (Double) val);
@@ -89,13 +96,38 @@ public class SceneDetailTaskAdapter extends BaseQuickAdapter<SceneTaskEntity, Ba
                                     title = title + mContext.getResources().getString(R.string.scene_brightness) + brightness + "%" + (i < attrSize - 1 ? "、" : "");
                                     break;
 
-                                case "color_temp":  // 色温
+                                case Constant.color_temp:  // 色温
                                     int colorTemp = 0;
                                     if (val != null) {
                                         colorTemp = AttrUtil.getPercentVal(min, max, (Double) val);
                                     }
                                     title = title + mContext.getResources().getString(R.string.scene_color_temperature) + colorTemp + "%" + (i < attrSize - 1 ? "、" : "");
                                     break;
+
+                                case Constant.rgb: // 彩色
+                                    color = Color.parseColor((String)  val);
+                                    hasColor = true;
+                                    title = title + mContext.getString(R.string.home_color)+"■" + (i < attrSize - 1 ? "、" : "");
+                                    break;
+
+                                case Constant.target_state:
+                                    int target_state = 0;
+                                    if (val != null) {
+                                        double valDou = ((Double)val).doubleValue();
+                                        target_state = (int) valDou;
+                                    }
+                                    title = StringUtil.targetStatStr(mContext, target_state);
+                                    break;
+
+                                case Constant.target_position: // 窗帘状态
+                                    int target_position = 0;
+                                    if (val != null) {
+                                        double valDou = ((Double)val).doubleValue();
+                                        target_position = (int) valDou;
+                                    }
+                                    title = StringUtil.targetPositionStr(mContext, min, max, target_position, "");
+                                    break;
+
                             }
                         } catch (ClassCastException e) {
                             e.printStackTrace();
@@ -114,8 +146,9 @@ public class SceneDetailTaskAdapter extends BaseQuickAdapter<SceneTaskEntity, Ba
                     tvLocation.setText(mContext.getResources().getString(R.string.scene_device_removed));
                     tvLocation.setTextColor(UiUtil.getColor(R.color.color_F6AE1E));
                 }else { // 设备没删除
-                    tvLocation.setVisibility(TextUtils.isEmpty(deviceInfoEntity.getLocation_name()) ? View.GONE : View.VISIBLE);
-                    tvLocation.setText(deviceInfoEntity.getLocation_name());
+                    String location = Constant.AREA_TYPE == 2 ? deviceInfoEntity.getDepartment_name() : deviceInfoEntity.getLocation_name();
+                    tvLocation.setVisibility(TextUtils.isEmpty(location) ? View.GONE : View.VISIBLE);
+                    tvLocation.setText(location);
                     tvLocation.setTextColor(UiUtil.getColor(R.color.color_94A5BE));
                 }
             }
@@ -141,8 +174,11 @@ public class SceneDetailTaskAdapter extends BaseQuickAdapter<SceneTaskEntity, Ba
             }
             ivCover.setImageResource(R.drawable.icon_scene);
         }
-
-        tvTitle.setText(title);
+        if (hasColor){  // 如果有彩色
+            tvTitle.setText(StringUtil.changeTextColor(title, color));
+        }else {
+            tvTitle.setText(title);
+        }
         tvSubtitle.setText(subTitle);
 
         /****************** 延时 *******************/

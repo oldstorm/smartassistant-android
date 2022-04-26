@@ -58,8 +58,26 @@ public class SocketSwitchBean extends BaseEntity {
         public class AttrBean {
             private Integer id;
             private String attribute;
-            private String val;
+            private Object val;
             private String val_type;
+            private Integer min;
+            private Integer max;
+
+            public Integer getMin() {
+                return min;
+            }
+
+            public void setMin(Integer min) {
+                this.min = min;
+            }
+
+            public Integer getMax() {
+                return max;
+            }
+
+            public void setMax(Integer max) {
+                this.max = max;
+            }
 
             public Integer getId() {
                 return id;
@@ -77,11 +95,11 @@ public class SocketSwitchBean extends BaseEntity {
                 this.attribute = attribute;
             }
 
-            public String getVal() {
+            public Object getVal() {
                 return val;
             }
 
-            public void setVal(String val) {
+            public void setVal(Object val) {
                 this.val = val;
             }
 

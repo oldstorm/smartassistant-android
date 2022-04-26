@@ -1,11 +1,13 @@
 package com.yctc.zhiting.entity.mine;
 
+import android.text.TextUtils;
+
 import com.app.main.framework.entity.BaseEntity;
 import com.google.gson.annotations.SerializedName;
 
 public class HomeCompanyBean extends BaseEntity {
 
-    private long id;//云端家庭id
+    private long id;//云端家庭id，服务器拉取下来
     private long localId; // 本地家庭id
     private int roomAreaCount;//房间个数
     private int location_count;  // 房间数量
@@ -26,6 +28,11 @@ public class HomeCompanyBean extends BaseEntity {
     private long area_id; // sa家庭id
     private boolean isVirtual;//虚拟SA
     private String sa_id; // sa设备id
+    private int area_type; // 区分家庭和公司， 1是家庭，2是公司
+    private int department_count; // 部门数量
+    private boolean is_owner;  // 是否拥有者(是: 删除家庭, 否: 退出家庭)
+    // 用于标识授权时的获取scopeToken状态 0：为访问接口 1：成功 2：失败
+    private int authStatus;
 
     public boolean isVirtual() {
         return isVirtual;
@@ -61,11 +68,14 @@ public class HomeCompanyBean extends BaseEntity {
         this.ss_id = ss_id;
     }
 
-    public String getMac_address() {
+    public String getBSSID() {
+        if (!TextUtils.isEmpty(mac_address) && mac_address.startsWith("<unknown")) {
+            return "";
+        }
         return mac_address;
     }
 
-    public void setMac_address(String mac_address) {
+    public void setBSSID(String mac_address) {
         this.mac_address = mac_address;
     }
 
@@ -199,5 +209,37 @@ public class HomeCompanyBean extends BaseEntity {
 
     public void setSa_id(String sa_id) {
         this.sa_id = sa_id;
+    }
+
+    public int getArea_type() {
+        return area_type;
+    }
+
+    public void setArea_type(int area_type) {
+        this.area_type = area_type;
+    }
+
+    public int getDepartment_count() {
+        return department_count;
+    }
+
+    public void setDepartment_count(int department_count) {
+        this.department_count = department_count;
+    }
+
+    public boolean isIs_owner() {
+        return is_owner;
+    }
+
+    public void setIs_owner(boolean is_owner) {
+        this.is_owner = is_owner;
+    }
+
+    public int getAuthStatus() {
+        return authStatus;
+    }
+
+    public void setAuthStatus(int authStatus) {
+        this.authStatus = authStatus;
     }
 }

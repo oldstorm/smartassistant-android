@@ -55,8 +55,7 @@ public class LoadingDialog extends Dialog {
         imageView = findViewById(R.id.ivLoad);
         tvLoading = findViewById(R.id.tvLoading);
         gifImageView = (GifImageView) findViewById(R.id.givLoading);
-
-//        setCancelable(false);
+        setCancelable(false);
     }
 
     public void reset() {
@@ -86,7 +85,6 @@ public class LoadingDialog extends Dialog {
                     .load(R.drawable.loading)
                     .into(imageView);
         setLoadingTextVisible(true);
-
     }
 
     public void setStatic() {

@@ -7,7 +7,7 @@
     android:animateLayoutChanges="true"
     android:background="@color/white"
     android:orientation="vertical"
-    tools:context=".activity.SupportBrandActivity">
+    tools:context=".activity.CommonWebActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/clTop"
@@ -15,7 +15,8 @@
         android:layout_height="wrap_content"
         android:background="#3F4663"
         android:orientation="vertical"
-        android:visibility="gone">
+        android:visibility="gone"
+        tools:visibility="visible">
 
         <com.app.main.framework.widget.StatusBarView
             android:id="@+id/sbView"
@@ -47,7 +48,8 @@
             android:orientation="horizontal"
             app:layout_constraintBottom_toBottomOf="@id/tvTitle"
             app:layout_constraintRight_toLeftOf="@+id/llClose"
-            app:layout_constraintTop_toTopOf="@id/tvTitle">
+            app:layout_constraintTop_toTopOf="@id/tvTitle"
+            android:visibility="gone">
 
             <ImageView
                 android:layout_width="wrap_content"
@@ -94,8 +96,10 @@
             android:layout_below="@id/sbv"
             android:src="@mipmap/m_back"
             android:paddingStart="@dimen/dp_16"
-            android:paddingEnd="@dimen/dp_8"/>
+            android:paddingEnd="@dimen/dp_8"
+            android:visibility="gone"/>
         <TextView
+            android:id="@+id/tvWebTitle"
             android:layout_width="wrap_content"
             android:maxWidth="@dimen/dp_200"
             android:layout_height="@dimen/dp_44"
@@ -107,7 +111,8 @@
             android:text="@string/mine_third_party"
             android:textColor="@color/color_3F466"
             android:textSize="@dimen/textSize18"
-            android:textStyle="bold"/>
+            android:textStyle="bold"
+            android:visibility="gone"/>
     </RelativeLayout>
 
     <ProgressBar

@@ -6,9 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 
-import com.app.main.framework.baseutil.UiUtil;
-import com.yctc.zhiting.R;
-import com.yctc.zhiting.application.Application;
+import com.app.main.framework.baseutil.LogUtil;
 import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.config.DBConfig;
 import com.yctc.zhiting.entity.home.DeviceMultipleBean;
@@ -16,10 +14,10 @@ import com.yctc.zhiting.entity.mine.HomeCompanyBean;
 import com.yctc.zhiting.entity.mine.LocationBean;
 import com.yctc.zhiting.entity.mine.RoomAreaBean;
 import com.yctc.zhiting.entity.mine.UserInfoBean;
-import com.yctc.zhiting.utils.CollectionUtil;
+import com.yctc.zhiting.utils.HomeUtil;
+import com.yctc.zhiting.utils.StringUtil;
 import com.yctc.zhiting.utils.UserUtils;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -115,12 +113,13 @@ public class DBManager {
      * cloud_user_id 云端用户id
      * area_id sa家庭id
      * sa_id sa设备id
+     * area_type 区分家庭和公司， 1是家庭，2是公司
      */
     private void checkHomeCompanyTable() {
         try {
             String createRecentContactTableSqlStr = "create table if not exists " + DBConfig.TABLE_HOME_COMPANY
                     + "(h_id INTEGER primary key AUTOINCREMENT," +
-                    "name text, sa_user_token text, sa_user_id integer, sa_lan_address text, is_bind_sa bool, user_id integer,ss_id text,mac_address text, cloud_id integer, cloud_user_id integer, area_id integer, sa_id text)";
+                    "name text, sa_user_token text, sa_user_id integer, sa_lan_address text, is_bind_sa bool, user_id integer,ss_id text,mac_address text, cloud_id integer, cloud_user_id integer, area_id integer, sa_id text, area_type integer)";
             db.execSQL(createRecentContactTableSqlStr);
         } catch (Exception e) {
             e.printStackTrace();
@@ -186,6 +185,7 @@ public class DBManager {
                 homeCompanyBean.setId(getLongFromCursor(cursor, "cloud_id"));
                 homeCompanyBean.setCloud_user_id(getIntFromCursor(cursor, "cloud_user_id"));
                 homeCompanyBean.setArea_id(getLongFromCursor(cursor, "area_id"));
+                homeCompanyBean.setArea_type(getIntFromCursor(cursor, "area_type"));
                 roomCursor.close();
                 cursor.close();
             }
@@ -222,6 +222,7 @@ public class DBManager {
                 homeCompanyBean.setId(getLongFromCursor(cursor, "cloud_id"));
                 homeCompanyBean.setCloud_user_id(getIntFromCursor(cursor, "cloud_user_id"));
                 homeCompanyBean.setArea_id(getLongFromCursor(cursor, "area_id"));
+                homeCompanyBean.setArea_type(getIntFromCursor(cursor, "area_type"));
                 cursor.close();
             }
         } catch (Exception e) {
@@ -262,11 +263,39 @@ public class DBManager {
     }
 
     /**
+     * 通过saId查找saToken
+     *
+     * @param saId
+     * @return
+     */
+    public String getSaTokenBySAID(String saId) {
+        checkIfDBIsOk();
+        checkHomeCompanyTable();
+        String saToken = null;
+        Cursor cursor = null;
+        try {
+            String sql = "select * from " + DBConfig.TABLE_HOME_COMPANY + " where sa_id = '" + saId + "'";
+            cursor = db.rawQuery(sql, null);
+            if (cursor != null && cursor.getCount() > 0) {
+                cursor.moveToFirst();
+                saToken = cursor.getString(cursor.getColumnIndex("sa_user_token"));
+                cursor.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null)
+                cursor.close();
+        }
+        return saToken;
+    }
+
+    /**
      * 查询家庭/公司列表
      *
      * @return
      */
-    public List<HomeCompanyBean> queryHomeCompanyList() {
+    public synchronized List<HomeCompanyBean> queryHomeCompanyList() {
         if (db == null || !db.isOpen()) openDb();
         checkIfDBIsOk();
         checkHomeCompanyTable();
@@ -283,12 +312,13 @@ public class DBManager {
                     item.setUser_id(cursor.getInt(cursor.getColumnIndex("sa_user_id")));
                     item.setIs_bind_sa(getBooleanFromCursor(cursor, "is_bind_sa"));
                     item.setSs_id(getStringFromCursor(cursor, "ss_id"));
-                    item.setMac_address(getStringFromCursor(cursor, "mac_address"));
+                    item.setBSSID(getStringFromCursor(cursor, "mac_address"));
                     item.setCloud_user_id(getIntFromCursor(cursor, "cloud_user_id"));
                     item.setId(getLongFromCursor(cursor, "cloud_id"));
                     item.setSa_lan_address(getStringFromCursor(cursor, "sa_lan_address"));
                     item.setArea_id(getLongFromCursor(cursor, "area_id"));
                     item.setSa_id(getStringFromCursor(cursor, "sa_id"));
+                    item.setArea_type(getIntFromCursor(cursor, "area_type"));
                     homeCompanyList.add(item);
                 }
             }
@@ -303,10 +333,11 @@ public class DBManager {
 
     /**
      * 通过云端用户id查找家庭
+     *
      * @param cloudUserId
      * @return
      */
-    public List<HomeCompanyBean> queryHomeCompanyListByCloudUserId(int cloudUserId){
+    public List<HomeCompanyBean> queryHomeCompanyListByCloudUserId(int cloudUserId) {
         if (db == null || !db.isOpen()) openDb();
         checkIfDBIsOk();
         checkHomeCompanyTable();
@@ -323,11 +354,12 @@ public class DBManager {
                     item.setUser_id(cursor.getInt(cursor.getColumnIndex("sa_user_id")));
                     item.setIs_bind_sa(getBooleanFromCursor(cursor, "is_bind_sa"));
                     item.setSs_id(getStringFromCursor(cursor, "ss_id"));
-                    item.setMac_address(getStringFromCursor(cursor, "mac_address"));
+                    item.setBSSID(getStringFromCursor(cursor, "mac_address"));
                     item.setCloud_user_id(getIntFromCursor(cursor, "cloud_user_id"));
                     item.setId(getLongFromCursor(cursor, "cloud_id"));
                     item.setArea_id(getLongFromCursor(cursor, "area_id"));
                     item.setSa_id(getStringFromCursor(cursor, "sa_id"));
+                    item.setArea_type(getIntFromCursor(cursor, "area_type"));
                     homeCompanyList.add(item);
                 }
             }
@@ -345,7 +377,7 @@ public class DBManager {
      *
      * @return
      */
-    public List<HomeCompanyBean> queryLocalHomeCompanyList() {
+    public synchronized List<HomeCompanyBean> queryLocalHomeCompanyList() {
         if (db == null || !db.isOpen()) openDb();
         checkIfDBIsOk();
         checkHomeCompanyTable();
@@ -362,12 +394,13 @@ public class DBManager {
                     item.setUser_id(cursor.getInt(cursor.getColumnIndex("sa_user_id")));
                     item.setIs_bind_sa(getBooleanFromCursor(cursor, "is_bind_sa"));
                     item.setSs_id(getStringFromCursor(cursor, "ss_id"));
-                    item.setMac_address(getStringFromCursor(cursor, "mac_address"));
+                    item.setBSSID(getStringFromCursor(cursor, "mac_address"));
                     item.setCloud_user_id(getIntFromCursor(cursor, "cloud_user_id"));
                     item.setId(getLongFromCursor(cursor, "cloud_id"));
                     item.setArea_id(getLongFromCursor(cursor, "area_id"));
                     item.setSa_id(getStringFromCursor(cursor, "sa_id"));
                     item.setSa_lan_address(getStringFromCursor(cursor, "sa_lan_address"));
+                    item.setArea_type(getIntFromCursor(cursor, "area_type"));
                     homeCompanyList.add(item);
                 }
             }
@@ -412,16 +445,43 @@ public class DBManager {
     /**
      * 通过云端id修改家庭公司名称
      *
-     * @param id
-     * @param name
+     * @param homeCompanyBean
      * @return
      */
-    public int updateHomeCompanyByCloudId(long id, String name) {
+    public int updateHomeCompanyByCloudId(HomeCompanyBean homeCompanyBean) {
+        int count = 0;
+        try {
+            long id = homeCompanyBean.getId();
+            ContentValues contentValues = new ContentValues();
+            contentValues.put("name", homeCompanyBean.getName());
+            contentValues.put("is_bind_sa", homeCompanyBean.isIs_bind_sa());
+            contentValues.put("sa_user_id", homeCompanyBean.getUser_id());
+            contentValues.put("user_id", homeCompanyBean.getUser_id());
+            contentValues.put("cloud_user_id", homeCompanyBean.getCloud_user_id());
+            contentValues.put("area_id", homeCompanyBean.isIs_bind_sa() ? id : 0);
+            contentValues.put("cloud_id", id);
+            contentValues.put("sa_id", homeCompanyBean.getSa_id());
+            count = db.update(DBConfig.TABLE_HOME_COMPANY, contentValues, "cloud_id=? or area_id=?", new String[]{String.valueOf(id), String.valueOf(id)});
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return count;
+    }
+
+    /**
+     * 通过said修改家庭sa_lan_address
+     *
+     * @param saId
+     * @param saLanAddress
+     * @return
+     */
+    public int updateSALanAddressBySAId(String saId, String saLanAddress, String macAddress) {
         int count = 0;
         try {
             ContentValues contentValues = new ContentValues();
-            contentValues.put("name", name);
-            count = db.update(DBConfig.TABLE_HOME_COMPANY, contentValues, "cloud_id=?", new String[]{String.valueOf(id)});
+            contentValues.put("sa_lan_address", saLanAddress);
+            contentValues.put("mac_address", macAddress);
+            count = db.update(DBConfig.TABLE_HOME_COMPANY, contentValues, "sa_id=?", new String[]{saId});
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -482,11 +542,16 @@ public class DBManager {
             contentValues.put("name", homeCompanyBean.getName());
             contentValues.put("is_bind_sa", homeCompanyBean.isIs_bind_sa());
             contentValues.put("user_id", homeCompanyBean.getUser_id());
+            contentValues.put("sa_user_id", homeCompanyBean.getUser_id());
             contentValues.put("sa_user_token", homeCompanyBean.getSa_user_token());
-//            if (Constant.wifiInfo != null) {
-//                contentValues.put("ss_id", Constant.wifiInfo.getSSID());
-//                contentValues.put("mac_address", Constant.wifiInfo.getBSSID());
-//            }
+            LogUtil.e("updateHomeCompanyByAreaId1=="+HomeUtil.isBssidEqual(homeCompanyBean));
+            LogUtil.e("updateHomeCompanyByAreaId2=="+(Constant.wifiInfo != null));
+            if (Constant.wifiInfo != null && HomeUtil.isBssidEqual(homeCompanyBean)) {
+                contentValues.put("ss_id", Constant.wifiInfo.getSSID());
+                String bssid = StringUtil.getBssid();
+                if (!TextUtils.isEmpty(bssid))
+                contentValues.put("mac_address", bssid);
+            }
             count = db.update(DBConfig.TABLE_HOME_COMPANY, contentValues, "area_id=?", new String[]{String.valueOf(homeCompanyBean.getArea_id())});
         } catch (Exception e) {
             e.printStackTrace();
@@ -508,11 +573,15 @@ public class DBManager {
             contentValues.put("sa_user_token", homeCompanyBean.getSa_user_token());
             contentValues.put("sa_lan_address", homeCompanyBean.getSa_lan_address());
             contentValues.put("user_id", homeCompanyBean.getUser_id());
+            contentValues.put("sa_user_id", homeCompanyBean.getUser_id());
             contentValues.put("is_bind_sa", homeCompanyBean.isIs_bind_sa());
             contentValues.put("area_id", homeCompanyBean.getArea_id());
+            contentValues.put("sa_id", homeCompanyBean.getSa_id());
             if (Constant.wifiInfo != null) {
                 contentValues.put("ss_id", Constant.wifiInfo.getSSID());
-                contentValues.put("mac_address", Constant.wifiInfo.getBSSID());
+                String bssid = StringUtil.getBssid();
+                if (!TextUtils.isEmpty(bssid))
+                    contentValues.put("mac_address", bssid);
             }
             count = db.update(DBConfig.TABLE_HOME_COMPANY, contentValues, "h_id=?", new String[]{String.valueOf(homeCompanyBean.getLocalId())});
         } catch (Exception e) {
@@ -523,19 +592,23 @@ public class DBManager {
 
     /**
      * 更新家庭areaId
+     *
      * @param localId
      * @param areaId
      * @return
      */
-    public int updateHCAreaId(long localId, long areaId, boolean bindWifi){
+    public int updateHCAreaId(long localId, long areaId, boolean bindWifi) {
         int count = 0;
         try {
             ContentValues contentValues = new ContentValues();
             contentValues.put("cloud_id", areaId);
             if (Constant.wifiInfo != null) {
                 contentValues.put("ss_id", Constant.wifiInfo.getSSID());
-                if (bindWifi)
-                contentValues.put("mac_address", Constant.wifiInfo.getBSSID());
+                if (bindWifi) {
+                    String bssid = StringUtil.getBssid();
+                    if (!TextUtils.isEmpty(bssid))
+                        contentValues.put("mac_address", bssid);
+                }
             }
             contentValues.put("cloud_user_id", UserUtils.getCloudUserId());
             count = db.update(DBConfig.TABLE_HOME_COMPANY, contentValues, "h_id=?", new String[]{String.valueOf(localId)});
@@ -567,15 +640,18 @@ public class DBManager {
 
     /**
      * 修改家庭macAddress
+     *
      * @param localId
      * @param macAddress
      * @return
      */
-    public int updateHomeMacAddress(long localId, String macAddress){
+    public int updateHomeMacAddress(long localId, String macAddress) {
         int count = 0;
         try {
             ContentValues contentValues = new ContentValues();
-            contentValues.put("mac_address", macAddress);
+            String bssid = StringUtil.getBssid();
+            if (!TextUtils.isEmpty(bssid))
+                contentValues.put("mac_address", bssid);
             count = db.update(DBConfig.TABLE_HOME_COMPANY, contentValues, "h_id=?", new String[]{String.valueOf(localId)});
         } catch (Exception e) {
             e.printStackTrace();
@@ -585,11 +661,12 @@ public class DBManager {
 
     /**
      * 修改SAToken
+     *
      * @param localId
      * @param saToken
      * @return
      */
-    public int updateSATokenByLocalId(long localId, String saToken){
+    public int updateSATokenByLocalId(long localId, String saToken) {
         int count = 0;
         try {
             ContentValues contentValues = new ContentValues();
@@ -623,6 +700,25 @@ public class DBManager {
     /**
      * 删除家庭公司
      *
+     * @param id
+     * @return
+     */
+    public int removeFamilyByAreaId(long id) {
+        int count = 0;
+        try {
+            count = db.delete(DBConfig.TABLE_HOME_COMPANY, "area_id=?", new String[]{String.valueOf(id)});
+            if (count > 0) {
+                removeLocationByHId(id, -1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return count;
+    }
+
+    /**
+     * 删除家庭公司
+     *
      * @param token
      * @return
      */
@@ -634,6 +730,38 @@ public class DBManager {
                 removeLocationBySaToken(token);
                 removeDeviceBySaToken(token);
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return count;
+    }
+
+    /**
+     * 删除所有家庭
+     * @return
+     */
+    public int removeAllFamily() {
+        int count = db.delete(DBConfig.TABLE_HOME_COMPANY, null, null);
+        return count;
+    }
+
+    public int removeVirtualSAFamily() {
+        int count = db.delete(DBConfig.TABLE_HOME_COMPANY, "is_bind_sa=?", new String[]{"0"});
+        return count;
+    }
+
+    /**
+     * 修改家庭的云端用户id
+     * @param localId
+     * @return
+     */
+    public long unbindCloudUser(long localId) {
+        long count = 0;
+        try {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put("cloud_id", 0);
+            contentValues.put("cloud_user_id", 0);
+            count = db.update(DBConfig.TABLE_HOME_COMPANY, contentValues, "h_id=?", new String[]{String.valueOf(localId)});
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -667,10 +795,11 @@ public class DBManager {
 
     /**
      * 移除不是当前云端用户的家庭
+     *
      * @param cloudUserId
      * @return
      */
-    public int removeFamilyNotPresentUserFamily(int cloudUserId){
+    public int removeFamilyNotPresentUserFamily(int cloudUserId) {
         int count = 0;
         try {
             count = db.delete(DBConfig.TABLE_HOME_COMPANY, "cloud_user_id>0 and cloud_user_id!=?", new String[]{String.valueOf(cloudUserId)});
@@ -684,10 +813,11 @@ public class DBManager {
 
     /**
      * 移除不是当前云端用户的家庭
+     *
      * @param cloudId
      * @return
      */
-    public int removeFamilyByCloudId(long cloudId){
+    public int removeFamilyByCloudId(long cloudId) {
         int count = 0;
         try {
             count = db.delete(DBConfig.TABLE_HOME_COMPANY, "cloud_id = ?", new String[]{String.valueOf(cloudId)});
@@ -744,14 +874,14 @@ public class DBManager {
             contentValues.put("sa_user_id", item.getUser_id());
             contentValues.put("is_bind_sa", item.isIs_bind_sa());
             if (Constant.wifiInfo != null && !TextUtils.isEmpty(item.getSa_user_token()) && insertWifiInfo) {
-                System.out.println("进来这里哦");
                 contentValues.put("ss_id", Constant.wifiInfo.getSSID());
-                contentValues.put("mac_address", Constant.wifiInfo.getBSSID());
+                contentValues.put("mac_address", StringUtil.getBssid());
             }
             contentValues.put("cloud_id", item.getId());
             contentValues.put("cloud_user_id", item.getCloud_user_id());
             contentValues.put("area_id", item.getArea_id());
             contentValues.put("sa_id", item.getSa_id());
+            contentValues.put("area_type", item.getArea_type());
             //使用replace，不使用insert，为了实现存在就更新，不存在就插入
             count = db.replace(tableName, null, contentValues);
             if (roomAreas != null && roomAreas.size() > 0) {
@@ -768,7 +898,7 @@ public class DBManager {
      *
      * @param item
      */
-    public long insertCloudHomeCompany(HomeCompanyBean item) {
+    public synchronized long insertCloudHomeCompany(HomeCompanyBean item) {
         long count = 0;
         checkIfDBIsOk();
         checkHomeCompanyTable();
@@ -786,6 +916,7 @@ public class DBManager {
             contentValues.put("cloud_user_id", item.getCloud_user_id());
             contentValues.put("area_id", item.getArea_id());
             contentValues.put("sa_id", item.getSa_id());
+            contentValues.put("area_type", item.getArea_type());
             //使用replace，不使用insert，为了实现存在就更新，不存在就插入
             count = db.replace(tableName, null, contentValues);
         } catch (Exception e) {
@@ -853,8 +984,8 @@ public class DBManager {
             }
         } catch (Exception e) {
             e.printStackTrace();
-        }finally {
-            if (cursor!=null){
+        } finally {
+            if (cursor != null) {
                 cursor.close();
             }
         }
@@ -894,11 +1025,14 @@ public class DBManager {
      * @param nickname
      * @return
      */
-    public long updateUser(int userId, String nickname) {
+    public long updateUser(int userId, String nickname, String iconUrl) {
         long count = 0;
         try {
             ContentValues contentValues = new ContentValues();
-            contentValues.put("nickname", nickname);
+            if (!TextUtils.isEmpty(nickname))
+                contentValues.put("nickname", nickname);
+            if (!TextUtils.isEmpty(iconUrl))
+                contentValues.put("icon_url", iconUrl);
             count = db.update(DBConfig.TABLE_USER_INFO, contentValues, "user_id=?", new String[]{String.valueOf(userId)});
         } catch (Exception e) {
             e.printStackTrace();
@@ -913,12 +1047,13 @@ public class DBManager {
      * area_id 区域id
      * sort 排序
      * l_id 房间id（用于区别本地和服务器插入
+     * user_count 人员数量
      */
     public void checkLocationTable() {
         try {
             String createLocationTableSqlStr = "create table if not exists " + DBConfig.TABLE_LOCATION
                     + "(r_id integer primary key AUTOINCREMENT,"
-                    + "name text, sa_user_token text, area_id integer, sort integer, l_id integer)";
+                    + "name text, sa_user_token text, area_id integer, sort integer, l_id integer, user_count integer)";
             db.execSQL(createLocationTableSqlStr);
         } catch (Exception e) {
             e.printStackTrace();
@@ -942,6 +1077,7 @@ public class DBManager {
             contentValues.put("area_id", locationBean.getArea_id());
             contentValues.put("sa_user_token", locationBean.getSa_user_token());
             contentValues.put("l_id", locationBean.getLocationId());
+            contentValues.put("user_count", locationBean.getUser_count());
             String tableName = DBConfig.TABLE_LOCATION;
             //使用replace，不使用insert，为了实现存在就更新，不存在就插入
             count = db.replace(tableName, null, contentValues);
@@ -975,6 +1111,7 @@ public class DBManager {
                 contentValues.put("area_id", id);
                 contentValues.put("sa_user_token", item.getSa_user_token());
                 contentValues.put("l_id", item.getLocationId());
+                contentValues.put("user_count", item.getUser_count());
                 db.replace(tableName, null, contentValues);
             }
             db.setTransactionSuccessful();
@@ -999,6 +1136,7 @@ public class DBManager {
                 contentValues.put("name", item.getName());
                 contentValues.put("sort", item.getSort());
                 contentValues.put("sa_user_token", item.getSa_user_token());
+                contentValues.put("user_count", item.getUser_count());
                 db.update(DBConfig.TABLE_LOCATION, contentValues, "r_id=?", new String[]{String.valueOf(item.getId())});
             }
         } catch (Exception e) {
@@ -1081,6 +1219,7 @@ public class DBManager {
                     item.setArea_id(getLongFromCursor(cursor, "area_id"));
                     item.setSa_user_token(getStringFromCursor(cursor, "sa_user_token"));
                     item.setSort(getIntFromCursor(cursor, "sort"));
+                    item.setUser_count(getIntFromCursor(cursor, "user_count"));
                     roomAreaList.add(item);
                 }
             }
@@ -1112,6 +1251,7 @@ public class DBManager {
                     item.setArea_id(getLongFromCursor(cursor, "area_id"));
                     item.setSa_user_token(getStringFromCursor(cursor, "sa_user_token"));
                     item.setSort(getIntFromCursor(cursor, "sort"));
+                    item.setUser_count(getIntFromCursor(cursor, "user_count"));
                     roomAreaList.add(item);
                 }
             }
@@ -1143,6 +1283,7 @@ public class DBManager {
                     item.setArea_id(getLongFromCursor(cursor, "area_id"));
                     item.setSa_user_token(getStringFromCursor(cursor, "sa_user_token"));
                     item.setSort(getIntFromCursor(cursor, "sort"));
+                    item.setUser_count(getIntFromCursor(cursor, "user_count"));
                     roomAreaList.add(item);
                 }
             }
@@ -1170,7 +1311,7 @@ public class DBManager {
         try {
             String createDeviceTableSqlStr = "create table if not exists " + DBConfig.TABLE_DEVICE
                     + "(d_id integer,"
-                    + "name text, sa_user_token text, area_id integer, l_id integer, type text, logo_url text, plugin_id text, is_sa bool, brand_id text, identity text)";
+                    + "name text, sa_user_token text, area_id integer, l_id integer, type text, logo_url text, plugin_id text, is_sa bool, brand_id text, identity text, control text)";
             db.execSQL(createDeviceTableSqlStr);
         } catch (Exception e) {
             e.printStackTrace();
@@ -1198,12 +1339,13 @@ public class DBManager {
                 contentValues.put("name", item.getName());
                 contentValues.put("sa_user_token", saToken);
                 contentValues.put("area_id", areaId);
-                contentValues.put("l_id", item.getLocation_id());
+                contentValues.put("l_id", Constant.AREA_TYPE == 2 ? item.getDepartment_id() : item.getLocation_id());
                 contentValues.put("logo_url", item.getLogo_url());
                 contentValues.put("type", item.getType());
                 contentValues.put("plugin_id", item.getPlugin_id());
                 contentValues.put("identity", item.getIdentity());
                 contentValues.put("is_sa", item.isIs_sa());
+                contentValues.put("control", item.getControl());
                 db.replace(tableName, null, contentValues);
             }
             db.setTransactionSuccessful();
@@ -1212,6 +1354,43 @@ public class DBManager {
         } finally {
             db.endTransaction();
         }
+    }
+
+    /**
+     * 根据saToken查询房间/区域列表
+     *
+     * @return
+     */
+    public List<DeviceMultipleBean> queryDeviceListByAreaId(long areaId) {
+        checkIfDBIsOk();
+        checkDeviceTable();
+        List<DeviceMultipleBean> deviceMultipleBeans = new ArrayList<>();
+        Cursor cursor = null;
+        String sql = "select * from " + DBConfig.TABLE_DEVICE + " where area_id = ?";
+
+        try {
+            cursor = db.rawQuery(sql, new String[]{String.valueOf(areaId)});
+            if (cursor != null) {
+                while (cursor.moveToNext()) {
+                    DeviceMultipleBean item = new DeviceMultipleBean();
+                    item.setId(getIntFromCursor(cursor, "d_id"));
+                    item.setLocation_id(getIntFromCursor(cursor, "l_id"));
+                    item.setDepartment_id(getIntFromCursor(cursor, "l_id"));
+                    item.setName(getStringFromCursor(cursor, "name"));
+                    item.setArea_id(getIntFromCursor(cursor, "area_id"));
+                    item.setSa_user_token(getStringFromCursor(cursor, "sa_user_token"));
+                    item.setLogo_url(getStringFromCursor(cursor, "logo_url"));
+                    item.setIdentity(getStringFromCursor(cursor, "identity"));
+                    item.setPlugin_id(getStringFromCursor(cursor, "plugin_id"));
+                    item.setIs_sa(getBooleanFromCursor(cursor, "is_sa"));
+                    item.setControl(getStringFromCursor(cursor, "control"));
+                    deviceMultipleBeans.add(item);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return deviceMultipleBeans;
     }
 
     /**
@@ -1233,6 +1412,7 @@ public class DBManager {
                     DeviceMultipleBean item = new DeviceMultipleBean();
                     item.setId(getIntFromCursor(cursor, "d_id"));
                     item.setLocation_id(getIntFromCursor(cursor, "l_id"));
+                    item.setDepartment_id(getIntFromCursor(cursor, "l_id"));
                     item.setName(getStringFromCursor(cursor, "name"));
                     item.setArea_id(getIntFromCursor(cursor, "area_id"));
                     item.setSa_user_token(getStringFromCursor(cursor, "sa_user_token"));
@@ -1256,6 +1436,17 @@ public class DBManager {
         int count = 0;
         if (tableIsExist(DBConfig.TABLE_DEVICE)) {
             count = db.delete(DBConfig.TABLE_DEVICE, "sa_user_token=?", new String[]{saToken});
+        }
+        return count;
+    }
+
+    /**
+     * 通过saToken删除设备
+     */
+    public int removeDeviceByAreaId(long areaId) {
+        int count = 0;
+        if (tableIsExist(DBConfig.TABLE_DEVICE)) {
+            count = db.delete(DBConfig.TABLE_DEVICE, "area_id=?", new String[]{String.valueOf(areaId)});
         }
         return count;
     }

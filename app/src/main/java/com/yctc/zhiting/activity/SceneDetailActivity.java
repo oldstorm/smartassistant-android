@@ -15,6 +15,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.app.main.framework.baseutil.KeyboardHelper;
+import com.app.main.framework.baseutil.LogUtil;
 import com.app.main.framework.baseutil.SpUtil;
 import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.MVPBaseActivity;
@@ -120,8 +121,8 @@ public class SceneDetailActivity extends MVPBaseActivity<SceneDetailContract.Vie
     private int conditionPos;  // 点击条件列表的位置
     private int taskPos; // 点击任务列表的位置
 
-    private boolean auto_run; // true 为自动，false为
-    private boolean hasTiming; // 是否已经有定时// 手动
+    private boolean auto_run; // true 为自动，false为手动
+    private boolean hasTiming; // 是否已经有定时
     private boolean allCondition; // 是否是全部条件
     private boolean allConditionSubmit; // 是否是全部条件  提交数据用
 
@@ -203,6 +204,7 @@ public class SceneDetailActivity extends MVPBaseActivity<SceneDetailContract.Vie
         SceneConditionEntity sceneConditionEntity = (SceneConditionEntity) intent.getSerializableExtra(IntentConstant.BEAN);
         // 条件
         if (sceneConditionEntity!=null){
+            LogUtil.e("设备属性："+sceneConditionEntity.getCondition_attr().getType());
             sceneConditionData.add(sceneConditionEntity);
             sceneDetailConditionAdapter.notifyDataSetChanged();
             auto_run = true;

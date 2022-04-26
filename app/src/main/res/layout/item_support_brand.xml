@@ -1,105 +1,107 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:paddingTop="@dimen/dp_19"
     android:paddingLeft="@dimen/dp_15"
+    android:paddingTop="@dimen/dp_19"
     android:paddingRight="@dimen/dp_15">
+
     <ImageView
         android:id="@+id/ivCover"
         android:layout_width="@dimen/dp_40"
         android:layout_height="@dimen/dp_40"
-        app:layout_constraintTop_toTopOf="parent"
+        android:src="@drawable/default_bg"
         app:layout_constraintLeft_toLeftOf="parent"
-        android:src="@drawable/default_bg" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
         android:layout_width="@dimen/dp_0"
         android:layout_height="@dimen/dp_0"
-        app:layout_constraintTop_toTopOf="@+id/ivCover"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="@+id/ivCover"
         app:layout_constraintLeft_toRightOf="@+id/ivCover"
         app:layout_constraintRight_toLeftOf="@+id/tvUpdate"
-        android:gravity="center_vertical"
-        android:orientation="vertical">
+        app:layout_constraintTop_toTopOf="@+id/ivCover">
+
         <TextView
             android:id="@+id/tvName"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginRight="@dimen/dp_10"
-            android:maxLines="1"
-            android:ellipsize="end"
-            android:layout_marginTop="@dimen/dp_2"
             android:layout_marginLeft="@dimen/dp_15"
-            tools:text="Yeelight"
-            android:textSize="@dimen/textSize14"
+            android:layout_marginTop="@dimen/dp_2"
+            android:layout_marginRight="@dimen/dp_10"
+            android:ellipsize="end"
+            android:maxLines="1"
             android:textColor="@color/color_3f4663"
-            android:textStyle="bold"/>
+            android:textSize="@dimen/textSize14"
+            android:textStyle="bold"
+            tools:text="Yeelight" />
+
         <TextView
             android:id="@+id/tvCount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="@dimen/dp_15"
-            android:maxLines="1"
             android:ellipsize="end"
+            android:maxLines="1"
             android:text=""
-            android:textSize="@dimen/textSize12"
             android:textColor="@color/color_94A5BE"
-            android:visibility="gone"/>
+            android:textSize="@dimen/textSize12"
+            android:visibility="gone" />
     </LinearLayout>
-
 
 
     <TextView
         android:id="@+id/tvUpdate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:minWidth="@dimen/dp_50"
-        app:layout_constraintTop_toTopOf="@+id/ivCover"
-        app:layout_constraintBottom_toBottomOf="@+id/ivCover"
-        app:layout_constraintRight_toRightOf="parent"
-        android:paddingLeft="@dimen/dp_7"
-        android:paddingRight="@dimen/dp_7"
-        android:paddingTop="@dimen/dp_9"
-        android:paddingBottom="@dimen/dp_9"
         android:background="@drawable/shape_f1f4fc_c4"
         android:gravity="center"
+        android:minWidth="@dimen/dp_50"
+        android:paddingLeft="@dimen/dp_7"
+        android:paddingTop="@dimen/dp_9"
+        android:paddingRight="@dimen/dp_7"
+        android:paddingBottom="@dimen/dp_9"
         android:text="@string/mine_mine_update"
         android:textColor="@color/color_2da3f6"
         android:textSize="@dimen/textSize14"
-        android:visibility="gone"/>
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/ivCover"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/ivCover" />
 
     <TextView
         android:id="@+id/tvAdded"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="@+id/ivCover"
-        app:layout_constraintBottom_toBottomOf="@+id/ivCover"
-        app:layout_constraintRight_toRightOf="parent"
         android:gravity="center"
         android:text="@string/mine_mine_added"
         android:textColor="@color/color_94A5BE"
         android:textSize="@dimen/textSize14"
-        android:visibility="gone"/>
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/ivCover"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/ivCover" />
 
     <com.yctc.zhiting.widget.RingProgressBar
         android:id="@+id/ringProgressBar"
         android:layout_width="@dimen/dp_40"
         android:layout_height="@dimen/dp_40"
-        app:layout_constraintTop_toTopOf="@+id/ivCover"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/ivCover"
         app:layout_constraintRight_toRightOf="parent"
-        android:visibility="gone"/>
+        app:layout_constraintTop_toTopOf="@+id/ivCover" />
 
 
     <View
         android:layout_width="@dimen/dp_0"
         android:layout_height="0.5dp"
+        android:layout_marginTop="@dimen/dp_20"
         android:background="@color/color_EEEEEE"
-        app:layout_constraintTop_toBottomOf="@+id/ivCover"
         app:layout_constraintRight_toRightOf="parent"
-        android:layout_marginTop="@dimen/dp_20" />
+        app:layout_constraintTop_toBottomOf="@+id/ivCover" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

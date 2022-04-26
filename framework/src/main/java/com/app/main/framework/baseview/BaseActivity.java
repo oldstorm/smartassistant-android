@@ -2,12 +2,8 @@ package com.app.main.framework.baseview;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.ActivityOptions;
-import android.app.Application;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -59,7 +55,6 @@ public abstract class BaseActivity extends BasePermissionsAndStackActivity imple
     /*加载框子*/
     private LoadingView loadingView;
     private View statesBar;
-    private boolean isShareViewAnim = false;
 
     public ReplaceViewHelper helper = new ReplaceViewHelper(LibLoader.getCurrentActivity());
     public DiskLruCacheHelper cacheHelper;//数据的缓存
@@ -67,6 +62,8 @@ public abstract class BaseActivity extends BasePermissionsAndStackActivity imple
 
     private LoadingDialog loadingDialog;
     public Bundle bundle;
+
+    protected LoadingDialog loadingDialogInAct;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,8 +75,6 @@ public abstract class BaseActivity extends BasePermissionsAndStackActivity imple
         ButterKnife.bind(this);
         AndroidBugsSolution.assistActivity(this, null); //adjustResize无效解决
         Intent intent = getIntent();
-        if (intent != null)
-            isShareViewAnim = intent.getBooleanExtra(SHARE_ANIM_KEY, false);
         initUI();
         initListener();
         if (intent != null) {
@@ -89,7 +84,7 @@ public abstract class BaseActivity extends BasePermissionsAndStackActivity imple
         if (bindEventBus()) {//注册EventBus
             if (!EventBus.getDefault().isRegistered(this)) {
                 LogUtil.e("Base=注册===EventBus1===" + TAG);
-                EventBus.getDefault().unregister(this);
+//                EventBus.getDefault().unregister(this);
                 EventBus.getDefault().register(this);
             }
         }
@@ -308,56 +303,50 @@ public abstract class BaseActivity extends BasePermissionsAndStackActivity imple
     @Override
     public void showLoadingView() {
         runOnUiThread(() -> {
-//            initLoadingView();
-//            UiUtil.removeCallbacks(mTimeCloseRunnable);
-//            if (loadingView.getRootView().getVisibility() != View.VISIBLE) {
-//                loadingView.getRootView().setBackgroundColor(Color.TRANSPARENT);
-//                loadingView.getRootView().setVisibility(View.VISIBLE);
-//                KeyboardHelper.hideKeyboard(loadingView.getRootView());
-//                timerCloseLoadingView();
-//            }
             if (loadingDialog == null) {
                 loadingDialog = new LoadingDialog(this);
-                loadingDialog.setOnShowListener(new DialogInterface.OnShowListener() {
-                    @Override
-                    public void onShow(DialogInterface dialog) {
-                        loadingDialog.reset();
-                    }
-                });
+                loadingDialog.setOnShowListener(dialog -> loadingDialog.reset());
 
-                loadingDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
-                    @Override
-                    public void onDismiss(DialogInterface dialog) {
-                        loadingDialog.stop();
-                    }
-                });
+                loadingDialog.setOnDismissListener(dialog -> loadingDialog.stop());
             }
             if (!loadingDialog.isShowing()) {
                 loadingDialog.show();
                 timerCloseLoadingView();
-
             }
         });
     }
 
     @Override
     public void hideLoadingView() {
-        runOnUiThread(() -> {
-//            if (loadingView != null && loadingView.getRootView().getVisibility() != View.GONE) {
-//                loadingView.getRootView().setVisibility(View.GONE);
-//            }
-            if (loadingDialog != null && loadingDialog.isShowing()) {
+        if (!isDestroyed() && loadingDialog != null && loadingDialog.isShowing()) {
+            runOnUiThread(() -> {
                 loadingDialog.dismiss();
-            }
-        });
+            });
+        }
+    }
+
+    /**
+     * 加载弹窗
+     */
+    public void showLoadingDialogInAct() {
+        if (loadingDialogInAct == null) {
+            loadingDialogInAct = new LoadingDialog(this);
+            loadingDialogInAct.setOnShowListener(dialog -> loadingDialogInAct.reset());
+
+            loadingDialogInAct.setOnDismissListener(dialog -> loadingDialogInAct.stop());
+        }
+        loadingDialogInAct.show();
+    }
+
+    public void dismissLoadingDialogInAct() {
+        if (loadingDialogInAct != null && loadingDialogInAct.isShowing()) {
+            loadingDialogInAct.dismiss();
+        }
     }
 
     private void timerCloseLoadingView() {
         if (mTimeCloseRunnable == null) {
             mTimeCloseRunnable = () -> {
-//                Activity currentActivity = LibLoader.getCurrentActivity();
-//                if (currentActivity instanceof BaseActivity && !currentActivity.isFinishing())
-//                    ((BaseActivity) currentActivity).hideLoadingView();
                 if (loadingDialog != null && loadingDialog.isShowing() && !isDestroyed())
                     loadingDialog.dismiss();
             };
@@ -389,7 +378,7 @@ public abstract class BaseActivity extends BasePermissionsAndStackActivity imple
         }
     }
 
-    //    界面之间的跳转
+    //界面之间的跳转
     public void switchToActivity(Class<?> clazz) {
         Intent intent = new Intent(this, clazz);
         startActivity(intent);
@@ -745,7 +734,6 @@ public abstract class BaseActivity extends BasePermissionsAndStackActivity imple
         }
     }
 
-
     /**
      * 键盘显示开关
      *
@@ -759,5 +747,4 @@ public abstract class BaseActivity extends BasePermissionsAndStackActivity imple
             hideKeyboard(view);
         }
     }
-
 }

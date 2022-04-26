@@ -20,6 +20,8 @@ import com.yctc.zhiting.adapter.EquipmentAdapter;
 import com.yctc.zhiting.db.DBManager;
 import com.yctc.zhiting.dialog.CenterAlertDialog;
 import com.yctc.zhiting.dialog.EditBottomDialog;
+import com.yctc.zhiting.entity.home.DeviceMultipleBean;
+import com.yctc.zhiting.entity.mine.DevicesBean;
 import com.yctc.zhiting.entity.mine.LocationBean;
 import com.yctc.zhiting.entity.mine.PermissionBean;
 import com.yctc.zhiting.entity.mine.RADetailBean;
@@ -99,13 +101,16 @@ public class RADetailActivity extends MVPBaseActivity<RADetailContract.View, RAD
 
         equipmentAdapter.setOnItemClickListener((adapter, view, position) -> {
             Bundle bundle = new Bundle();
-            bundle.putInt(IntentConstant.ID, equipmentAdapter.getItem(position).getId());
-            bundle.putBoolean(IntentConstant.IS_SA, equipmentAdapter.getItem(position).isIs_sa());
-            bundle.putString(IntentConstant.NAME, equipmentAdapter.getItem(position).getName());
-            bundle.putString(IntentConstant.LOGO_URL, equipmentAdapter.getItem(position).getLogo_url());
-            bundle.putInt(IntentConstant.RA_ID, raId);
-            bundle.putString(IntentConstant.PLUGIN_URL, equipmentAdapter.getItem(position).getPlugin_url());
-            bundle.putString(IntentConstant.RA_NAME, name);
+            DevicesBean devicesBean = equipmentAdapter.getItem(position);
+            DeviceMultipleBean deviceMultipleBean =  new DeviceMultipleBean();
+            deviceMultipleBean.setId(devicesBean.getId());
+            deviceMultipleBean.setIs_sa(devicesBean.isIs_sa());
+            deviceMultipleBean.setName(devicesBean.getName());
+            deviceMultipleBean.setLogo_url(devicesBean.getLogo_url());
+            deviceMultipleBean.setPlugin_url(devicesBean.getPlugin_url());
+            deviceMultipleBean.setLocation_id(raId);
+            deviceMultipleBean.setLocation_name(name);
+            bundle.putSerializable(IntentConstant.BEAN, deviceMultipleBean);
             switchToActivity(DeviceDetailActivity.class, bundle);
         });
 
@@ -182,7 +187,7 @@ public class RADetailActivity extends MVPBaseActivity<RADetailContract.View, RAD
      * 删除房间
      */
     private void removeRoom() {
-        centerAlertDialog = CenterAlertDialog.newInstance(getResources().getString(R.string.mine_remove_room_ask), getResources().getString(R.string.mine_remove_room_tip), true);
+        centerAlertDialog = CenterAlertDialog.newInstance(getResources().getString(R.string.mine_remove_room_ask), getResources().getString(R.string.mine_remove_room_tip), UiUtil.getString(R.string.cancel),  UiUtil.getString(R.string.confirm), true);
         centerAlertDialog.setConfirmListener(del -> {
             if (isBindSa) {  // 已绑sa， 服务器
                 mPresenter.delRoom(raId);

@@ -12,6 +12,7 @@ import com.app.main.framework.baseutil.UiUtil;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.yctc.zhiting.R;
+import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.entity.scene.LogBean;
 import com.yctc.zhiting.utils.CollectionUtil;
 import com.yctc.zhiting.utils.StringUtil;
@@ -88,7 +89,7 @@ public class LogSonAdapter extends BaseQuickAdapter<LogBean.ItemsBean, BaseViewH
             View viewLine = view.findViewById(R.id.viewLine);
             viewLine.setVisibility(i==data.size()-1 ? View.VISIBLE : View.GONE);
             tvDevice.setText(deviceStatusBean.getName());
-            tvLocation.setText(deviceStatusBean.getLocation_name());
+            tvLocation.setText(Constant.AREA_TYPE == 2? deviceStatusBean.getDepartment_name() : deviceStatusBean.getLocation_name());
             tvStatus.setText(StringUtil.getLogStatus(mContext, deviceStatusBean.getResult()));
             tvStatus.setTextColor(deviceStatusBean.getResult() == 1 ? UiUtil.getColor(R.color.color_3f4663) : UiUtil.getColor(R.color.color_FF0000));
             llParent.addView(view);

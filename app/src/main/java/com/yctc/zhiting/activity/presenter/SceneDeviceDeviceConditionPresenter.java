@@ -29,8 +29,8 @@ public class SceneDeviceDeviceConditionPresenter extends BasePresenterImpl<Scene
     }
 
     @Override
-    public void getDeviceDetail(int id) {
-        model.getDeviceDetail(id, new RequestDataCallback<DeviceDetailResponseEntity>() {
+    public void getDeviceDetail(int id, int type) {
+        model.getDeviceDetail(id, type, new RequestDataCallback<DeviceDetailResponseEntity>() {
             @Override
             public void onSuccess(DeviceDetailResponseEntity obj) {
                 super.onSuccess(obj);

@@ -1,8 +1,10 @@
 package com.yctc.zhiting.activity;
 
+import static com.yctc.zhiting.config.Constant.CurrentHome;
 
-import android.content.Context;
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.text.TextUtils;
 import android.text.method.HideReturnsTransformationMethod;
 import android.text.method.LinkMovementMethod;
@@ -15,31 +17,44 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.app.main.framework.baseutil.SpConstant;
+import com.app.main.framework.baseutil.SpUtil;
 import com.app.main.framework.baseutil.UiUtil;
 import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.MVPBaseActivity;
+import com.app.main.framework.gsonutils.GsonConverter;
+import com.app.main.framework.httputil.NameValuePair;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.yctc.zhiting.R;
 import com.yctc.zhiting.activity.contract.LoginContract;
 import com.yctc.zhiting.activity.presenter.LoginPresenter;
 import com.yctc.zhiting.config.Constant;
-import com.yctc.zhiting.db.DBManager;
+import com.yctc.zhiting.entity.AreaCodeBean;
+import com.yctc.zhiting.entity.mine.CaptchaBean;
 import com.yctc.zhiting.entity.mine.LoginBean;
 import com.yctc.zhiting.entity.mine.MemberDetailBean;
 import com.yctc.zhiting.entity.mine.RegisterPost;
-import com.yctc.zhiting.entity.mine.UpdateUserPost;
+import com.yctc.zhiting.event.FinishLoginEvent;
+import com.yctc.zhiting.event.LogoutEvent;
 import com.yctc.zhiting.event.MineUserInfoEvent;
+import com.yctc.zhiting.event.RefreshHomeEvent;
+import com.yctc.zhiting.event.UpdateProfessionStatusEvent;
+import com.yctc.zhiting.popup_window.AreaCodePopupWindow;
 import com.yctc.zhiting.utils.AgreementPolicyListener;
 import com.yctc.zhiting.utils.AllRequestUtil;
-import com.yctc.zhiting.utils.ChannelUtil;
-import com.yctc.zhiting.utils.HomeUtil;
+import com.yctc.zhiting.utils.AreaCodeConstant;
 import com.yctc.zhiting.utils.IntentConstant;
 import com.yctc.zhiting.utils.StringUtil;
 import com.yctc.zhiting.utils.UserUtils;
+import com.yctc.zhiting.websocket.WSocketManager;
 
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
-import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.OnClick;
@@ -50,8 +65,12 @@ import butterknife.OnTextChanged;
  */
 public class LoginActivity extends MVPBaseActivity<LoginContract.View, LoginPresenter> implements LoginContract.View {
 
+    @BindView(R.id.tvArea)
+    TextView tvArea;
     @BindView(R.id.etPhone)
     EditText etPhone;
+    @BindView(R.id.etCode)
+    EditText etCode;
     @BindView(R.id.etPassword)
     EditText etPassword;
     @BindView(R.id.viewLinePhone)
@@ -72,10 +91,21 @@ public class LoginActivity extends MVPBaseActivity<LoginContract.View, LoginPres
     TextView tvAgreementPolicy;
     @BindView(R.id.ivSel)
     ImageView ivSel;
+    @BindView(R.id.tvLoginWay)
+    TextView tvLoginWay;
+    @BindView(R.id.tvCode)
+    TextView tvCode;
+    @BindView(R.id.llVerificate)
+    LinearLayout llVerificate;
+    @BindView(R.id.llPassword)
+    LinearLayout llPassword;
 
     private boolean showPwd;
-    private WeakReference<Context> mContext;
-    private DBManager dbManager;
+    private int mLoginType = 0;//0:密码登录，1：短信登录
+    private String mCountryCode = "86";
+    private String mCaptchaId;
+    private CountDownTimer mCountDownTimer;
+    private AreaCodePopupWindow mAreaCodePopupWindow; // 区号选择弹窗
 
     @Override
     protected int getLayoutId() {
@@ -85,8 +115,8 @@ public class LoginActivity extends MVPBaseActivity<LoginContract.View, LoginPres
     @Override
     protected void initUI() {
         super.initUI();
-        mContext = new WeakReference<>(this);
-        dbManager = DBManager.getInstance(mContext.get());
+        initDownTimer();
+        initAreaCodePopupWindow();
         tvAgreementPolicy.setMovementMethod(LinkMovementMethod.getInstance());
         tvAgreementPolicy.setText(StringUtil.setAgreementAndPolicyTextStyle(UiUtil.getString(R.string.login_read_and_agree), UiUtil.getColor(R.color.color_2da3f6),
                 new AgreementPolicyListener() {
@@ -114,48 +144,97 @@ public class LoginActivity extends MVPBaseActivity<LoginContract.View, LoginPres
     }
 
     @Override
+    protected void initListener() {
+        super.initListener();
+        etPhone.setOnTouchListener((v, event) -> {
+            tvTips.setVisibility(View.GONE);
+            return false;
+        });
+        etPassword.setOnTouchListener((v, event) -> {
+            tvTips.setVisibility(View.GONE);
+            return false;
+        });
+        etCode.setOnTouchListener((v, event) -> {
+            tvTips.setVisibility(View.GONE);
+            return false;
+        });
+    }
+
+    /**
+     * 计时
+     */
+    private void initDownTimer() {
+        mCountDownTimer = new CountDownTimer(60000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                tvCode.setEnabled(false);
+                String text = UiUtil.getString(R.string.login_get_it_again_in_sixty_seconds);
+                tvCode.setText(String.format(text, millisUntilFinished / 1000));
+            }
+
+            @Override
+            public void onFinish() {
+                tvCode.setEnabled(true);
+                tvCode.setText(UiUtil.getString(R.string.login_get_verification_code));
+            }
+        };
+    }
+
+    /**
+     * 区号选择弹窗
+     */
+    private void initAreaCodePopupWindow() {
+        List<AreaCodeBean> areaCodeData = new Gson().fromJson(AreaCodeConstant.AREA_CODE, new TypeToken<List<AreaCodeBean>>() {
+        }.getType());
+        mAreaCodePopupWindow = new AreaCodePopupWindow(this, areaCodeData);
+        mAreaCodePopupWindow.setSelectedAreaCodeListener(areaCodeBean -> {
+            mCountryCode = areaCodeBean.getCode();
+            tvArea.setText("+" + areaCodeBean.getCode());
+            mAreaCodePopupWindow.dismiss();
+        });
+
+        mAreaCodePopupWindow.setOnDismissListener(() -> tvArea.setSelected(false));
+    }
+
+    @Override
     public boolean bindEventBus() {
         return true;
     }
 
     @OnTextChanged(R.id.etPhone)
     void onPhoneChanged(CharSequence s) {
-        boolean hint = false;
-        etPhone.setTextSize(TypedValue.COMPLEX_UNIT_SP, !TextUtils.isEmpty(etPhone.getText().toString().trim()) ? 24 : 14);
-        viewLinePhone.setBackgroundResource(!TextUtils.isEmpty(etPhone.getText().toString().trim()) ? R.color.color_3f4663 : R.color.color_CCCCCC);
+        boolean phoneEmpty = TextUtils.isEmpty(etPhone.getText().toString().trim());
+        etPhone.setTextSize(TypedValue.COMPLEX_UNIT_SP, phoneEmpty ? 14 : 22);
+        etPhone.setTypeface(phoneEmpty ? Typeface.DEFAULT : Typeface.DEFAULT_BOLD);
+        viewLinePhone.setBackgroundResource(!phoneEmpty ? R.color.color_3f4663 : R.color.color_CCCCCC);
     }
 
     @OnTextChanged(R.id.etPassword)
     void onChanged() {
-        etPassword.setTextSize(TypedValue.COMPLEX_UNIT_SP, !TextUtils.isEmpty(etPassword.getText().toString().trim()) ? 24 : 14);
+        boolean passwdEmpty = TextUtils.isEmpty(etPassword.getText().toString().trim());
+        etPassword.setTextSize(TypedValue.COMPLEX_UNIT_SP, passwdEmpty ? 14 : 22);
+        etPassword.setTypeface(passwdEmpty ? Typeface.DEFAULT : Typeface.DEFAULT_BOLD);
         ivVisible.setVisibility(TextUtils.isEmpty(etPassword.getText().toString().trim()) ? View.GONE : View.VISIBLE);
-        viewLinePassword.setBackgroundResource(!TextUtils.isEmpty(etPassword.getText().toString().trim()) ? R.color.color_3f4663 : R.color.color_CCCCCC);
+        viewLinePassword.setBackgroundResource(!passwdEmpty ? R.color.color_3f4663 : R.color.color_CCCCCC);
     }
 
-    @OnClick({R.id.ivVisible, R.id.llLogin, R.id.tvBind, R.id.ivSel})
+    @OnClick({R.id.tvArea, R.id.ivVisible, R.id.llLogin, R.id.tvBind, R.id.ivSel, R.id.tvForget, R.id.tvCode, R.id.tvLoginWay})
     void onClick(View view) {
         switch (view.getId()) {
-            case R.id.ivVisible:  // 密码是否可见
-                showPwd = !showPwd;
-                ivVisible.setImageResource(showPwd ? R.drawable.icon_password_visible : R.drawable.icon_password_invisible);
-                if (showPwd) {
-                    etPassword.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
-                } else {
-                    etPassword.setTransformationMethod(PasswordTransformationMethod.getInstance());
-                }
-                etPassword.setSelection(etPassword.getText().length());
+            case R.id.tvCode:
+                getCaptcha();
                 break;
 
+            case R.id.tvArea: // 区号选择
+                selectArea();
+                break;
+
+            case R.id.ivVisible:// 密码是否可见
+                passwordVisible();
+
+                break;
             case R.id.llLogin:  // 登录
-                if (checkPhone() && checkPwd() && checkAgree()) {
-                    String phone = etPhone.getText().toString().trim();
-                    String password = etPassword.getText().toString().trim();
-                    RegisterPost registerPost = new RegisterPost(phone, password);
-                    mPresenter.login(new Gson().toJson(registerPost));
-                    setProgressBarVisible(true);
-                    setLoginEnabled(false);
-                    setTvBindEnabled(false);
-                }
+                login();
                 break;
 
             case R.id.tvBind:  // 绑定云
@@ -165,6 +244,109 @@ public class LoginActivity extends MVPBaseActivity<LoginContract.View, LoginPres
             case R.id.ivSel:
                 ivSel.setSelected(!ivSel.isSelected());
                 break;
+
+            case R.id.tvForget:// 忘记密码
+                goToForgetPassword();
+                break;
+
+            case R.id.tvLoginWay://切换登录方式
+                switchLoginWay();
+                break;
+        }
+    }
+
+    public void switchLoginWay() {
+        etCode.setText("");
+        etPassword.setText("");
+        tvTips.setVisibility(View.GONE);
+        String text = tvLoginWay.getText().toString();
+        if (text.equals(UiUtil.getString(R.string.mine_login_verificate))) {
+            mLoginType = 1;
+            tvLoginWay.setText(R.string.mine_login_password);
+            llPassword.setVisibility(View.GONE);
+            llVerificate.setVisibility(View.VISIBLE);
+        } else {
+            mLoginType = 0;
+            llPassword.setVisibility(View.VISIBLE);
+            llVerificate.setVisibility(View.GONE);
+            tvLoginWay.setText(R.string.mine_login_verificate);
+        }
+    }
+
+    /**
+     * 区号选择
+     */
+    private void selectArea() {
+        if (mAreaCodePopupWindow != null && !mAreaCodePopupWindow.isShowing()) {
+            tvArea.setSelected(true);
+            mAreaCodePopupWindow.showAsDropDown(viewLinePhone, -15, 0);
+        }
+    }
+
+    /**
+     * 密码是否可见
+     */
+    private void passwordVisible() {
+        showPwd = !showPwd;
+        ivVisible.setImageResource(showPwd ? R.drawable.icon_password_invisible : R.drawable.icon_password_visible);
+        if (showPwd) {
+            etPassword.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
+        } else {
+            etPassword.setTransformationMethod(PasswordTransformationMethod.getInstance());
+        }
+        etPassword.setSelection(etPassword.getText().length());
+    }
+
+    /**
+     * 跳转忘记密码
+     */
+    private void goToForgetPassword() {
+        String phone = etPhone.getText().toString().trim();
+        Bundle bundle = new Bundle();
+        bundle.putString(IntentConstant.PHONE, phone);
+        bundle.putString(IntentConstant.COUNTRY_CODE, mCountryCode);
+        switchToActivity(ForgetPwdActivity.class, bundle);
+    }
+
+    /**
+     * 登录
+     */
+    private void login() {
+        if (mLoginType == 0) {
+            if (!(checkPhone() && checkPwd() && checkAgree())) {
+                return;
+            }
+        } else {
+            if (!(checkPhone() && checkCaptcha() && checkAgree())) {
+                return;
+            }
+        }
+
+        String phone = etPhone.getText().toString().trim();
+        String password = etPassword.getText().toString().trim();
+        String captcha = etCode.getText().toString().trim();
+        RegisterPost registerPost = new RegisterPost(phone, password);
+        registerPost.setCountry_code(mCountryCode);
+        registerPost.setCaptcha_id(mCaptchaId);
+        registerPost.setCaptcha(captcha);
+        registerPost.setLogin_type(mLoginType);//login_type 0:密码登录，1：短信登录
+
+        mPresenter.login(GsonConverter.getGson().toJson(registerPost));
+        setProgressBarVisible(true);
+        setLoginEnabled(false);
+        setTvBindEnabled(false);
+    }
+
+    /**
+     * 获取验证码
+     */
+    private void getCaptcha() {
+        if (checkPhone()) {
+            List<NameValuePair> requestData = new ArrayList<>();
+            requestData.add(new NameValuePair(Constant.TYPE, Constant.LOGIN));
+            requestData.add(new NameValuePair(Constant.TARGET, etPhone.getText().toString().trim()));
+            requestData.add(new NameValuePair(Constant.COUNTRY_CODE, mCountryCode));
+            mPresenter.getCaptcha(requestData);
         }
     }
 
@@ -186,6 +368,15 @@ public class LoginActivity extends MVPBaseActivity<LoginContract.View, LoginPres
         return true;
     }
 
+    private boolean checkCaptcha() {
+        String captcha = etCode.getText().toString().trim();
+        if (TextUtils.isEmpty(captcha)) {
+            ToastUtil.show(getResources().getString(R.string.login_please_input_captcha));
+            return false;
+        }
+        return true;
+    }
+
     /**
      * 检验密码
      *
@@ -197,10 +388,6 @@ public class LoginActivity extends MVPBaseActivity<LoginContract.View, LoginPres
             ToastUtil.show(getResources().getString(R.string.login_please_input_password));
             return false;
         }
-//        if (etPassword.length()<6){
-//            ToastUtil.show(getResources().getString(R.string.login_password_at_least_6));
-//            return false;
-//        }
         return true;
     }
 
@@ -223,6 +410,8 @@ public class LoginActivity extends MVPBaseActivity<LoginContract.View, LoginPres
      * @param enabled
      */
     private void setLoginEnabled(boolean enabled) {
+        tvArea.setEnabled(enabled);
+        etPhone.setEnabled(enabled);
         llLogin.setEnabled(enabled);
     }
 
@@ -245,6 +434,10 @@ public class LoginActivity extends MVPBaseActivity<LoginContract.View, LoginPres
         tvBind.setEnabled(enabled);
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(FinishLoginEvent event) {
+        if (!isDestroyed()) finish();
+    }
 
     /**
      * 登录成功
@@ -254,18 +447,36 @@ public class LoginActivity extends MVPBaseActivity<LoginContract.View, LoginPres
     @Override
     public void loginSuccess(LoginBean loginBean) {
         if (loginBean != null) {
+            startConnectSocket();
+            EventBus.getDefault().post(new LogoutEvent());
+            SpUtil.put(SpConstant.PHONE_NUM, etPhone.getText().toString());
+            SpUtil.put(SpConstant.AREA_CODE, mCountryCode);
             MemberDetailBean memberDetailBean = loginBean.getUser_info();
             if (memberDetailBean != null) {
                 UserUtils.saveUser(memberDetailBean);
                 EventBus.getDefault().post(new MineUserInfoEvent(false));
+                EventBus.getDefault().post(new UpdateProfessionStatusEvent());
+                //EventBus.getDefault().post(new RefreshHomeEvent());
                 AllRequestUtil.getCloudArea();
-                //ChannelUtil.reSaveChannel();
                 finish();
             } else {
                 fail();
             }
         } else {
             fail();
+        }
+    }
+
+    /**
+     * 开始连接socket
+     */
+    private void startConnectSocket() {
+        if (!WSocketManager.isConnecting && CurrentHome != null && CurrentHome.isIs_bind_sa()) {
+            WSocketManager.getInstance().start();
+            UiUtil.postDelayed(() -> {
+                if (!WSocketManager.isConnecting)
+                    WSocketManager.getInstance().start();
+            }, 2000);
         }
     }
 
@@ -294,5 +505,27 @@ public class LoginActivity extends MVPBaseActivity<LoginContract.View, LoginPres
         setProgressBarVisible(false);
     }
 
+    @Override
+    public void getCaptchaSuccess(CaptchaBean captchaBean) {
+        mCountDownTimer.start();
+        ToastUtil.show(UiUtil.getString(R.string.login_sent_successfully));
+        if (captchaBean != null) {
+            mCaptchaId = captchaBean.getCaptcha_id();
+        }
+    }
 
+    @Override
+    public void getCaptchaFail(int errorCode, String msg) {
+        mCountDownTimer.cancel();
+        ToastUtil.show(msg);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mCountDownTimer != null) {
+            mCountDownTimer.cancel();
+            mCountDownTimer = null;
+        }
+    }
 }

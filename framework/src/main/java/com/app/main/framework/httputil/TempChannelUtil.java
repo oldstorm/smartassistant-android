@@ -1,5 +1,6 @@
 package com.app.main.framework.httputil;
 
+import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -7,6 +8,7 @@ import com.app.main.framework.baseutil.LogUtil;
 import com.app.main.framework.baseutil.SpConstant;
 import com.app.main.framework.baseutil.SpUtil;
 import com.app.main.framework.baseutil.TimeFormatUtil;
+import com.app.main.framework.config.HttpBaseUrl;
 import com.app.main.framework.entity.ChannelEntity;
 import com.app.main.framework.entity.SATokenEntity;
 import com.app.main.framework.gsonutils.GsonConverter;
@@ -21,11 +23,15 @@ import java.util.List;
 public class TempChannelUtil {
 
     public static String TAG = "TempChannelUtil";
-    public static String SC_HOST = "scgz.zhitingtech.com";
-    public static String baseSCUrl = "https://scgz.zhitingtech.com/api";//测试服务SC
-    public static String baseSAUrl = "http://192.168.22.123:9020/api";//测试服务器SA
+    public static String baseSCUrl = HttpBaseUrl.baseSCUrlApi;
+//    public static String baseSCUrl = "http://192.168.22.114:8082";//测试服务SC
+    //public static String baseSCUrl = "http://192.168.22.84:8082/api";//测试服务SC
+    //public static String baseSCUrl = "http://192.168.22.110:9097/api";//力宏测试服务SC
+    //public static String baseSAUrl = "http://192.168.22.123:9020/api";//测试服务器SA
+    public static String baseSAUrl = "";//测试服务器SA
     public static String ONLY_SC = "&type=only_sc";//注意com.yctc.zhiting.config.Constant也有这个常量
-    public static String CHANNEL_URL = baseSCUrl + "/datatunnel"+ONLY_SC;
+    public static String CHANNEL_URL = baseSCUrl + "/datatunnel" + ONLY_SC;
+    public static String TEMP_CHANNEL_PARAM = "scheme";
 
     public static class OnTempChannelListener {
         void onSuccess(String newUrl) {
@@ -35,23 +41,42 @@ public class TempChannelUtil {
         }
     }
 
+    /**
+     * 临时通道需要登录状态下访问
+     *
+     * @param oldUrl
+     * @param listener
+     */
     public static void checkTemporaryUrl(String oldUrl, OnTempChannelListener listener) {
-        if (oldUrl != null && oldUrl.contains(baseSAUrl) || isNoNeedTempChannelUrl(oldUrl)) {//就是sa或者不需要转换,直接返url
-            if (!TextUtils.isEmpty(oldUrl) && oldUrl.contains(ONLY_SC))
+        if (!TextUtils.isEmpty(oldUrl) && !TextUtils.isEmpty(baseSAUrl) && oldUrl.contains(baseSAUrl) || isNoNeedTempChannelUrl(oldUrl)) {//就是sa或者不需要转换,直接返url
+            if (oldUrl != null && oldUrl.contains(ONLY_SC))
                 oldUrl = oldUrl.replace(ONLY_SC, "");
             listener.onSuccess(oldUrl);
         } else {
+            //没有登录不允许走临时通道
+            int userId = SpUtil.getInt(SpConstant.CLOUD_USER_ID);
+            if (userId == 0) {
+                listener.onSuccess(oldUrl);
+                return;
+            }
+
             if (isWithinTime(oldUrl, listener)) return;//在有效时间内
-
+            if (listener == null) return;
             List<NameValuePair> requestData = new ArrayList<>();
-            requestData.add(new NameValuePair("scheme", "https"));
+            requestData.add(new NameValuePair(TEMP_CHANNEL_PARAM, HttpBaseUrl.HTTPS));
             String finalOriginalUrl = oldUrl;
-
+            boolean hasAreaId = HttpConfig.hasCertainKey(HttpConfig.AREA_ID);
+            if (!hasAreaId) {
+                HttpConfig.addAreaIdHeader(HttpConfig.AREA_ID, String.valueOf(SpUtil.get(SpConstant.AREA_ID)));
+            }
             HTTPCaller.getInstance().get(ChannelEntity.class, CHANNEL_URL, requestData,
                     new RequestDataCallback<ChannelEntity>() {
                         @Override
                         public void onSuccess(ChannelEntity obj) {
                             super.onSuccess(obj);
+                            if (!hasAreaId) {
+                                HttpConfig.clearHear(HttpConfig.AREA_ID);
+                            }
                             if (obj != null) {
                                 Log.e(TAG, "checkTemporaryUrl=onSuccess123=");
                                 listener.onSuccess(getUrl(finalOriginalUrl, obj.getHost()));
@@ -62,11 +87,19 @@ public class TempChannelUtil {
                         @Override
                         public void onFailed(int errorCode, String errorMessage) {
                             super.onFailed(errorCode, errorMessage);
+                            if (!hasAreaId) {
+                                HttpConfig.clearHear(HttpConfig.AREA_ID);
+                            }
                             Log.e(TAG, "checkTemporaryUrl=onFailed123=");
-                            if (errorCode == 5012) {
-                                getSAToken(listener, finalOriginalUrl);
+                            String url = finalOriginalUrl.replace(ONLY_SC, "");
+                            Uri uri = Uri.parse(url);
+                            if (!url.startsWith("https") && uri.getPort() == 0) {
+                                return;
+                            }
+                            if (errorCode == 5012 || errorCode == 5027) {
+                                getSAToken(listener, url);
                             } else {
-                                listener.onSuccess(finalOriginalUrl);
+                                listener.onSuccess(url);
                                 listener.onError(errorCode, errorMessage);
                             }
                         }
@@ -119,7 +152,7 @@ public class TempChannelUtil {
 
     public static void saveTempChannelUrl(ChannelEntity bean) {
         bean.setGenerate_channel_time(TimeFormatUtil.getCurrentTime());
-        String tokenKey = SpUtil.get(SpConstant.SA_TOKEN);
+        String tokenKey = SpUtil.get(SpConstant.AREA_ID);
         String value = GsonConverter.getGson().toJson(bean);
         SpUtil.put(tokenKey, value);
     }
@@ -131,7 +164,7 @@ public class TempChannelUtil {
      */
     public static boolean isWithinTime(String originalUrl, OnTempChannelListener listener) {
         long currentTime = TimeFormatUtil.getCurrentTime();
-        String tokenKey = SpUtil.get(SpConstant.SA_TOKEN);
+        String tokenKey = SpUtil.get(SpConstant.AREA_ID);
         String json = SpUtil.get(tokenKey);
         if (!TextUtils.isEmpty(json)) {
             ChannelEntity channel = GsonConverter.getGson().fromJson(json, ChannelEntity.class);
@@ -155,9 +188,9 @@ public class TempChannelUtil {
     private static String getUrl(String originalUrl, String host) {
         String url = "";
         if (!TextUtils.isEmpty(host)) {
-            url = originalUrl.replace(SC_HOST, host);
+            url = originalUrl.replace(HttpBaseUrl.baseSCHost, host);
         }
-        LogUtil.e(TAG+"=getUrl=="+url);
+        LogUtil.e(TAG + "=getUrl==" + url);
         return url;
     }
 }

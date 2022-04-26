@@ -12,6 +12,15 @@ public class InvitationCodePost {
 
     private long area_id;
     private List<Integer> role_ids;
+    private List<Integer> department_ids;
+
+    public List<Integer> getDepartment_ids() {
+        return department_ids;
+    }
+
+    public void setDepartment_ids(List<Integer> department_ids) {
+        this.department_ids = department_ids;
+    }
 
     public long getArea_id() {
         return area_id;

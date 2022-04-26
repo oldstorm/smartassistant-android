@@ -40,7 +40,7 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/clAllow"
             android:layout_gravity="left"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/dp_25">
 
@@ -67,13 +67,15 @@
                 app:layout_constraintTop_toTopOf="@id/cbAllowFind" />
 
             <TextView
-                android:layout_width="wrap_content"
+                android:layout_width="@dimen/dp_0"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/dp_8"
+                android:gravity="left"
                 android:text="@string/home_allow_find_tip"
                 android:textColor="#ff94a5be"
                 android:textSize="@dimen/textSize11"
                 app:layout_constraintLeft_toLeftOf="@id/tv_allow_find"
+                app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_allow_find" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
@@ -81,7 +83,7 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/clNoAllow"
             android:layout_gravity="left"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/dp_25">
 
@@ -110,26 +112,20 @@
 
             <TextView
                 android:id="@+id/tvNoAllowFindTip"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/dp_8"
+                android:gravity="left"
                 android:text="@string/home_no_allow_find_tip"
                 android:textColor="#ff94a5be"
                 android:textSize="@dimen/textSize11"
                 app:layout_constraintLeft_toLeftOf="@id/tvNoAllowFind"
+                app:layout_constraintRight_toRightOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tvNoAllowFind" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <TextView
-            android:layout_marginLeft="@dimen/dp_29"
-            android:layout_gravity="left"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/dp_25"
-            android:text="@string/home_find_certificate_warn_tip"
-            android:textColor="#ff94a5be"
-            android:textSize="@dimen/textSize11" />
+
 
     </LinearLayout>
 
@@ -137,15 +133,19 @@
         android:id="@+id/viewLine"
         android:layout_width="@dimen/dp_0"
         android:layout_height="0.5dp"
+        android:layout_marginTop="@dimen/dp_14"
         android:background="@color/color_DDDDDD"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/llContent" />
+        app:layout_constraintTop_toBottomOf="@+id/llContent"
+        android:visibility="invisible"/>
 
     <LinearLayout
         android:id="@+id/llBottom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/dp_25"
+        android:layout_marginRight="@dimen/dp_25"
         android:orientation="horizontal"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -179,12 +179,25 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:gravity="center"
+                android:background="@drawable/shape_2da3f6_c4"
                 android:text="@string/common_confirm"
-                android:textColor="@color/color_2da3f6"
+                android:textColor="@color/white"
                 android:textSize="@dimen/textSize14"
                 android:visibility="visible" />
         </LinearLayout>
 
     </LinearLayout>
 
+    <TextView
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/llBottom"
+        app:layout_constraintLeft_toLeftOf="@+id/llBottom"
+        app:layout_constraintRight_toRightOf="@+id/llBottom"
+        android:gravity="center_horizontal"
+        android:paddingBottom="@dimen/dp_21"
+        android:layout_marginTop="@dimen/dp_9"
+        android:text="@string/home_find_certificate_warn_tip"
+        android:textColor="#ff94a5be"
+        android:textSize="@dimen/textSize11" />
 </androidx.constraintlayout.widget.ConstraintLayout>

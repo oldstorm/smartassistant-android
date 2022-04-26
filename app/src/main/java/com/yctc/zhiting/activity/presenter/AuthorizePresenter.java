@@ -30,15 +30,11 @@ public class AuthorizePresenter extends BasePresenterImpl<AuthorizeContract.View
      */
     @Override
     public void getScopeList() {
-        if (mView!=null){
-            mView.showLoadingView();
-        }
         model.getScopeList(new RequestDataCallback<ScopesBean>() {
             @Override
             public void onSuccess(ScopesBean obj) {
                 super.onSuccess(obj);
                 if (mView!=null){
-                    mView.hideLoadingView();
                     mView.getScopesSuccess(obj);
                 }
             }
@@ -47,7 +43,6 @@ public class AuthorizePresenter extends BasePresenterImpl<AuthorizeContract.View
             public void onFailed(int errorCode, String errorMessage) {
                 super.onFailed(errorCode, errorMessage);
                 if (mView!=null){
-                    mView.hideLoadingView();
                     mView.getScopesFail(errorCode, errorMessage);
                 }
             }
@@ -60,16 +55,11 @@ public class AuthorizePresenter extends BasePresenterImpl<AuthorizeContract.View
      */
     @Override
     public void getScopeToken(String body) {
-        if (mView!=null){
-            mView.showLoadingView();
-        }
-
         model.getScopeToken(body, new RequestDataCallback<ScopeTokenBean>() {
             @Override
             public void onSuccess(ScopeTokenBean obj) {
                 super.onSuccess(obj);
                 if (mView!=null){
-                    mView.hideLoadingView();
                     mView.getScopeTokenSuccess(obj);
                 }
             }
@@ -78,7 +68,6 @@ public class AuthorizePresenter extends BasePresenterImpl<AuthorizeContract.View
             public void onFailed(int errorCode, String errorMessage) {
                 super.onFailed(errorCode, errorMessage);
                 if (mView!=null){
-                    mView.hideLoadingView();
                     mView.getScopeTokenFail(errorCode, errorMessage);
                 }
             }

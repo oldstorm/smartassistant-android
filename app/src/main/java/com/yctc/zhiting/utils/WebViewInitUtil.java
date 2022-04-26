@@ -1,9 +1,13 @@
 package com.yctc.zhiting.utils;
 
 import android.annotation.SuppressLint;
+import android.content.ClipData;
+import android.content.Intent;
+import android.net.Uri;
 import android.view.View;
 import android.webkit.JsPromptResult;
 import android.webkit.JsResult;
+import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -12,10 +16,13 @@ import android.widget.ProgressBar;
 
 import com.app.main.framework.baseutil.LogUtil;
 import com.app.main.framework.baseview.BaseActivity;
+import com.yctc.zhiting.listener.WebFileChoseListener;
 
 public class WebViewInitUtil {
     private BaseActivity activity;
     private ProgressBar progressBar;
+
+    private WebFileChoseListener webFileChoseListener;
 
     public WebViewInitUtil(BaseActivity activity) {
         this.activity = activity;
@@ -25,6 +32,12 @@ public class WebViewInitUtil {
         this.progressBar = progressBar;
         return this;
     }
+
+    public WebViewInitUtil setWebFileChoseListener(WebFileChoseListener webFileChoseListener) {
+        this.webFileChoseListener = webFileChoseListener;
+        return this;
+    }
+
 
     @SuppressLint("SetJavaScriptEnabled")
     public void initWebView(WebView webView) {
@@ -115,5 +128,42 @@ public class WebViewInitUtil {
         public boolean onJsTimeout() {
             return super.onJsTimeout();
         }
+
+        @Override
+        public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams) {
+            if (webFileChoseListener != null) {
+                webFileChoseListener.getFile(filePathCallback);
+            }
+            return true;
+        }
+    }
+
+    public static void seleteH5Phone(Intent data, ValueCallback valueCallback) {
+        if (valueCallback == null) {
+            // todo valueCallback 为空的逻辑
+            return;
+        }
+        try {
+            Uri[] results = null;
+            String dataString = data.getDataString();
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN) {
+                ClipData clipData = data.getClipData();
+                if (clipData != null) {
+                    results = new Uri[clipData.getItemCount()];
+                    for (int i = 0; i < clipData.getItemCount(); i++) {
+                        ClipData.Item item = clipData.getItemAt(i);
+                        results[i] = item.getUri();
+                    }
+                }
+            }
+
+            if (dataString != null) {
+                results = new Uri[]{Uri.parse(dataString)};
+                valueCallback.onReceiveValue(results);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        valueCallback = null;
     }
 }

@@ -1,6 +1,9 @@
 package com.yctc.zhiting.adapter;
 
 
+import android.view.View;
+import android.widget.ImageView;
+
 import androidx.annotation.Nullable;
 
 import com.app.main.framework.imageutil.GlideUtil;
@@ -33,6 +36,10 @@ public class MemberAdapter extends BaseQuickAdapter<UserBean, BaseViewHolder> {
                 }
             }
         }
+        ImageView ciAvatar = helper.getView(R.id.ciAvatar);
+        GlideUtil.load(item.getAvatar_url()).userHead().into(ciAvatar);
+        ImageView ivMedal = helper.getView(R.id.ivMedal);
+        ivMedal.setVisibility(item.isIs_manager() ? View.VISIBLE : View.GONE);
         helper.setText(R.id.tvName, item.getNickname())
                 .setText(R.id.tvRole, stringBuffer.toString());
     }

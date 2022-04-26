@@ -57,4 +57,18 @@ public class IntentConstant {
     public static final String HOMEKIT_CODE_ERROR = "homekit_code_error";
     public static final String URL = "url";
     public static final String BEAN_LIST = "bean_list";
+
+    public static final String CLOUD_ID = "cloud_id";
+    public static final String DEPARTMENT_ID = "department_id";
+    public static final String BOOL = "bool";
+    public static final String ID_LIST = "idList";
+    public static final String POSITION = "position";
+
+    public static final String PHONE = "phone";
+    public static final String COUNTRY_CODE = "countryCode";
+    public static final String PLUGIN_ID = "pluginId";
+    public static final String IID = "iid";
+
+    public static final String AVATAR_URL = "avatarUrl";
+    public static final String CONTROL = "control";
 }

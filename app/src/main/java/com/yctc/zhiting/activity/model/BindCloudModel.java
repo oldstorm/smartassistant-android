@@ -7,6 +7,7 @@ import com.yctc.zhiting.activity.contract.BindCloudContract;
 import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.config.HttpUrlConfig;
 import com.yctc.zhiting.entity.mine.CaptchaBean;
+import com.yctc.zhiting.entity.mine.LoginBean;
 import com.yctc.zhiting.entity.mine.MemberDetailBean;
 
 import java.util.List;
@@ -34,7 +35,7 @@ public class BindCloudModel implements BindCloudContract.Model {
      * @param callback
      */
     @Override
-    public void register(String body, RequestDataCallback<MemberDetailBean> callback) {
-        HTTPCaller.getInstance().post(MemberDetailBean.class, HttpUrlConfig.getRegister() + Constant.ONLY_SC, body, callback);
+    public void register(String body, RequestDataCallback<LoginBean> callback) {
+        HTTPCaller.getInstance().post(LoginBean.class, HttpUrlConfig.getRegister() + Constant.ONLY_SC, body, callback);
     }
 }

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/white"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <ImageView
+        android:id="@+id/ivSmallCircle1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/icon_log_circle_small"
+        app:layout_constraintLeft_toLeftOf="@+id/ivCircle"
+        app:layout_constraintRight_toRightOf="@+id/ivCircle"
+        app:layout_constraintTop_toTopOf="parent"
+        android:visibility="gone"/>
+
+    <ImageView
+        android:id="@+id/ivCircle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_24"
+        android:background="@drawable/icon_log_circle"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/clData" />
+
+    <View
+        android:id="@+id/viewLine1"
+        android:layout_width="@dimen/dp_1"
+        android:layout_height="@dimen/dp_0"
+        app:layout_constraintTop_toTopOf="@+id/clData"
+        app:layout_constraintBottom_toTopOf="@+id/ivCircle"
+        app:layout_constraintLeft_toLeftOf="@+id/ivCircle"
+        app:layout_constraintRight_toRightOf="@+id/ivCircle"
+        android:background="@color/color_CED5DE"
+        android:visibility="gone"/>
+
+    <View
+        android:id="@+id/viewLine2"
+        android:layout_width="@dimen/dp_1"
+        android:layout_height="@dimen/dp_0"
+        app:layout_constraintTop_toBottomOf="@+id/ivCircle"
+        app:layout_constraintBottom_toBottomOf="@+id/clData"
+        app:layout_constraintLeft_toLeftOf="@+id/ivCircle"
+        app:layout_constraintRight_toRightOf="@+id/ivCircle"
+        android:background="@color/color_CED5DE"
+        android:visibility="gone"/>
+
+    <LinearLayout
+        android:id="@+id/clData"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toRightOf="@+id/ivCircle"
+        app:layout_constraintRight_toRightOf="parent"
+        android:paddingTop="@dimen/dp_20"
+        android:paddingBottom="@dimen/dp_20"
+        android:paddingLeft="@dimen/dp_16"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/icon_exception" />
+
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="@dimen/dp_0"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="@dimen/dp_6"
+            android:layout_marginRight="@dimen/dp_6"
+            android:text="多次验证失败"
+            android:textColor="@color/color_3f4663_ff0000"
+            android:textSize="@dimen/textSize14"
+            android:textStyle="bold" />
+        <TextView
+            android:id="@+id/tvTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="3月08日 14:06"
+            android:textColor="@color/color_3f4663"
+            android:textSize="@dimen/textSize12" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/ivSmallCircle2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/icon_log_circle_small"
+        app:layout_constraintLeft_toLeftOf="@+id/ivCircle"
+        app:layout_constraintRight_toRightOf="@+id/ivCircle"
+        app:layout_constraintBottom_toBottomOf="@+id/clData"
+        android:visibility="gone"/>
+</androidx.constraintlayout.widget.ConstraintLayout>

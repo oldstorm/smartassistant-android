@@ -14,6 +14,9 @@ public class AuthBackBean extends Request {
 
     private int userId;  // 用户id
     private String userName; // 用户昵称
+    private int cloudUserId;
+    private String countryCode;
+    private String phone;
     private HomeCompanyBean homeCompanyBean; // 家庭信息
     private ScopeTokenBean.STBean stBean; // 授权token和过期时间
     private List<Cookie> cookies; // 登录SC时的cookie
@@ -39,6 +42,30 @@ public class AuthBackBean extends Request {
 
     public void setUserName(String userName) {
         this.userName = userName;
+    }
+
+    public int getCloudUserId() {
+        return cloudUserId;
+    }
+
+    public void setCloudUserId(int cloudUserId) {
+        this.cloudUserId = cloudUserId;
+    }
+
+    public String getCountryCode() {
+        return countryCode;
+    }
+
+    public void setCountryCode(String countryCode) {
+        this.countryCode = countryCode;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     public HomeCompanyBean getHomeCompanyBean() {

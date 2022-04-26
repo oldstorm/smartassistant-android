@@ -31,8 +31,8 @@ public class SceneDetailDevicesPresenter extends BasePresenterImpl<SceneDetailDe
      * 设备列表
      */
     @Override
-    public void getDeviceList() {
-        model.getDeviceList(new RequestDataCallback<RoomDeviceListBean>() {
+    public void getDeviceList(int type) {
+        model.getDeviceList(type, new RequestDataCallback<RoomDeviceListBean>() {
             @Override
             public void onSuccess(RoomDeviceListBean obj) {
                 super.onSuccess(obj);

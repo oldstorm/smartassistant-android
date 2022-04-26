@@ -192,7 +192,6 @@ public class ApNetworkActivity extends MVPBaseActivity<ApNetworkContract.View, A
         byte[] data = ByteUtil.byteMergerAll(ByteUtil.intToByte2(0x55ee),bodyLength, byteBody);
         byte[] crcByte = ByteUtil.intToByte2(ByteUtil.alex_crc16(data, data.length)) ;
         byte[] sendData = ByteUtil.byteMergerAll( data , crcByte);
-        System.out.println("最后发送数据："+ Arrays.toString(sendData));
         udpSocket.sendMessage(sendData, ipAddress);
     }
 

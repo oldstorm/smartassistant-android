@@ -15,6 +15,7 @@ import com.app.main.framework.httputil.RequestDataCallback;
 import com.app.main.framework.httputil.comfig.HttpConfig;
 import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.config.HttpUrlConfig;
+import com.yctc.zhiting.websocket.WSocketManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,11 +25,20 @@ import java.util.List;
  * desc :临时通道获取及保存
  */
 public class ChannelUtil {
+    private static String TAG = "ChannelUtil==";
 
-    public static void reSaveChannel() {
-        boolean isBindSA = SpUtil.getBoolean(SpConstant.IS_BIND_SA);
-        if (isBindSA && UserUtils.isLogin() && HomeUtil.getHomeId() > 0 && !isWithinTime()) {
+    public static void refreshHomeTempeChannel() {
+        //虚拟SA也走临时通道
+        String saId = SpUtil.get(SpConstant.SA_ID);
+        LogUtil.e(TAG, "saId=" + saId);
+        LogUtil.e(TAG, "isLogin=" + UserUtils.isLogin());
+        LogUtil.e(TAG, "getHomeId=" + HomeUtil.getHomeId());
+        LogUtil.e(TAG, "isWithinTime=" + isWithinTime());
+
+        if (!TextUtils.isEmpty(saId) && UserUtils.isLogin() && HomeUtil.getHomeId() > 0 && !isWithinTime()) {
             LogUtil.e("reSaveChannel123");
+            //WSocketManager.getInstance().close();
+
             String url = HttpUrlConfig.apiSCUrl + "datatunnel" + Constant.ONLY_SC;
             List<NameValuePair> requestData = new ArrayList<>();
             requestData.add(new NameValuePair("scheme", "https"));
@@ -40,13 +50,8 @@ public class ChannelUtil {
                         @Override
                         public void onSuccess(ChannelEntity bean) {
                             super.onSuccess(bean);
-                            if (bean != null) {
-                                Log.e("HTTPCaller1=", "checkTemporaryUrl=onSuccess");
-                                bean.setGenerate_channel_time(TimeFormatUtil.getCurrentTime());
-                                String tokenKey = SpUtil.get(SpConstant.SA_TOKEN);
-                                String value = GsonConverter.getGson().toJson(bean);
-                                SpUtil.put(tokenKey, value);
-                            }
+                            Log.e("HTTPCaller1=", "checkTemporaryUrl=onSuccess");
+                            saveChannelData(bean);
                         }
 
                         @Override
@@ -55,7 +60,23 @@ public class ChannelUtil {
                             Log.e("HTTPCaller2=", "checkTemporaryUrl=onFailed");
                         }
                     });
+        } else {
+            WSocketManager.getInstance().start();
         }
+    }
+
+    /**
+     * 保存临时通道
+     *
+     * @param bean
+     */
+    private static void saveChannelData(ChannelEntity bean) {
+        if (bean == null) return;
+        bean.setGenerate_channel_time(TimeFormatUtil.getCurrentTime());
+        String tokenKey = SpUtil.get(SpConstant.AREA_ID);
+        String value = GsonConverter.getGson().toJson(bean);
+        SpUtil.put(tokenKey, value);
+        WSocketManager.getInstance().start();
     }
 
     /**
@@ -65,7 +86,7 @@ public class ChannelUtil {
      */
     public static boolean isWithinTime() {
         long currentTime = TimeFormatUtil.getCurrentTime();
-        String tokenKey = SpUtil.get(SpConstant.SA_TOKEN);
+        String tokenKey = SpUtil.get(SpConstant.AREA_ID);
         String json = SpUtil.get(tokenKey);
         if (!TextUtils.isEmpty(json)) {
             ChannelEntity channel = GsonConverter.getGson().fromJson(json, ChannelEntity.class);

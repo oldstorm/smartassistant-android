@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout
+        android:id="@+id/llMember"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginRight="@dimen/dp_12"
+        android:paddingRight="@dimen/dp_1"
+        android:orientation="horizontal">
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/dp_4"
+            android:layout_marginRight="@dimen/dp_3"
+            android:layout_marginTop="@dimen/dp_3"
+            android:background="@drawable/shape_1a2da3f6_c30"
+            android:gravity="center"
+            android:orientation="horizontal">
+            <com.yctc.zhiting.widget.CircleImageView
+                android:layout_width="@dimen/dp_23"
+                android:layout_height="@dimen/dp_23"
+                android:src="@drawable/icon_default_avatar" />
+
+            <TextView
+                android:id="@+id/tvName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:layout_marginLeft="@dimen/dp_5"
+                android:layout_marginRight="@dimen/dp_8"
+                android:text="小丽suo"
+                android:textColor="@color/color_3f4663"
+                android:textSize="@dimen/textSize14" />
+        </LinearLayout>
+    </LinearLayout>
+
+
+    <ImageView
+        android:id="@+id/ivClose"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/dp_3"
+        android:layout_alignRight="@id/llMember"
+        android:src="@drawable/icon_black_close" />
+
+</RelativeLayout>

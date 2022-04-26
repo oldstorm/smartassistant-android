@@ -6,6 +6,8 @@
     android:background="@color/color_f6f8fd"
     tools:context=".activity.UserInfoActivity">
 
+    <include layout="@layout/layout_line" />
+
     <RelativeLayout
         android:id="@+id/rlAvatar"
         android:layout_width="match_parent"
@@ -33,6 +35,12 @@
             android:src="@drawable/icon_default_avatar" />
     </RelativeLayout>
 
+    <include
+        layout="@layout/layout_line"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:layout_below="@id/rlAvatar" />
+
     <RelativeLayout
         android:id="@+id/rlNickname"
         style="@style/rl_key_value"
@@ -49,6 +57,12 @@
             tools:text="13fasd4541" />
 
     </RelativeLayout>
+
+    <include
+        layout="@layout/layout_line"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:layout_below="@id/rlNickname" />
 
     <RelativeLayout
         android:id="@+id/rlPhone"
@@ -68,6 +82,24 @@
             tools:text="130****4541" />
 
     </RelativeLayout>
+
+    <include
+        layout="@layout/layout_line"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:layout_below="@id/rlPhone" />
+
+    <TextView
+        android:id="@+id/tvAccount"
+        style="@style/rl_key_value"
+        android:layout_below="@id/rlPhone"
+        android:drawableRight="@drawable/icon_gray_right_arrow"
+        android:gravity="center_vertical"
+        android:text="@string/mine_account_and_security"
+        android:textColor="@color/color_3f4663"
+        android:textSize="@dimen/textSize14"
+        android:textStyle="bold"
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/tvLogout"

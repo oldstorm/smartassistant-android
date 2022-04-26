@@ -16,6 +16,7 @@ import com.yctc.zhiting.R;
 import com.yctc.zhiting.activity.contract.AddHCContract;
 import com.yctc.zhiting.activity.presenter.AddHCPresenter;
 import com.yctc.zhiting.adapter.AddHCAdapter;
+import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.config.HttpUrlConfig;
 import com.yctc.zhiting.db.DBManager;
 import com.yctc.zhiting.dialog.EditBottomDialog;
@@ -26,6 +27,7 @@ import com.yctc.zhiting.entity.mine.LocationBean;
 import com.yctc.zhiting.entity.mine.LocationTmpl;
 import com.yctc.zhiting.entity.mine.LocationsBean;
 import com.yctc.zhiting.event.RefreshHome;
+import com.yctc.zhiting.event.RefreshHomeEvent;
 import com.yctc.zhiting.request.AddHCRequest;
 import com.yctc.zhiting.utils.CollectionUtil;
 import com.yctc.zhiting.utils.UserUtils;
@@ -79,10 +81,10 @@ public class AddHCActivity extends MVPBaseActivity<AddHCContract.View, AddHCPres
         data.add(new LocationTmpl(getResources().getString(R.string.mine_master), true));
         data.add(new LocationTmpl(getResources().getString(R.string.mine_study), true));
         data.add(new LocationTmpl(getResources().getString(R.string.mine_toilet), true));
-        data.add(new LocationTmpl(getResources().getString(R.string.mine_administration_department), false));
-        data.add(new LocationTmpl(getResources().getString(R.string.mine_marketing_department), false));
-        data.add(new LocationTmpl(getResources().getString(R.string.mine_r_d_department), false));
-        data.add(new LocationTmpl(getResources().getString(R.string.mine_president_office), false));
+        data.add(new LocationTmpl(getResources().getString(R.string.mine_the_old_room), false));
+        data.add(new LocationTmpl(getResources().getString(R.string.mine_the_child_room), false));
+        data.add(new LocationTmpl(getResources().getString(R.string.mine_balcony), false));
+        data.add(new LocationTmpl(getResources().getString(R.string.mine_cloakroom), false));
 
         addHCAdapter.setNewData(data);
         rvRoom.setLayoutManager(new LinearLayoutManager(this));
@@ -92,7 +94,7 @@ public class AddHCActivity extends MVPBaseActivity<AddHCContract.View, AddHCPres
             locationTmpl.setChosen(!locationTmpl.isChosen());
             addHCAdapter.notifyItemChanged(position);
         });
-        mPresenter.getDefaultRoom();
+//        mPresenter.getDefaultRoom();
     }
 
     @OnClick(R.id.ivBack)
@@ -131,9 +133,10 @@ public class AddHCActivity extends MVPBaseActivity<AddHCContract.View, AddHCPres
                 homeCompanyBean.setUser_id(saUserId);
                 homeCompanyBean.setSa_user_token(saToken);
             }
+            homeCompanyBean.setArea_type(Constant.HOME_MODE);
             dbManager.insertHomeCompany(homeCompanyBean, roomAreas, false);
             UiUtil.runInMainThread(() -> {
-                EventBus.getDefault().post(new RefreshHome());
+                EventBus.getDefault().post(new RefreshHomeEvent());
                 ToastUtil.show(getResources().getString(R.string.mine_add_success));
                 finish();
             });
@@ -171,7 +174,7 @@ public class AddHCActivity extends MVPBaseActivity<AddHCContract.View, AddHCPres
         }
         String homeName = etName.getText().toString().trim();
 //        SynPost.AreaBean areaBean = new SynPost.AreaBean(homeName, locations);//家庭
-        AddHCRequest addHCRequest = new AddHCRequest(homeName, locations);
+        AddHCRequest addHCRequest = new AddHCRequest(homeName, Constant.HOME_MODE, locations);
         HttpConfig.clearHear(HttpConfig.AREA_ID);
         HttpConfig.clearHear(HttpConfig.TOKEN_KEY);
         mPresenter.addScHome(addHCRequest);
@@ -253,6 +256,6 @@ public class AddHCActivity extends MVPBaseActivity<AddHCContract.View, AddHCPres
      */
     @Override
     public void addScHomeFail(int errorCode, String msg) {
-
+        ToastUtil.show(msg);
     }
 }

@@ -53,6 +53,9 @@ public class MyItemTouchHelper extends androidx.recyclerview.widget.ItemTouchHel
             }
         }
         recyclerView.getAdapter().notifyItemMoved(fromPosition, toPosition);
+        if (movedListener != null) {
+            movedListener.onMoved();
+        }
         return true;
     }
 
@@ -70,14 +73,23 @@ public class MyItemTouchHelper extends androidx.recyclerview.widget.ItemTouchHel
     public void onSelectedChanged(RecyclerView.ViewHolder viewHolder, int actionState) {
         super.onSelectedChanged(viewHolder, actionState);
         if (actionState == ItemTouchHelper.ACTION_STATE_DRAG) {
-            viewHolder.itemView.setBackgroundColor(Color.WHITE);
+            //viewHolder.itemView.setBackgroundColor(Color.WHITE);
         }
     }
 
     @Override
     public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
         super.clearView(recyclerView, viewHolder);
-        viewHolder.itemView.setBackgroundColor(0);
+        //viewHolder.itemView.setBackgroundColor(0);
     }
 
+    private MovedListener movedListener;
+
+    public void setMovedListener(MovedListener movedListener) {
+        this.movedListener = movedListener;
+    }
+
+    public interface MovedListener {
+        void onMoved();
+    }
 }

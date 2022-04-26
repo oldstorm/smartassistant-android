@@ -7,6 +7,8 @@ import com.app.main.framework.httputil.NameValuePair;
 import com.app.main.framework.httputil.RequestDataCallback;
 import com.yctc.zhiting.activity.contract.HCDetailContract;
 import com.yctc.zhiting.activity.model.HCDetailModel;
+import com.yctc.zhiting.entity.DepartmentListBean;
+import com.yctc.zhiting.entity.ExtensionBean;
 import com.yctc.zhiting.entity.FindSATokenBean;
 import com.yctc.zhiting.entity.mine.HomeCompanyBean;
 import com.yctc.zhiting.entity.mine.IdBean;
@@ -14,6 +16,7 @@ import com.yctc.zhiting.entity.mine.InvitationCodeBean;
 import com.yctc.zhiting.entity.mine.MemberDetailBean;
 import com.yctc.zhiting.entity.mine.MembersBean;
 import com.yctc.zhiting.entity.mine.PermissionBean;
+import com.yctc.zhiting.entity.mine.RemoveHCBean;
 import com.yctc.zhiting.entity.mine.RolesBean;
 import com.yctc.zhiting.entity.mine.VerificationCodeBean;
 import com.yctc.zhiting.request.AddHCRequest;
@@ -215,13 +218,13 @@ public class HCDetailPresenter extends BasePresenterImpl<HCDetailContract.View> 
     @Override
     public void delHomeCompany(long id, String body) {
         if (model != null) {
-            model.delHomeCompany(id, body, new RequestDataCallback<Object>() {
+            model.delHomeCompany(id, body, new RequestDataCallback<RemoveHCBean>() {
                 @Override
-                public void onSuccess(Object obj) {
+                public void onSuccess(RemoveHCBean obj) {
                     super.onSuccess(obj);
                     if (mView != null) {
                         mView.hideLoadingView();
-                        mView.delHomeCompanySuccess();
+                        mView.delHomeCompanySuccess(obj);
                     }
                 }
 
@@ -380,4 +383,55 @@ public class HCDetailPresenter extends BasePresenterImpl<HCDetailContract.View> 
             }
         });
     }
+
+    /**
+     * 部门列表
+     */
+    @Override
+    public void getDepartmentList() {
+        model.getDepartmentList(new RequestDataCallback<DepartmentListBean>() {
+            @Override
+            public void onSuccess(DepartmentListBean obj) {
+                super.onSuccess(obj);
+                if (mView!=null){
+                    mView.hideLoadingView();
+                    mView.getDepartmentListSuccess(obj);
+                }
+            }
+
+            @Override
+            public void onFailed(int errorCode, String errorMessage) {
+                super.onFailed(errorCode, errorMessage);
+                if (mView!=null){
+                    mView.hideLoadingView();
+                    mView.getDepartmentListFail(errorCode, errorMessage);
+                }
+            }
+        });
+    }
+
+    /**
+     * 扩展列表
+     */
+    @Override
+    public void getExtensions() {
+        model.getExtensions(new RequestDataCallback<ExtensionBean>() {
+            @Override
+            public void onSuccess(ExtensionBean obj) {
+                super.onSuccess(obj);
+                if (mView != null) {
+                    mView.getExtensionsSuccess(obj.getExtension_names());
+                }
+            }
+
+            @Override
+            public void onFailed(int errorCode, String errorMessage) {
+                super.onFailed(errorCode, errorMessage);
+                if (mView != null) {
+                    mView.getExtensionsFail(errorCode, errorMessage);
+                }
+            }
+        });
+    }
+
 }

@@ -1,19 +1,13 @@
 package com.yctc.zhiting.activity;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
+import static com.yctc.zhiting.config.Constant.CurrentHome;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
-import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
@@ -25,16 +19,19 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.http.SslError;
 import android.net.wifi.WifiManager;
+import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
+import android.os.Looper;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.SslErrorHandler;
+import android.webkit.WebBackForwardList;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ImageView;
@@ -42,18 +39,28 @@ import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+
 import com.app.main.framework.baseutil.LogUtil;
+import com.app.main.framework.baseutil.NetworkUtil;
+import com.app.main.framework.baseutil.SpConstant;
+import com.app.main.framework.baseutil.SpUtil;
 import com.app.main.framework.baseutil.UiUtil;
-import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.MVPBaseActivity;
+import com.app.main.framework.config.HttpBaseUrl;
+import com.app.main.framework.entity.ChannelEntity;
 import com.app.main.framework.gsonutils.GsonConverter;
 import com.espressif.provisioning.DeviceConnectionEvent;
 import com.espressif.provisioning.ESPConstants;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.yctc.zhiting.R;
 import com.yctc.zhiting.activity.contract.ConfigNetworkWebContract;
 import com.yctc.zhiting.activity.presenter.ConfigNetworkWebPresenter;
 import com.yctc.zhiting.config.Constant;
+import com.yctc.zhiting.config.HttpUrlConfig;
 import com.yctc.zhiting.dialog.CenterAlertDialog;
 import com.yctc.zhiting.entity.ConfigServerResultBean;
 import com.yctc.zhiting.entity.GetDeviceInfoBean;
@@ -61,12 +68,20 @@ import com.yctc.zhiting.entity.JsBean;
 import com.yctc.zhiting.entity.ScanDeviceByUDPBean;
 import com.yctc.zhiting.entity.ServerConfigBean;
 import com.yctc.zhiting.entity.home.AccessTokenBean;
+import com.yctc.zhiting.entity.home.AddDeviceResponseBean;
 import com.yctc.zhiting.entity.home.DeviceBean;
 import com.yctc.zhiting.entity.home.DeviceTypeDeviceBean;
-import com.yctc.zhiting.event.UpdateProfessionStatusEvent;
+import com.yctc.zhiting.entity.ws_request.WSDeviceRequest;
+import com.yctc.zhiting.entity.ws_request.WSRequest;
+import com.yctc.zhiting.entity.ws_request.WSConstant;
+import com.yctc.zhiting.entity.ws_response.WSDeviceResponseBean;
+import com.yctc.zhiting.entity.ws_response.WSBaseResponseBean;
+import com.yctc.zhiting.entity.ws_response.WSDeviceBean;
 import com.yctc.zhiting.receiver.WifiReceiver;
 import com.yctc.zhiting.utils.AESUtil;
 import com.yctc.zhiting.utils.BluetoothUtil;
+import com.yctc.zhiting.utils.ByteConstant;
+import com.yctc.zhiting.utils.HomeUtil;
 import com.yctc.zhiting.utils.IntentConstant;
 import com.yctc.zhiting.utils.JsMethodConstant;
 import com.yctc.zhiting.utils.Md5Util;
@@ -79,8 +94,9 @@ import com.yctc.zhiting.utils.confignetwork.WifiUtil;
 import com.yctc.zhiting.utils.statusbarutil.StatusBarUtil;
 import com.yctc.zhiting.utils.udp.ByteUtil;
 import com.yctc.zhiting.utils.udp.UDPSocket;
+import com.yctc.zhiting.websocket.IWebSocketListener;
+import com.yctc.zhiting.websocket.WSocketManager;
 
-import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
@@ -95,16 +111,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import blufi.espressif.BlufiCallback;
 import blufi.espressif.BlufiClient;
-import blufi.espressif.params.BlufiConfigureParams;
-import blufi.espressif.params.BlufiParameter;
 import blufi.espressif.response.BlufiScanResult;
 import blufi.espressif.response.BlufiStatusResponse;
 import blufi.espressif.response.BlufiVersionResponse;
 import butterknife.BindView;
 import butterknife.OnClick;
-
-import static com.yctc.zhiting.config.Constant.CurrentHome;
-import static com.yctc.zhiting.config.Constant.wifiInfo;
+import okhttp3.WebSocket;
 
 /**
  * 配网
@@ -124,7 +136,7 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
     @BindView(R.id.progressbar)
     ProgressBar progressbar;
 
-    private String webUrl = "http://192.168.22.91/doc/test.html";
+    private String webUrl = "http://192.168.22.109/doc/test.html";
     private DeviceTypeDeviceBean mDeviceTypeDeviceBean;
 
     private BlufiUtil blufiUtil;
@@ -138,7 +150,16 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
     private String mAccessToken;
     private ConcurrentHashMap<String, ScanDeviceByUDPBean> scanMap = new ConcurrentHashMap<>();  // 存储udp扫描的设备信息
     private JsMethodConstant mJsMethodConstant;
-    private boolean canAccessToken;
+    private String registerDeviceCallbackID;
+    private String type; // 设备类型
+    private long sendId = 0; // 发送upd id
+    private CountDownTimer mCountDownTimer;
+
+    private IWebSocketListener mIWebSocketListener;
+
+    private ConcurrentHashMap<String, WSRequest> requestHashMap = new ConcurrentHashMap<>();
+
+    private CountDownTimer mAddDeviceCountDownTimer;  // 添加设备扫描倒计时
 
     /**
      * Wifi 状态接收器
@@ -153,25 +174,24 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
                 } else if (info.getState().equals(NetworkInfo.State.CONNECTED)) {
                     if (JsMethodConstant.dealConnectHotspot) {
                         if (mWifiUtil != null && JsMethodConstant.mHotspotName != null) {
-                            LogUtil.e("热点名称："+JsMethodConstant.mHotspotName);
+                            LogUtil.e("热点名称：" + JsMethodConstant.mHotspotName);
                             WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
                             String wifiName = wifiManager.getConnectionInfo().getSSID();
-                            wifiName = wifiName.substring(1, wifiName.length()-1);
-                            LogUtil.e("wifi名称："+wifiName);
+                            wifiName = wifiName.substring(1, wifiName.length() - 1);
+                            LogUtil.e("wifi名称：" + wifiName);
                             boolean result = wifiName.equals(JsMethodConstant.mHotspotName);
                             if (result) {
                                 mDeviceId = wifiManager.getConnectionInfo().getBSSID().replace(":", "");
-                                if (mJsMethodConstant!=null)
-                                mJsMethodConstant.connectDeviceHotspotResult(JsMethodConstant.SUCCESS, UiUtil.getString(R.string.success));
+                                if (mJsMethodConstant != null)
+                                    mJsMethodConstant.connectDeviceHotspotResult(JsMethodConstant.SUCCESS, UiUtil.getString(R.string.success));
                             } else {
-                                if (mJsMethodConstant!=null)
-                                mJsMethodConstant.connectDeviceHotspotResult(JsMethodConstant.FAIL, UiUtil.getString(R.string.failed));
+                                if (mJsMethodConstant != null)
+                                    mJsMethodConstant.connectDeviceHotspotResult(JsMethodConstant.FAIL, UiUtil.getString(R.string.failed));
                             }
                         }
                         JsMethodConstant.dealConnectHotspot = false;
                     }
-                    getAccessToken();
-                }else if (info.getState().equals(NetworkInfo.State.UNKNOWN)) {
+                } else if (info.getState().equals(NetworkInfo.State.UNKNOWN)) {
                     if (JsMethodConstant.dealConnectHotspot) {
                         mJsMethodConstant.connectDeviceHotspotResult(JsMethodConstant.FAIL, UiUtil.getString(R.string.failed));
                         JsMethodConstant.dealConnectHotspot = false;
@@ -184,17 +204,9 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
     /**
      * 获取配网accessToken
      */
-    private void getAccessToken(){
-        if (canAccessToken) {
-            canAccessToken = false;
-            if (UserUtils.isLogin() && !CurrentHome.isIs_bind_sa()) {
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mPresenter.getAccessToken();
-                    }
-                }, 500);
-            }
+    private void getAccessToken() {
+        if (UserUtils.isLogin() && !CurrentHome.isIs_bind_sa()) {
+            UiUtil.postDelayed(() -> mPresenter.getAccessToken(), 500);
         }
     }
 
@@ -206,8 +218,16 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
     @Override
     public void onBackPressed() {
         if (webView.canGoBack()) {
-            webView.goBack();
-        }else {
+            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    webView.removeAllViews();
+                    webView.clearCache(true);
+                    webView.clearHistory();
+                }
+            }, 50);
+            webView.loadUrl(webUrl);
+        } else {
             super.onBackPressed();
         }
     }
@@ -216,6 +236,7 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
     protected void initUI() {
         super.initUI();
         registerWifiReceiver();
+        initWebSocket();
         StatusBarUtil.setStatusBarDarkTheme(this, false);
         blufiUtil = new BlufiUtil(getApplicationContext());
         mBluetoothScanCallback = new BluetoothScanCallback();
@@ -226,7 +247,7 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
         webViewInitUtil.initWebView(webView);
         webViewInitUtil.setProgressBar(progressbar);
         String ua = webView.getSettings().getUserAgentString();
-        webView.getSettings().setUserAgentString(ua + "; "+Constant.ZHITING_USER_AGENT);
+        webView.getSettings().setUserAgentString(ua + "; " + Constant.ZHITING_USER_AGENT);
         webView.getSettings().setAllowFileAccess(true);
         webView.getSettings().setAllowContentAccess(true);
         webView.addJavascriptInterface(new JsInterface(), Constant.ZHITING_APP);
@@ -243,14 +264,48 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
     protected void initIntent(Intent intent) {
         super.initIntent(intent);
         webUrl = intent.getStringExtra(IntentConstant.PLUGIN_PATH);
+        type = intent.getStringExtra(IntentConstant.TYPE);
         mDeviceTypeDeviceBean = (DeviceTypeDeviceBean) intent.getSerializableExtra(IntentConstant.BEAN);
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                webView.loadUrl(webUrl);
-            }
-        }, 200);
+        UiUtil.postDelayed(() -> webView.loadUrl(webUrl), 200);
+        initCountDownTimer();
+    }
 
+    /**
+     * WebSocket初始化、添加监听
+     */
+    private void initWebSocket() {
+        mIWebSocketListener = new IWebSocketListener() {
+            @Override
+            public void onMessage(WebSocket webSocket, String text) {
+                if (TextUtils.isEmpty(text)) return;
+                LogUtil.e("添加设备结果：" + text);
+                WSBaseResponseBean<WSDeviceResponseBean> responseBean = GsonConverter.getGson().fromJson(text, new TypeToken<WSBaseResponseBean<WSDeviceResponseBean>>() {
+                }.getType());
+                if (responseBean != null && requestHashMap.containsKey(String.valueOf(responseBean.getId()))) {
+                    if (responseBean.isSuccess()) {
+                        WSDeviceResponseBean addDeviceResponseBean = responseBean.getData();
+                        if (addDeviceResponseBean != null) {
+                            WSDeviceBean deviceBean = addDeviceResponseBean.getDevice();
+                            if (deviceBean != null) {
+                                String addSuccess = registerDeviceJsCallback(0, "success");
+                                mJsMethodConstant.runOnMainUi(addSuccess);
+                                bundle = new Bundle();
+                                bundle.putInt(IntentConstant.ID, deviceBean.getId());
+                                bundle.putString(IntentConstant.PLUGIN_ID, deviceBean.getPlugin_id());
+                                bundle.putString(IntentConstant.CONTROL, deviceBean.getControl());
+                                bundle.putString(IntentConstant.NAME, mDeviceTypeDeviceBean.getName());
+                                switchToActivity(SetDevicePositionActivity.class, bundle);
+                                mAddDeviceCountDownTimer.cancel();
+                                finish();
+                            }
+                        }
+                    } else {
+                        addDeviceFail(-1, "添加设备失败");
+                    }
+                }
+            }
+        };
+        WSocketManager.getInstance().addWebSocketListener(mIWebSocketListener);
     }
 
     @Override
@@ -261,6 +316,43 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
     @Override
     protected boolean isLoadTitleBar() {
         return false;
+    }
+
+    /**
+     * 计时
+     */
+    private void initCountDownTimer() {
+        mCountDownTimer = new CountDownTimer(10_000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                LogUtil.e("initCountDownTimer=" + (millisUntilFinished / 1000));
+            }
+
+            @Override
+            public void onFinish() {
+                LogUtil.e("initCountDownTimer=onFinish=");
+                if (udpSocket != null && udpSocket.isRunning()) {
+                    udpSocket.stopUDPSocket();
+                    scanMap.clear();
+                    updAddressSet.clear();
+                    addDeviceFail(-1, "device not found");
+                }
+
+            }
+        };
+
+        mAddDeviceCountDownTimer = new CountDownTimer(20_000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                LogUtil.e("mAddDeviceCountDownTimer=" + (millisUntilFinished / 1000));
+            }
+
+            @Override
+            public void onFinish() {
+                LogUtil.e("mAddDeviceCountDownTimer=onFinish=");
+                addDeviceFail(-1, "device not response");
+            }
+        };
     }
 
     /**
@@ -281,14 +373,10 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
 
                         }
                     });
-            udpSocket.startUDPSocket();
         }
-        // 发送hello包数据，固定
-        byte[] sendHelloData = {(byte) 0x21, (byte) 0x31, (byte) 0x00, (byte) 0x20, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
-                (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
-                (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
-        LogUtil.e("最后发送hello包数据：" + Arrays.toString(sendHelloData));
-        udpSocket.sendMessage(sendHelloData, Constant.FIND_DEVICE_URL);
+        udpSocket.startUDPSocket();
+        udpSocket.sendMessage(ByteConstant.SEND_HELLO_DATA, Constant.FIND_DEVICE_URL);
+        mCountDownTimer.start();
     }
 
     /**
@@ -316,15 +404,15 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
                     String tokenFromServer = AESUtil.decryptAES(dealData, decryptKeyDta, ivEncryptedData, AESUtil.PKCS7, true);
                     if (!TextUtils.isEmpty(tokenFromServer)) {
                         sdb.setToken(tokenFromServer);
-                        long id = System.currentTimeMillis();
-                        sdb.setId(id);
-                        String deviceStr = "{\"method\":\"get_prop.info\",\"params\":[],\"id\":" + id + "}";  // 获取设备信息体
+                        sdb.setId(sendId);
+                        String deviceStr = "{\"method\":\"get_prop.info\",\"params\":[],\"id\":" + sendId + "}";  // 获取设备信息体
+                        sendId++;
                         byte[] bodyData = AESUtil.encryptAES(deviceStr.getBytes(), tokenFromServer, AESUtil.PKCS7); // 获取设备信息体转字节加密
                         int len = bodyData.length + 32;  // 包长
                         byte[] lenData = ByteUtil.intToByte2(len);  // 包长用占两位字节
-                        byte[] headData = {(byte) 0x21, (byte) 0x31}; // 包头固定
-                        byte[] preData = {(byte) 0xFF, (byte) 0xFF}; // 预留固定
-                        byte[] serData = {(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00}; // 序列号固定
+                        byte[] headData = ByteConstant.GET_DEV_INFO_HEAD_Data; // 包头固定
+                        byte[] preData = ByteConstant.GET_DEV_INFO_PRE_Data; // 预留固定
+                        byte[] serData = ByteConstant.SER_DATA; // 序列号固定
                         byte[] tokenData = sdb.getPassword().getBytes();  // 之前获取设备信息时生成的16位随机密码
                         byte[] getDeviceInfoData = ByteUtil.byteMergerAll(headData, lenData, preData, deviceIdData, serData, tokenData, bodyData); //  拼接获取设备信息包
                         LogUtil.e(address + "获取设备信息发送数据：" + Arrays.toString(getDeviceInfoData));
@@ -339,40 +427,55 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
                     String infoJson = AESUtil.decryptAES(dealData, decryptDeviceData, ivEncryptedDeviceData, AESUtil.PKCS7, false);
                     LogUtil.e("设备信息：" + infoJson);
                     GetDeviceInfoBean getDeviceInfoBean = new Gson().fromJson(infoJson, GetDeviceInfoBean.class);
-                    if (sdb.getServerConfigBean() == null){  // 还没发送设置服务器配置，发送
-                        if ( CurrentHome!=null && mDeviceId!=null && sdb.getDeviceId().equalsIgnoreCase(mDeviceId)) {
-                            System.out.println("当前家庭id："+CurrentHome.getId());
-                            ServerConfigBean serverConfigBean = new ServerConfigBean(Constant.CONFIG_DEVICE_TO_SERVER_ADDRESS, Constant.FIND_DEVICE_PORT, mAccessToken, String.valueOf(CurrentHome.getId()));
+                    if (sdb.getServerConfigBean() == null) {  // 还没发送设置服务器配置，发送
+                        if (CurrentHome != null && mDeviceId != null && sdb.getDeviceId().equalsIgnoreCase(mDeviceId)) {
+                            ServerConfigBean serverConfigBean = new ServerConfigBean(HttpBaseUrl.baseSCHost, Constant.FIND_DEVICE_PORT, mAccessToken, String.valueOf(CurrentHome.getId()));
+                            if (mDeviceTypeDeviceBean != null) {
+                                String protocol = mDeviceTypeDeviceBean.getProtocol();
+                                if (protocol != null && protocol.equals(Constant.MQTT)) {
+                                    serverConfigBean.setMode(Constant.CLOUD);
+                                    serverConfigBean.setMqtt_server(HttpBaseUrl.baseSCHost + Constant.CONFIG_SERVER_PORT);
+                                    serverConfigBean.setMqtt_password("");
+                                }
+                            }
                             sdb.setServerConfigBean(serverConfigBean);
                             String param = GsonConverter.getGson().toJson(serverConfigBean);
-                            long id = System.currentTimeMillis();
-                            sdb.setId(id);
-                            String sendConfig = "{\"method\":\"set_prop.server\",\"params\":" + param + ",\"id\":" + id + "}";  // 设置服务器配置
+                            sdb.setId(sendId);
+                            String sendConfig = "{\"method\":\"set_prop.server\",\"params\":" + param + ",\"id\":" + sendId + "}"; // 配置服务器
+                            sendId++;
                             LogUtil.e("发送配置服务器：" + sendConfig);
                             byte[] bodyData = AESUtil.encryptAES(sendConfig.getBytes(), sdb.getToken(), AESUtil.PKCS7); // 获取设备信息体转字节加密
                             int len = bodyData.length + 32;  // 包长
                             byte[] lenData = ByteUtil.intToByte2(len);  // 包长用占两位字节
-                            byte[] headData = {(byte) 0x21, (byte) 0x31}; // 包头固定
-                            byte[] preData = {(byte) 0xFF, (byte) 0xFF}; // 预留固定
-                            byte[] serData = {(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00}; // 序列号固定
+                            byte[] headData = ByteConstant.GET_DEV_INFO_HEAD_Data; // 包头固定
+                            byte[] preData = ByteConstant.GET_DEV_INFO_PRE_Data; // 预留固定
+                            byte[] serData = ByteConstant.SER_DATA; // 序列号固定
                             byte[] tokenData = sdb.getPassword().getBytes();  // 之前获取设备信息时生成的16位随机密码
                             byte[] configServerData = ByteUtil.byteMergerAll(headData, lenData, preData, deviceIdData, serData, tokenData, bodyData); //  拼接获取设备信息包
                             LogUtil.e(address + "获取设备信息发送数据：" + Arrays.toString(configServerData));
+                            if (mCountDownTimer != null) {
+                                mCountDownTimer.cancel();
+                            }
                             udpSocket.sendMessage(configServerData, address);
                         }
-                    }else {  // 已经发送过设置服务器配置，处理设置服务器配置结果
+                    } else {  // 已经发送过设置服务器配置，处理设置服务器配置结果
                         byte[] decryptConfigServerData = Md5Util.getMD5(ByteUtil.md5Str2Byte(token));
                         byte[] ivConfigServerData = ByteUtil.byteMergerAll(decryptDeviceData, ByteUtil.md5Str2Byte(token));
                         byte[] ivEncryptedConfigServerData = Md5Util.getMD5(ivConfigServerData);
                         LogUtil.e("设置服务器字节：" + Arrays.toString(dealData));
                         String configServerJson = AESUtil.decryptAES(dealData, decryptConfigServerData, ivEncryptedConfigServerData, AESUtil.PKCS7, false);
-                        LogUtil.e("设置服务器结果：" +configServerJson);
+                        LogUtil.e("设置服务器结果：" + configServerJson);
                         ConfigServerResultBean configServerResultBean = new Gson().fromJson(infoJson, ConfigServerResultBean.class);
-                        if (configServerResultBean!=null && configServerResultBean.getId() == sdb.getId()){ // 处理结果
-
+                        if (configServerResultBean != null && configServerResultBean.getId() == sdb.getId()) { // 处理结果
+                            String sw_ver = "";
+                            if (getDeviceInfoBean != null) {
+                                GetDeviceInfoBean.ResultBean resultBean = getDeviceInfoBean.getResult();
+                                if (resultBean != null)
+                                    sw_ver = resultBean.getSw_ver();
+                            }
+                            addDevice(sw_ver);
                         }
                     }
-
                 }
             } else {  // 获取到hello数据包信息
                 ScanDeviceByUDPBean scanDeviceByUDPBean = new ScanDeviceByUDPBean(address, port, deviceId);
@@ -383,6 +486,43 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
             }
         } catch (Exception e) {
             e.printStackTrace();
+            String udpFail = registerDeviceJsCallback(1, "");
+            mJsMethodConstant.runOnMainUi(udpFail);
+        }
+    }
+
+    /**
+     * 添加设备
+     */
+    private void addDevice(String sw_ver) {
+        DeviceBean deviceBean = new DeviceBean();
+        if (TextUtils.isEmpty(mDeviceId)) {
+            addDeviceFail(-1, "Device Id is empty");
+        }
+        deviceBean.setIdentity(mDeviceId.toLowerCase());
+        deviceBean.setModel(mDeviceTypeDeviceBean.getModel());
+        deviceBean.setType(type);
+        if (!TextUtils.isEmpty(sw_ver)) {
+            deviceBean.setSwVersion(sw_ver);
+        }
+        deviceBean.setManufacturer(mDeviceTypeDeviceBean.getManufacturer());
+        deviceBean.setPluginId(mDeviceTypeDeviceBean.getPlugin_id());
+        if (!NetworkUtil.isNetworkAvailable()) {
+            addDeviceFail(-1, "Network unavailable");
+        } else {
+//            mPresenter.addDevice(deviceBean);
+            Constant.mSendId = Constant.mSendId + 1;
+            WSRequest<WSDeviceRequest> wsRequest = new WSRequest<>();
+            wsRequest.setId(Constant.mSendId);
+            wsRequest.setDomain(mDeviceTypeDeviceBean.getPlugin_id());
+            wsRequest.setService(WSConstant.SERVICE_CONNECT);
+            WSDeviceRequest wsAddDeviceRequest = new WSDeviceRequest(mDeviceId.toLowerCase());
+            wsRequest.setData(wsAddDeviceRequest);
+            String deviceJson = GsonConverter.getGson().toJson(wsRequest);
+            LogUtil.e("添加设备发送的数据：" + deviceJson);
+            requestHashMap.put(String.valueOf(Constant.mSendId), wsRequest);
+            mAddDeviceCountDownTimer.start();
+            WSocketManager.getInstance().sendMessage(deviceJson);
         }
     }
 
@@ -395,10 +535,10 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
     private void getDeviceToken(String address, byte[] data, String password) {
         if (!updAddressSet.contains(address)) {
             updAddressSet.add(address);
-            byte[] tokenHeadData = {(byte) 0x21, (byte) 0x31, (byte) 0x00, (byte) 0x20, (byte) 0xFF, (byte) 0xFE}; // 包头，包长，预留字节固定
+            byte[] tokenHeadData = ByteConstant.TOKEN_HEAD_DATA; // 包头，包长，预留字节固定
             byte[] deviceIdData = Arrays.copyOfRange(data, 6, 12);  // 设备id
             byte[] passwordData = password.getBytes();  // 密码
-            byte[] serData = {(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00}; // 序列号 固定
+            byte[] serData = ByteConstant.SER_DATA; // 序列号 固定
             byte[] tokenData = ByteUtil.byteMergerAll(tokenHeadData, deviceIdData, serData, passwordData);  // 拼接获取token数据包
             udpSocket.sendMessage(tokenData, address);
         }
@@ -427,29 +567,29 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
     /**
      * 定位权限
      */
-    private void checkLocationPermission(){
+    private void checkLocationPermission() {
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_PERMISSION);
     }
 
     /**
      * 检查蓝牙
      */
-    private void initBlueToothScan(){
-        if (BluetoothUtil.hasBlueTooth()){
-            if (BluetoothUtil.isEnabled()){
+    private void initBlueToothScan() {
+        if (BluetoothUtil.hasBlueTooth()) {
+            if (BluetoothUtil.isEnabled()) {
                 checkLocationPermission();
-            }else {
-                CenterAlertDialog alertDialog = CenterAlertDialog.newInstance(getResources().getString(R.string.home_blue_tooth_disabled),getResources().getString(R.string.home_guide_user_to_open_bluetooth),
-                        getResources().getString(R.string.home_cancel), getResources().getString(R.string.home_setting), false);
-                alertDialog.setConfirmListener(new CenterAlertDialog.OnConfirmListener() {
-                    @Override
-                    public void onConfirm(boolean del) {
-//                        Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                        Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(intent);
-                        alertDialog.dismiss();
-                    }
+            } else {
+                String title = getResources().getString(R.string.home_blue_tooth_disabled);
+                String tip = getResources().getString(R.string.home_guide_user_to_open_bluetooth);
+                CenterAlertDialog alertDialog = CenterAlertDialog.newInstance(
+                        title, tip, getResources().getString(R.string.home_cancel),
+                        getResources().getString(R.string.home_setting), false);
+
+                alertDialog.setConfirmListener(del -> {
+                    Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                    alertDialog.dismiss();
                 });
                 alertDialog.show(this);
             }
@@ -459,12 +599,13 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
     /**
      * 扫描蓝牙设备
      */
-    private void scanBluetoothDevice(){
+    private void scanBluetoothDevice() {
         BluetoothUtil.startScanBluetooth(mBluetoothScanCallback);
     }
 
     /**
      * 权限结果回调
+     *
      * @param requestCode
      * @param permissions
      * @param grantResults
@@ -495,22 +636,32 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
             webView.destroy();
         }
         super.onDestroy();
-        if (udpSocket!=null)
-        udpSocket.stopUDPSocket();
+        if (udpSocket != null)
+            udpSocket.stopUDPSocket();
         BluetoothUtil.stopScanBluetooth(mBluetoothScanCallback);
         StatusBarUtil.setStatusBarDarkTheme(this, true);
-        if (mJsMethodConstant!=null)
-        mJsMethodConstant.release();
+        if (mJsMethodConstant != null)
+            mJsMethodConstant.release();
         unRegisterWifiReceiver();
+
+        if (mCountDownTimer != null) {
+            mCountDownTimer.cancel();
+        }
+        if (udpSocket != null) {
+            udpSocket.stopUDPSocket();
+        }
+
+        WSocketManager.getInstance().removeWebSocketListener(mIWebSocketListener);
     }
 
     /**
      * 获取设备access_token成功
+     *
      * @param accessTokenBean
      */
     @Override
     public void getAccessTokenSuccess(AccessTokenBean accessTokenBean) {
-        if (accessTokenBean!=null) {
+        if (accessTokenBean != null) {
             mAccessToken = accessTokenBean.getAccess_token();
             initUDPScan();
         }
@@ -518,26 +669,56 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
 
     /**
      * 获取设备access_token失败
+     *
      * @param errorCode
      * @param msg
      */
     @Override
     public void getAccessTokenFail(int errorCode, String msg) {
-
+        String accessTokenFail = registerDeviceJsCallback(1, msg);
+        mJsMethodConstant.runOnMainUi(accessTokenFail);
     }
 
+    /**
+     * 添加设备成功
+     *
+     * @param data
+     */
+    @Override
+    public void addDeviceSuccess(AddDeviceResponseBean data) {
+        String addSuccess = registerDeviceJsCallback(0, "success");
+        mJsMethodConstant.runOnMainUi(addSuccess);
+        Bundle bundle = new Bundle();
+        bundle.putInt(IntentConstant.ID, data.getDevice_id());
+        bundle.putString(IntentConstant.NAME, mDeviceTypeDeviceBean.getName());
+        switchToActivity(SetDevicePositionActivity.class, bundle);
+        finish();
+    }
+
+    /**
+     * 添加设备失败
+     *
+     * @param errorCode
+     * @param msg
+     */
+    @Override
+    public void addDeviceFail(int errorCode, String msg) {
+        String accessTokenFail = registerDeviceJsCallback(1, msg);
+        mJsMethodConstant.runOnMainUi(accessTokenFail);
+    }
 
     class MyWebViewClient extends WebViewClient {
 
         @Override
         public void onPageStarted(WebView view, String url, Bitmap favicon) {
             super.onPageStarted(view, url, favicon);
-            webView.loadUrl("javascript:" + Constant.professional_js);
+            showLoadingDialogInAct();
         }
 
         @Override
         public void onPageFinished(WebView view, String url) {
             super.onPageFinished(view, url);
+            dismissLoadingDialogInAct();
             LogUtil.e(TAG + "onPageFinished");
         }
 
@@ -553,13 +734,7 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
 
         @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
-
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    webView.loadUrl(webUrl);
-                }
-            }, 200);
+            UiUtil.postDelayed(() -> webView.loadUrl(webUrl), 200);
             LogUtil.e(TAG + "shouldOverrideUrlLoading");
             return true;
         }
@@ -577,21 +752,19 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
     }
 
     @OnClick(R.id.ivBack)
-    void back(){
+    void back() {
         onBackPressed();
     }
 
     /**
      * 连接设备结果
+     *
      * @param event
      */
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEvent(DeviceConnectionEvent event) {
-
         Log.d(TAG, "On Device Prov Event RECEIVED : " + event.getEventType());
-
         switch (event.getEventType()) {
-
             case ESPConstants.EVENT_DEVICE_CONNECTED:
                 mJsMethodConstant.connectDeviceByHotspotResult(JsMethodConstant.SUCCESS, UiUtil.getString(R.string.success));
                 break;
@@ -608,7 +781,7 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
         @JavascriptInterface
         public void entry(String json) {
             JsBean jsBean = new Gson().fromJson(json, JsBean.class);
-
+            LogUtil.e("js交互："+json);
             switch (jsBean.getFunc()) {
                 case JsMethodConstant.CONNECT_DEVICE_BY_BLUETOOTH: // 通过蓝牙连接设备
                     mJsMethodConstant.connectDeviceByBluetooth(jsBean, new BlufiCallbackMain());
@@ -631,11 +804,9 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
                     break;
 
                 case JsMethodConstant.CONNECT_NETWORK_BY_HOTSPOT:  //通过热点发送配网信息
-                    mJsMethodConstant.connectNetworkByHotspot(jsBean,new ConfigNetworkCallback() {
+                    mJsMethodConstant.connectNetworkByHotspot(jsBean, new ConfigNetworkCallback() {
                         @Override
                         public void onSuccess() {
-//                            mPresenter.getAccessToken();
-                            canAccessToken = true;
                             mJsMethodConstant.connectNetworkByHotspotResult(JsMethodConstant.SUCCESS, UiUtil.getString(R.string.success));
                         }
 
@@ -647,10 +818,27 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
                     });
                     break;
 
+                case JsMethodConstant.REGISTER_DEVICE_BY_HOTSPOT:
+                case JsMethodConstant.REGISTER_DEVICE_BY_BLUETOOTH:
+                    // 通过热点发送设备注册
+                    registerDeviceCallbackID = jsBean.getCallbackID();
+                    LogUtil.logE("registerDeviceCallbackID", registerDeviceCallbackID);
+                    if (NetworkUtil.isNetworkAvailable()) {
+                        if (HomeUtil.isBindSA()) {
+                            LogUtil.e("isSAEnvironment", "在sa");
+                            addDevice("");
+                        } else {
+                            LogUtil.e("isSAEnvironment", "在云");
+                            getAccessToken();
+                        }
+                    } else {
+                        addDeviceFail(-1, "Network unavailable");
+                    }
+                    break;
+
                 case JsMethodConstant.GET_DEVICE_INFO:  // // 获取配网的设备信息
                     String deviceJson = GsonConverter.getGson().toJson(mDeviceTypeDeviceBean);
-                    String backJson = "'"+deviceJson+"'";
-                    System.out.println("设备信息："+backJson);
+                    String backJson = "'" + deviceJson + "'";
                     mJsMethodConstant.getDeviceInfo(jsBean, backJson);
                     break;
 
@@ -666,30 +854,96 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
 
                 case JsMethodConstant.SET_TITLE:  // 设置标题属性
                     JsBean.JsSonBean jsSonBean = jsBean.getParams();
-                    if (jsSonBean!=null){
-                        UiUtil.runInMainThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                tvTitle.setText(jsSonBean.getTitle());
-                                rlTitle.setVisibility(jsSonBean.isIsShow() ? View.VISIBLE : View.GONE);
-                            }
+                    if (jsSonBean != null) {
+                        UiUtil.runInMainThread(() -> {
+                            tvTitle.setText(jsSonBean.getTitle());
+                            Boolean isShow = jsSonBean.isIsShow();
+                            rlTitle.setVisibility(isShow != null && isShow == true ? View.VISIBLE : View.GONE);
                         });
-
                     }
                     break;
 
                 case JsMethodConstant.GET_SYSTEM_WIFI_LIST: //获取wifi列表页
                     mJsMethodConstant.getSystemWifiList(jsBean);
                     break;
-            }
 
+                case JsMethodConstant.ROTOR_DEVICE_SET:
+                    JsBean.JsSonBean deviceIdBean = jsBean.getParams();
+                    if (deviceIdBean != null) {
+                        int deviceId = (int) deviceIdBean.getId();
+                        bundle = new Bundle();
+                        bundle.putInt(IntentConstant.ID, deviceId);
+                        switchToActivity(SetDevicePositionActivity.class, bundle);
+                        finish();
+                    }
+                    break;
+
+                case JsMethodConstant.GET_LOCAL_HOST: // 提供http端口
+
+                    String localhost = HttpUrlConfig.baseSAUrl;
+                    if(!CurrentHome.isSAEnvironment() && !HomeUtil.isInLAN) {
+                        String tokenKey = SpUtil.get(SpConstant.AREA_ID);
+                        String channelJson = SpUtil.get(tokenKey);
+                        LogUtil.e("临时通道Json："+channelJson);
+                        ChannelEntity channel = GsonConverter.getGson().fromJson(channelJson, ChannelEntity.class);
+                        if (channel != null) {
+                            localhost = HttpBaseUrl.HTTPS + "://" + channel.getHost();
+                        }
+                    }
+                    mJsMethodConstant.getLocalhost(jsBean, localhost);
+                    break;
+
+                case JsMethodConstant.GET_SOCKET_ADDRESS: // 获取插件websocket地址
+                    mJsMethodConstant.getSocketAddress(jsBean);
+                    break;
+
+                case JsMethodConstant.CONNECT_SOCKET: // 创建一个websocket连接
+                    mJsMethodConstant.connectSocket(jsBean);
+                    break;
+
+                case JsMethodConstant.SEND_SOCKET_MESSAGE:  //通过 WebSocket 连接发送数据
+                    mJsMethodConstant.sendSocketMessage(jsBean);
+                    break;
+
+                case JsMethodConstant.ON_SOCKET_OPEN:  // 监听 WebSocket 连接打开事件
+                    mJsMethodConstant.onSocketOpen(jsBean);
+                    break;
+
+                case JsMethodConstant.ON_SOCKET_MESSAGE:  // 监听 WebSocket 接受到服务器的消息事件
+                    mJsMethodConstant.onSocketMessage(jsBean);
+                    break;
+
+                case JsMethodConstant.ON_SOCKET_ERROR:  //监听 WebSocket 错误事件
+                    mJsMethodConstant.onSocketError(jsBean);
+                    break;
+
+                case JsMethodConstant.ON_SOCKET_CLOSE: // 监听 WebSocket 连接关闭事件
+                    mJsMethodConstant.onSocketClose(jsBean);
+                    break;
+
+                case JsMethodConstant.Close_Socket:  // 关闭 WebSocket 连接
+                    mJsMethodConstant.closeSocket(jsBean);
+                    break;
+            }
         }
+    }
+
+    /**
+     * 处理通过热点发送设备注册结果
+     *
+     * @param status
+     * @param error
+     * @return
+     */
+    private String registerDeviceJsCallback(int status, String error) {
+        String callbackJs = "zhiting.callBack('" + registerDeviceCallbackID + "'," + "'{\"status\":" + status + ",\"error\":\"" + error + "\"}')";
+        return callbackJs;
     }
 
     /**
      * 蓝牙扫描回调
      */
-    private class BluetoothScanCallback extends ScanCallback{
+    private class BluetoothScanCallback extends ScanCallback {
         @Override
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
@@ -709,27 +963,23 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
 
         /**
          * 处理扫描到的蓝牙
+         *
          * @param scanResult
          */
         private void onLeScan(ScanResult scanResult) {
-            if (scanResult!=null) {
+            if (scanResult != null) {
                 BluetoothDevice bluetoothDevice = scanResult.getDevice();
-                if (bluetoothDevice!=null) {
+                if (bluetoothDevice != null) {
                     String name = bluetoothDevice.getName();
-                    if (TextUtils.isEmpty(name)){
+                    if (TextUtils.isEmpty(name)) {
                         return;
                     }
-//                    if (!TextUtils.isEmpty(BluetoothUtil.BLUFI_PREFIX)) {
-//                        if (!name.startsWith(BluetoothUtil.BLUFI_PREFIX) || blueDeviceAdded.contains(name)) {
-//                            return;
-//                        }
-//                    }
                     blueDeviceAdded.add(bluetoothDevice.getName());
                     DeviceBean deviceBean = new DeviceBean();
                     deviceBean.setName(scanResult.getDevice().getName());
                     deviceBean.setBluetoothDevice(bluetoothDevice);
-                    if (JsMethodConstant.mBlueLists!=null)
-                    JsMethodConstant.mBlueLists.add(bluetoothDevice);
+                    if (JsMethodConstant.mBlueLists != null)
+                        JsMethodConstant.mBlueLists.add(bluetoothDevice);
                     mScanLists.add(deviceBean);
                 }
             }
@@ -770,7 +1020,6 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
             if (!requestMtu) {
                 LogUtil.w("Request mtu failed");
                 LogUtil.e(String.format(Locale.ENGLISH, "Request mtu %d failed", mtu));
-
             }
         }
 
@@ -781,7 +1030,6 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
             } else {
                 LogUtil.e("Negotiate security failed， code=" + status);
             }
-
         }
 
         @Override
@@ -797,10 +1045,10 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
 
         @Override
         public void onDeviceStatusResponse(BlufiClient client, int status, BlufiStatusResponse response) {
-            if (response.isStaConnectWifi()){ // 配网成功
-                mPresenter.getAccessToken();
-                mJsMethodConstant.connectNetworkByBluetoothResult(JsMethodConstant.SUCCESS, "configure params complete");
-                canAccessToken = true;
+            if (response.isStaConnectWifi()) { // 配网成功
+                UiUtil.postDelayed(() -> mJsMethodConstant.connectNetworkByBluetoothResult(JsMethodConstant.SUCCESS, "configure params complete"), 1000);
+            } else {
+                mJsMethodConstant.connectNetworkByBluetoothResult(JsMethodConstant.FAIL, String.format(Locale.ENGLISH, "Receive error code %d", status));
             }
 
             if (status == STATUS_SUCCESS) {
@@ -808,7 +1056,6 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
             } else {
                 LogUtil.e("Device status response error, code=" + status);
             }
-
         }
 
         @Override
@@ -823,7 +1070,6 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
             } else {
                 LogUtil.e("Device scan result error, code=" + status);
             }
-
         }
 
         @Override
@@ -833,7 +1079,6 @@ public class ConfigNetworkWebActivity extends MVPBaseActivity<ConfigNetworkWebCo
             } else {
                 LogUtil.e("Device version error, code=" + status);
             }
-
         }
 
         @Override

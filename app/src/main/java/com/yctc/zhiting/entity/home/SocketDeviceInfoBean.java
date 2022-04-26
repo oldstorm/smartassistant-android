@@ -2,6 +2,7 @@ package com.yctc.zhiting.entity.home;
 
 import com.app.main.framework.entity.BaseEntity;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -46,7 +47,7 @@ public class SocketDeviceInfoBean extends BaseEntity {
         this.success = success;
     }
 
-    public static class ResultBean {
+    public static class ResultBean implements Serializable {
         private DeviceBean device;
 
         public DeviceBean getDevice() {
@@ -57,7 +58,7 @@ public class SocketDeviceInfoBean extends BaseEntity {
             this.device = device;
         }
 
-        public static class DeviceBean {
+        public static class DeviceBean implements Serializable {
             private String identity;
             private String type;
             private List<InstancesBean> instances;
@@ -86,7 +87,7 @@ public class SocketDeviceInfoBean extends BaseEntity {
                 this.instances = instances;
             }
 
-            public static class InstancesBean {
+            public static class InstancesBean implements Serializable {
                 private String type;
                 private Integer instance_id;
                 private List<AttributesBean> attributes;
@@ -115,10 +116,10 @@ public class SocketDeviceInfoBean extends BaseEntity {
                     this.attributes = attributes;
                 }
 
-                public static class AttributesBean {
+                public static class AttributesBean implements Serializable{
                     private Integer id;
                     private String attribute;
-                    private String val;
+                    private Object val;
                     private String val_type;
                     private Boolean can_control;
                     private Integer min;
@@ -140,11 +141,11 @@ public class SocketDeviceInfoBean extends BaseEntity {
                         this.attribute = attribute;
                     }
 
-                    public String getVal() {
+                    public Object getVal() {
                         return val;
                     }
 
-                    public void setVal(String val) {
+                    public void setVal(Object val) {
                         this.val = val;
                     }
 

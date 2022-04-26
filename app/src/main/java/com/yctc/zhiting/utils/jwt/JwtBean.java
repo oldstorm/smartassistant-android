@@ -67,6 +67,7 @@ public class JwtBean {
         private int exp;
         private String sa_id;
         private int uid;
+        private int area_type;
         private List<Integer> role_ids;
 
         public long getArea_id() {
@@ -99,6 +100,14 @@ public class JwtBean {
 
         public void setUid(int uid) {
             this.uid = uid;
+        }
+
+        public int getArea_type() {
+            return area_type;
+        }
+
+        public void setArea_type(int area_type) {
+            this.area_type = area_type;
         }
 
         public List<Integer> getRole_ids() {

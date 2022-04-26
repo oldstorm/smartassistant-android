@@ -18,6 +18,8 @@ import butterknife.Unbinder;
 public abstract class CommonBaseDialog extends BitBaseDialogFragment {
     private Unbinder mBinder;
 
+    public Window mWindow;
+
     @Override
     protected View onCreateFragmentView(LayoutInflater inflater,
                                         @Nullable ViewGroup container,
@@ -44,7 +46,7 @@ public abstract class CommonBaseDialog extends BitBaseDialogFragment {
     protected void initWindows(Window window) {
 
         setCancelable(getCancelable());
-
+        mWindow = window;
         View decorView = window.getDecorView();
         decorView.setPadding(0, 0, 0, 0);
         window.setLayout(obtainWidth(), obtainHeight());

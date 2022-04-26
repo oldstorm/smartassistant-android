@@ -14,6 +14,7 @@ import com.app.main.framework.baseutil.LogUtil;
 import com.app.main.framework.baseutil.UiUtil;
 import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.MVPBaseActivity;
+import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.scwang.smart.refresh.layout.SmartRefreshLayout;
 import com.yctc.zhiting.R;
 import com.yctc.zhiting.activity.contract.HomeCompanyContract;
@@ -21,6 +22,7 @@ import com.yctc.zhiting.activity.presenter.HomeCompanyPresenter;
 import com.yctc.zhiting.adapter.HomeCompanyAdapter;
 import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.db.DBManager;
+import com.yctc.zhiting.dialog.AddHomeOrCompanyDialog;
 import com.yctc.zhiting.entity.mine.HomeCompanyBean;
 import com.yctc.zhiting.entity.mine.HomeCompanyListBean;
 import com.yctc.zhiting.entity.mine.IdBean;
@@ -50,10 +52,16 @@ public class HomeCompanyActivity extends MVPBaseActivity<HomeCompanyContract.Vie
     SmartRefreshLayout refreshLayout;
     @BindView(R.id.rvHC)
     RecyclerView rvHC;
+    @BindView(R.id.rvCompany)
+    RecyclerView rvCompany;
     @BindView(R.id.tvTodo)
     TextView tvTodo;
     @BindView(R.id.tvEmpty)
     TextView tvEmpty;
+    @BindView(R.id.tvHome)
+    TextView tvHome;
+    @BindView(R.id.tvCompany)
+    TextView tvCompany;
     @BindView(R.id.layout_null)
     View viewNull;
     @BindView(R.id.llAdd)
@@ -63,7 +71,10 @@ public class HomeCompanyActivity extends MVPBaseActivity<HomeCompanyContract.Vie
     private WeakReference<Context> mContext;
     private List<HomeCompanyBean> mHomeList = new ArrayList<>();
     private HomeCompanyAdapter homeCompanyAdapter;
+    private HomeCompanyAdapter mCompanyAdapter;
     private boolean isFirst = true;
+
+    private AddHomeOrCompanyDialog mAddHomeOrCompanyDialog;
 
     @Override
     protected int getLayoutId() {
@@ -79,7 +90,7 @@ public class HomeCompanyActivity extends MVPBaseActivity<HomeCompanyContract.Vie
     @Override
     protected void initUI() {
         super.initUI();
-        setTitleCenter(this.getResources().getString(R.string.mine_home_company));
+        setTitleCenter(this.getResources().getString(R.string.mine_home_company_2));
         tvEmpty.setText(getResources().getString(R.string.mine_home_empty));
         tvTodo.setVisibility(View.INVISIBLE);
         mContext = new WeakReference<>(this);
@@ -91,44 +102,92 @@ public class HomeCompanyActivity extends MVPBaseActivity<HomeCompanyContract.Vie
 
         refreshLayout.setOnRefreshListener(refreshLayout -> loadData());
         homeCompanyAdapter.setOnItemClickListener((adapter, view, position) -> {
-            HomeCompanyBean homeBean = mHomeList.get(position);
+            HomeCompanyBean homeBean = homeCompanyAdapter.getItem(position);
+            toDetail(homeBean);
+        });
 
-            if (!UserUtils.isLogin() && homeBean.getId() > 0) {
-                if (HomeUtil.isSAEnvironment(homeBean) && homeBean.isIs_bind_sa()) {
-                    bundle.putSerializable(IntentConstant.BEAN, homeBean);
-                    switchToActivity(HCDetailActivity.class, bundle);
-                } else {
-                    if (homeBean.isIs_bind_sa() && TextUtils.isEmpty(homeBean.getMac_address()) && !TextUtils.isEmpty(homeBean.getSa_lan_address())) {  // 已绑sa，需判断地址是否在sa环境
-                        AllRequestUtil.checkUrl(homeBean.getSa_lan_address(), new AllRequestUtil.onCheckUrlListener() {
-                            @Override
-                            public void onSuccess() {
-                                LogUtil.e("checkUrl===onSuccess");
-                                WifiInfo wifiInfo = Constant.wifiInfo;
-                                homeBean.setMac_address(wifiInfo.getBSSID());
-                                dbManager.updateHomeMacAddress(homeBean.getLocalId(), wifiInfo.getBSSID());
-                                bundle.putSerializable(IntentConstant.BEAN, homeBean);
-                                switchToActivity(HCDetailActivity.class, bundle);
-                            }
+        initRvCompany();
+        initAddHomeOrCompanyDialog();
+    }
 
-                            @Override
-                            public void onError() {
-                                switchToActivity(LoginActivity.class);
-                            }
-                        });
-                    } else {
-                        switchToActivity(LoginActivity.class);
-                    }
-                }
-            } else {
+    /**
+     * 去到家庭详情
+     * @param homeBean
+     */
+    private void toDetail(HomeCompanyBean homeBean){
+        if (!UserUtils.isLogin() && homeBean.getId() > 0) {
+            if (HomeUtil.isBssidEqual(homeBean) && homeBean.isIs_bind_sa()) {
                 bundle.putSerializable(IntentConstant.BEAN, homeBean);
                 switchToActivity(HCDetailActivity.class, bundle);
+            } else {
+                if (homeBean.isIs_bind_sa() && TextUtils.isEmpty(homeBean.getBSSID()) && !TextUtils.isEmpty(homeBean.getSa_lan_address())) {  // 已绑sa，需判断地址是否在sa环境
+                    AllRequestUtil.checkUrl(homeBean.getSa_lan_address(), new AllRequestUtil.onCheckUrlListener() {
+                        @Override
+                        public void onSuccess() {
+                            LogUtil.e("checkUrl===onSuccess");
+                            WifiInfo wifiInfo = Constant.wifiInfo;
+                            homeBean.setBSSID(wifiInfo.getBSSID());
+                            dbManager.updateHomeMacAddress(homeBean.getLocalId(), wifiInfo.getBSSID());
+                            bundle.putSerializable(IntentConstant.BEAN, homeBean);
+                            switchToActivity(HCDetailActivity.class, bundle);
+                        }
+
+                        @Override
+                        public void onError() {
+                            switchToActivity(LoginActivity.class);
+                        }
+                    });
+                } else {
+                    switchToActivity(LoginActivity.class);
+                }
+            }
+        } else {
+            bundle.putSerializable(IntentConstant.BEAN, homeBean);
+            switchToActivity(HCDetailActivity.class, bundle);
+        }
+    }
+
+    /**
+     * 初始化公司列表
+     */
+    private void initRvCompany(){
+        rvCompany.setLayoutManager(new LinearLayoutManager(this));
+        mCompanyAdapter = new HomeCompanyAdapter();
+        rvCompany.setAdapter(mCompanyAdapter);
+        mCompanyAdapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
+                HomeCompanyBean homeBean = mCompanyAdapter.getItem(position);
+                toDetail(homeBean);
+            }
+        });
+    }
+
+    /**
+     * 添加家庭/公司弹窗
+     */
+    private void initAddHomeOrCompanyDialog() {
+        mAddHomeOrCompanyDialog = AddHomeOrCompanyDialog.getInstance();
+        mAddHomeOrCompanyDialog.setClickListener(new AddHomeOrCompanyDialog.OnClickListener() {
+            @Override
+            public void onHome() {
+                switchToActivity(AddHCActivity.class);
+                mAddHomeOrCompanyDialog.dismiss();
+            }
+
+            @Override
+            public void onCompany() {
+                switchToActivity(AddCompanyActivity.class);
+                mAddHomeOrCompanyDialog.dismiss();
             }
         });
     }
 
     @OnClick(R.id.llAdd)
     void onClickAdd() {
-        switchToActivity(AddHCActivity.class);
+        if (mAddHomeOrCompanyDialog != null && !mAddHomeOrCompanyDialog.isShowing()) {
+            mAddHomeOrCompanyDialog.show(this);
+        }
     }
 
     /**
@@ -154,8 +213,23 @@ public class HomeCompanyActivity extends MVPBaseActivity<HomeCompanyContract.Vie
                     setNullView(true);
                 } else {
                     setNullView(false);
-                    homeCompanyAdapter.setNewData(mHomeList);
+                    List<HomeCompanyBean> homeList = new ArrayList<>();
+                    List<HomeCompanyBean> companyList = new ArrayList<>();
+                    for (HomeCompanyBean homeCompanyBean : mHomeList){
+                        if (homeCompanyBean.getArea_type() == 2){
+                            companyList.add(homeCompanyBean);
+                        }else {
+                            homeList.add(homeCompanyBean);
+                        }
+                    }
+                    homeCompanyAdapter.setNewData(homeList);
+                    mCompanyAdapter.setNewData(companyList);
+                    tvHome.setVisibility(CollectionUtil.isNotEmpty(homeList) ? View.VISIBLE : View.GONE);
+                    rvHC.setVisibility(CollectionUtil.isNotEmpty(homeList) ? View.VISIBLE : View.GONE);
+                    tvCompany.setVisibility(CollectionUtil.isNotEmpty(companyList) ? View.VISIBLE : View.GONE);
+                    rvCompany.setVisibility(CollectionUtil.isNotEmpty(companyList) ? View.VISIBLE : View.GONE);
                 }
+                refreshLayout.finishRefresh();
             });
             refreshLayout.finishRefresh();
         });
@@ -181,17 +255,20 @@ public class HomeCompanyActivity extends MVPBaseActivity<HomeCompanyContract.Vie
                     for (HomeCompanyBean homeBean : mHomeList) {
                         homeBean.setCloud_user_id(cloudUserId);
                     }
-                    List<HomeCompanyBean> userHomeCompanyList = dbManager.queryHomeCompanyListByCloudUserId(cloudUserId);
+//                    List<HomeCompanyBean> userHomeCompanyList = dbManager.queryHomeCompanyListByCloudUserId(cloudUserId);
+                    List<HomeCompanyBean> userHomeCompanyList = dbManager.queryHomeCompanyList();
                     List<Long> cloudIdList = new ArrayList<>();
+                    List<Long> areaIdList = new ArrayList<>();
                     for (HomeCompanyBean hcb : userHomeCompanyList) {
                         cloudIdList.add(hcb.getId());
+                        areaIdList.add(hcb.getArea_id());
                     }
                     // 用于存储从服务获取的数据
                     List<Long> serverIdList = new ArrayList<>();
                     for (HomeCompanyBean area : mHomeList) {
                         serverIdList.add(area.getId());
-                        if (cloudIdList.contains(area.getId())) {
-                            dbManager.updateHomeCompanyByCloudId(area.getId(), area.getName());
+                        if (cloudIdList.contains(area.getId()) || areaIdList.contains(area.getId())) {
+                            dbManager.updateHomeCompanyByCloudId(area);
                         } else {
                             if (area.isIs_bind_sa()) {
                                 area.setArea_id(area.getId());
@@ -202,12 +279,28 @@ public class HomeCompanyActivity extends MVPBaseActivity<HomeCompanyContract.Vie
 
                     // 移除sc已删除的数据
                     for (Long id : cloudIdList) {
-                        if (!serverIdList.contains(id) && id>0) {  // 如果云端数据不在，删除本地
+                        if (!serverIdList.contains(id) && id > 0) {  // 如果云端数据不在，删除本地
                             dbManager.removeFamilyByCloudId(id);
                         }
                     }
                     mHomeList = dbManager.queryHomeCompanyList();
-                    UiUtil.runInMainThread(() -> homeCompanyAdapter.setNewData(mHomeList));
+                    List<HomeCompanyBean> homeList = new ArrayList<>();
+                    List<HomeCompanyBean> companyList = new ArrayList<>();
+                    for (HomeCompanyBean homeCompanyBean : mHomeList){
+                        if (homeCompanyBean.getArea_type() == 2){
+                            companyList.add(homeCompanyBean);
+                        }else {
+                            homeList.add(homeCompanyBean);
+                        }
+                    }
+                    UiUtil.runInMainThread(() -> {
+                        homeCompanyAdapter.setNewData(homeList);
+                        mCompanyAdapter.setNewData(companyList);
+                        tvHome.setVisibility(CollectionUtil.isNotEmpty(homeList) ? View.VISIBLE : View.GONE);
+                        rvHC.setVisibility(CollectionUtil.isNotEmpty(homeList) ? View.VISIBLE : View.GONE);
+                        tvCompany.setVisibility(CollectionUtil.isNotEmpty(companyList) ? View.VISIBLE : View.GONE);
+                        rvCompany.setVisibility(CollectionUtil.isNotEmpty(companyList) ? View.VISIBLE : View.GONE);
+                    });
                 }
                 EventBus.getDefault().post(new RefreshHomeList());
             });

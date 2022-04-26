@@ -30,7 +30,6 @@ public class AESUtil {
      */
     public static byte[] encryptAES(byte[] data, String key, String mode){
         try {
-            System.out.println("key值:"+key);
             byte[] decryptKeyDta =  Md5Util.getMD5(ByteUtil.md5Str2Byte(key));
             byte[] ivData = ByteUtil.byteMergerAll(decryptKeyDta, ByteUtil.md5Str2Byte(key));
             byte[] ivEncryptedData = Md5Util.getMD5(ivData);

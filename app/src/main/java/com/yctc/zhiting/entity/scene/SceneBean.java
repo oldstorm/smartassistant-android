@@ -1,8 +1,9 @@
 package com.yctc.zhiting.entity.scene;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class SceneBean {
+public class SceneBean implements Serializable {
     /**
      * id : 2
      * name : 场景2

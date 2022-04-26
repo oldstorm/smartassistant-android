@@ -200,6 +200,7 @@ public class ScanDeviceActivity extends MVPBaseActivity<AddDeviceContract.View, 
                     //switchToActivity(ScanActivity.class);
                     switchToActivity(CaptureNewActivity.class);
                 } else {//添加SA
+                    bean.setArea_type(Constant.CurrentHome.getArea_type());
                     addDevice(bean);
                 }
             } else {//添加设备(灯和开关)
@@ -284,6 +285,26 @@ public class ScanDeviceActivity extends MVPBaseActivity<AddDeviceContract.View, 
 
     @Override
     public void getPluginDetailFail(int errorCode, String msg) {
+
+    }
+
+    @Override
+    public void getDeviceFirstTypeSuccess(DeviceTypeListBean deviceTypeListBean) {
+
+    }
+
+    @Override
+    public void getDeviceFirstTypFail(int errorCode, String msg) {
+
+    }
+
+    @Override
+    public void getDeviceSecondTypeSuccess(DeviceTypeListBean deviceTypeListBean) {
+
+    }
+
+    @Override
+    public void getDeviceSecondTypeFail(int errorCode, String msg) {
 
     }
 

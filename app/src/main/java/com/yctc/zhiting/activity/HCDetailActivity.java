@@ -1,5 +1,8 @@
 package com.yctc.zhiting.activity;
 
+import static com.yctc.zhiting.config.Constant.CurrentHome;
+import static com.yctc.zhiting.config.Constant.wifiInfo;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -7,6 +10,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.wifi.WifiInfo;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
@@ -43,11 +47,15 @@ import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.config.HttpUrlConfig;
 import com.yctc.zhiting.db.DBManager;
 import com.yctc.zhiting.dialog.CenterAlertDialog;
+import com.yctc.zhiting.dialog.CompanyQrCodeDialog;
 import com.yctc.zhiting.dialog.EditBottomDialog;
 import com.yctc.zhiting.dialog.ListBottomDialog;
 import com.yctc.zhiting.dialog.QRCodeDialog;
 import com.yctc.zhiting.dialog.RemovedTipsDialog;
+import com.yctc.zhiting.dialog.SelectRoleDialog;
+import com.yctc.zhiting.dialog.SingleSelectDepartmentDialog;
 import com.yctc.zhiting.dialog.VerificationCodeDialog;
+import com.yctc.zhiting.entity.DepartmentListBean;
 import com.yctc.zhiting.entity.FindSATokenBean;
 import com.yctc.zhiting.entity.GenerateCodeJson;
 import com.yctc.zhiting.entity.mine.HomeCompanyBean;
@@ -58,9 +66,11 @@ import com.yctc.zhiting.entity.mine.LocationBean;
 import com.yctc.zhiting.entity.mine.MemberDetailBean;
 import com.yctc.zhiting.entity.mine.MembersBean;
 import com.yctc.zhiting.entity.mine.PermissionBean;
+import com.yctc.zhiting.entity.mine.RemoveHCBean;
 import com.yctc.zhiting.entity.mine.RolesBean;
 import com.yctc.zhiting.event.DeviceDataEvent;
 import com.yctc.zhiting.event.RefreshHome;
+import com.yctc.zhiting.event.RefreshHomeEvent;
 import com.yctc.zhiting.event.RefreshHomeList;
 import com.yctc.zhiting.fragment.HomeFragment;
 import com.yctc.zhiting.request.AddHCRequest;
@@ -69,6 +79,7 @@ import com.yctc.zhiting.utils.AllRequestUtil;
 import com.yctc.zhiting.utils.CollectionUtil;
 import com.yctc.zhiting.utils.HomeUtil;
 import com.yctc.zhiting.utils.IntentConstant;
+import com.yctc.zhiting.utils.StringUtil;
 import com.yctc.zhiting.utils.UserUtils;
 
 import org.greenrobot.eventbus.EventBus;
@@ -82,9 +93,6 @@ import butterknife.BindView;
 import butterknife.OnClick;
 import pub.devrel.easypermissions.AppSettingsDialog;
 import pub.devrel.easypermissions.EasyPermissions;
-
-import static com.yctc.zhiting.config.Constant.CurrentHome;
-import static com.yctc.zhiting.config.Constant.wifiInfo;
 
 /**
  * 家庭/公司详情
@@ -121,13 +129,15 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     LinearLayout llHome;
     @BindView(R.id.rlVerificationCode)
     RelativeLayout rlVerificationCode;
+    @BindView(R.id.tvRoomNote)
+    TextView tvRoomNote;
+    @BindView(R.id.tvNameNote)
+    TextView tvNameNote;
 
     private final int ROOM_ACT_REQUEST_CODE = 100;
-
     private MemberAdapter memberAdapter;
     private MyHandler myHandler;
     private QRCodeDialog qrCodeDialog;
-
     private WeakReference<Context> mContext;
     private DBManager dbManager;
 
@@ -153,11 +163,23 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     private String name;
     private String userName;
     private String saUrl;
-    private List<ListBottomBean> roleData = new ArrayList<>();
+    private List<ListBottomBean> roleData = new ArrayList<>();//角色列表
+    private List<ListBottomBean> mSelectedRoleList = new ArrayList<>();//选中角色列表
+    private List<LocationBean> mDepartmentList = new ArrayList<>();//接口返回的部门集合
+    private LocationBean mLocationBean;//选中的部门
     private ListBottomDialog mListBottomDialog;
     private CenterAlertDialog centerAlertDialog;
-    private HomeCompanyBean mHomeBean;
-    private HomeCompanyBean mTempHomeBean;
+    private CompanyQrCodeDialog mCompanyQrCodeDialog;
+    private HomeCompanyBean mHomeBean, mTempHomeBean;
+
+    private int area_type;// 2 公司，否则家庭
+    private long cloudId;// 云端家庭id
+    private boolean needChTempHome; // 是否需要替换当前家庭
+
+    private boolean isInLANSub = HomeUtil.isInLAN;
+
+    private CenterAlertDialog mLoginTipDialog;  // 登录提示弹窗
+    private RemovedTipsDialog mProfessionTipDialog; // 去专业版提示弹窗
 
     @Override
     protected int getLayoutId() {
@@ -171,12 +193,13 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     }
 
     private void initFirstData() {
+        HomeUtil.isInLAN = false;
         //已经绑定sa且在sa环境，或者登陆状态
         if (isBindSa || (UserUtils.isLogin() && userId > 0)) {
             checkUrl();
         } else {//否则，从本地获取
             long cloudId = mHomeBean.getId();
-            if (UserUtils.isLogin() && cloudId > 0) { // 登录了
+            if (UserUtils.isLogin() && cloudId > 0) {//登录了
                 HttpConfig.addAreaIdHeader(HttpConfig.AREA_ID, String.valueOf(mHomeBean.getId()));
                 mPresenter.getDetail(cloudId);
             } else {
@@ -191,8 +214,8 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
      * @return
      */
     public boolean isSAEnvironment() {
-        if (wifiInfo != null && CurrentHome != null && CurrentHome.getMac_address() != null &&
-                wifiInfo.getBSSID().equalsIgnoreCase(CurrentHome.getMac_address())) {
+        if ((wifiInfo != null && CurrentHome != null && CurrentHome.getBSSID() != null &&
+                wifiInfo.getBSSID().equalsIgnoreCase(CurrentHome.getBSSID())) || HomeUtil.isInLAN) {
             return true;
         }
         return false;
@@ -201,27 +224,34 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     @Override
     protected void initUI() {
         super.initUI();
-        setTitleCenter(getResources().getString(R.string.mine_home_company));
-
         mContext = new WeakReference<>(this);
         dbManager = DBManager.getInstance(mContext.get());
-
         mHomeBean = (HomeCompanyBean) getIntent().getSerializableExtra(IntentConstant.BEAN);
 
         String homeBeanJson = GsonConverter.getGson().toJson(CurrentHome);
         mTempHomeBean = GsonConverter.getGson().fromJson(homeBeanJson, HomeCompanyBean.class);
-        mCurrentHomeLocalId = CurrentHome.getLocalId();
-        mAreaId = CurrentHome.getId();
+        if (CurrentHome != null) {
+            mCurrentHomeLocalId = CurrentHome.getLocalId();
+            mAreaId = CurrentHome.getId();
+        }
         CurrentHome = mHomeBean;
+
+        if (!TextUtils.isEmpty(mHomeBean.getSa_lan_address())) {
+            LogUtil.e("sa的地址：" + mHomeBean.getSa_lan_address());
+            HttpUrlConfig.baseSAUrl = mHomeBean.getSa_lan_address();
+            HttpUrlConfig.apiSAUrl = HttpUrlConfig.baseSAUrl + HttpUrlConfig.API;
+        }
 
         HttpConfig.clearHeader();
         HttpConfig.addHeader(mHomeBean.getSa_user_token());
         HttpConfig.addAreaIdHeader(HttpConfig.AREA_ID, String.valueOf(mHomeBean.getId()));
-        SpUtil.put(SpConstant.SA_TOKEN, mHomeBean.getSa_user_token());
+        if (mHomeBean != null && !TextUtils.isEmpty(mHomeBean.getSa_user_token()))
+            SpUtil.put(SpConstant.SA_TOKEN, mHomeBean.getSa_user_token());
         SpUtil.put(SpConstant.IS_BIND_SA, mHomeBean.isIs_bind_sa());
-
+        SpUtil.put(SpConstant.AREA_ID, String.valueOf(mHomeBean.getId()));
 
         mLocalId = mHomeBean.getLocalId();
+        cloudId = mHomeBean.getId();
         userId = mHomeBean.getUser_id();
         isBindSa = mHomeBean.isIs_bind_sa();
         saUrl = mHomeBean.getSa_lan_address();
@@ -234,10 +264,14 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
         rvMember.setAdapter(memberAdapter);
 
         memberAdapter.setOnItemClickListener((adapter, view, position) -> {
-            Intent intent = new Intent(HCDetailActivity.this, MemberDetailActivity.class);
+            Intent intent = new Intent(HCDetailActivity.this, area_type == 2 ? CompanyMemberDetailActivity.class : MemberDetailActivity.class);
             intent.putExtra(IntentConstant.ID, memberAdapter.getItem(position).getUser_id());
             startActivityForResult(intent, ROOM_ACT_REQUEST_CODE);
         });
+        tvName.post(() -> tvName.setMaxWidth(UiUtil.getScreenWidth() - UiUtil.dip2px(40)));
+        area_type = mHomeBean.getArea_type();
+        setTitleCenter(area_type == 2 ? getResources().getString(R.string.mine_company) : getResources().getString(R.string.mine_home_company));
+        tvRoomNote.setText(area_type == 2 ? UiUtil.getString(R.string.mine_department) : UiUtil.getString(R.string.mine_room_area));
         initFirstData();
     }
 
@@ -253,15 +287,16 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
      * 检测地址
      */
     private void checkUrl() {
-        if (isBindSa && wifiInfo != null) {
+        String saUrl = CurrentHome.getSa_lan_address();
+        if (isBindSa && wifiInfo != null && !TextUtils.isEmpty(saUrl)) {
             showLoadingView();
-            AllRequestUtil.checkUrl500(CurrentHome.getSa_lan_address(), new AllRequestUtil.onCheckUrlListener() {
+            AllRequestUtil.checkUrl500(saUrl, new AllRequestUtil.onCheckUrlListener() {
                 @Override
                 public void onSuccess() {
                     LogUtil.e("checkUrl===onSuccess");
-                    WifiInfo wifiInfo = Constant.wifiInfo;
-                    if (!TextUtils.isEmpty(wifiInfo.getBSSID()))
-                        handleTipStatus(wifiInfo.getBSSID());
+                    HomeUtil.isInLAN = true;
+                    String bssid = StringUtil.getBssid();
+                    handleTipStatus(bssid);
                 }
 
                 @Override
@@ -271,14 +306,15 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
                 }
             });
         } else {
+            System.out.println("getData()======");
             getData();
         }
     }
 
     private void handleTipStatus(String macAddress) {
         hideLoadingView();
-        if (TextUtils.isEmpty(CurrentHome.getMac_address()))
-            CurrentHome.setMac_address(macAddress);
+        if (TextUtils.isEmpty(CurrentHome.getBSSID()))
+            CurrentHome.setBSSID(macAddress);
         getData();
     }
 
@@ -329,17 +365,17 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     @OnClick(R.id.tvOpenCode)
     public void onClickVerificationCode() {
         mPresenter.getVerificationCode();
-
     }
 
     /**
+     * 8
      * 修改家庭名称
      */
     private void updateHcName() {
-        String title = getResources().getString(R.string.mine_home_company_name);
+        String title = area_type == 2 ? getResources().getString(R.string.mine_company_name) : getResources().getString(R.string.mine_home_name);
         String hint = getResources().getString(R.string.mine_input_area);
         String contentStr = tvName.getText().toString();
-        EditBottomDialog editBottomDialog = EditBottomDialog.newInstance(title, hint, contentStr, 2);
+        EditBottomDialog editBottomDialog = EditBottomDialog.newInstance(title, hint, contentStr, area_type == 2 ? 3 : 2);
         editBottomDialog.setClickSaveListener(content -> {
             updateName = content;
             if (mHomeBean.getId() > 0 || isBindSa) {
@@ -358,10 +394,13 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
      */
     @OnClick(R.id.rlRoom)
     void onClickRoom() {
-        Intent intent = new Intent(this, RoomAreaActivity.class);
+        Intent intent = new Intent(this, area_type == Constant.COMPANY_MODE ? DepartmentListActivity.class : RoomAreaActivity.class);
         intent.putExtra(IntentConstant.IS_BIND_SA, isBindSa);
         intent.putExtra(IntentConstant.ID, mLocalId);
+        intent.putExtra(IntentConstant.CLOUD_ID, cloudId);
         intent.putExtra(IntentConstant.USER_ID, userId);
+        intent.putExtra(IntentConstant.NAME, mHomeBean.getName());
+        intent.putExtra(IntentConstant.BEAN, mHomeBean);
         startActivityForResult(intent, ROOM_ACT_REQUEST_CODE);
     }
 
@@ -371,23 +410,92 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     @OnClick(R.id.tvQuit)
     void onClickQuit() {
         kind = 3;
-        long homeId = getHomeId();
-        centerAlertDialog = CenterAlertDialog.newInstance(
-                isCreator ? getResources().getString(R.string.common_confirm_del) : getResources().getString(R.string.common_confirm_exit),
-                isCreator ? getResources().getString(R.string.mine_room_del_tip) : getResources().getString(R.string.mine_room_exit_tip), true, isCreator && isBindSa);
-        centerAlertDialog.setConfirmListener(del -> {
-            if (isCreator) {  // 自己创建  暂时注释
-                if (isBindSa && isSAEnvironment() || (UserUtils.isLogin() && mHomeBean.getId() > 0)) {
-                    BooleanRequest booleanRequest = new BooleanRequest(del);
-                    mPresenter.delHomeCompany(homeId, booleanRequest.toString());
-                } else {
-                    removeLocal(true);
-                }
-            } else {
-                mPresenter.exitHomeCompany(homeId, userId);
+        if (invalid) {  // 如果凭证失效
+            if (UserUtils.isLogin()) {  // 登录
+                showProfessionTipDialog();
+            } else {  // 没登录
+                showLoginTipDialog();
             }
-        });
-        centerAlertDialog.show(this);
+        } else {
+            if (isCreator && isBindSa) {
+                mPresenter.getExtensions();
+            } else {
+                showRemoveDialog(false);
+            }
+        }
+    }
+
+    /**
+     *  提示登录
+     */
+    private void showLoginTipDialog() {
+        if (mLoginTipDialog == null) {
+            mLoginTipDialog = CenterAlertDialog.newInstance(getResources().getString(R.string.mine_invalid_login_tip), getResources().getString(R.string.home_cancel), getResources().getString(R.string.home_go_to_login), false);
+            mLoginTipDialog.setConfirmListener(del -> {
+                mLoginTipDialog.dismiss();
+                switchToActivity(LoginActivity.class);
+                finish();
+            });
+        }
+        if (mLoginTipDialog!=null && !mLoginTipDialog.isShowing()) {
+            mLoginTipDialog.show(this);
+        }
+    }
+
+    /**
+     *  提示去专业版
+     */
+    private void showProfessionTipDialog() {
+        if (mProfessionTipDialog == null) {
+            mProfessionTipDialog = new RemovedTipsDialog(UiUtil.getString(R.string.mine_invalid_professional_tip));
+            Bundle bundle = new Bundle();
+            bundle.putString("confirmStr", UiUtil.getString(R.string.confirm));
+            mProfessionTipDialog.setArguments(bundle);
+            mProfessionTipDialog.setKnowListener(() -> mProfessionTipDialog.dismiss());
+        }
+        if (mProfessionTipDialog!=null && !mProfessionTipDialog.isShowing()) {
+            mProfessionTipDialog.show(this);
+        }
+    }
+
+    /**
+     * 删除弹窗
+     */
+    private void showRemoveDialog(boolean showCloud) {
+        long homeId = getHomeId();
+        String tipTitle = isCreator ? getResources().getString(R.string.common_confirm_del) : getResources().getString(R.string.common_confirm_exit);
+        String tipContent = isCreator ? getResources().getString(R.string.mine_room_del_tip) : getResources().getString(R.string.mine_room_exit_tip);
+        if (area_type == 2) {
+            tipTitle = isCreator ? getResources().getString(R.string.mine_confirm_dissolve_company) : getResources().getString(R.string.mine_confirm_exit_company);
+            tipContent = isCreator ? getResources().getString(R.string.mine_confirm_dissolve_company_tip) : "";
+        }
+        if (centerAlertDialog == null) {
+
+            centerAlertDialog = CenterAlertDialog.newInstance(
+                    tipTitle, tipContent,true, showCloud);
+            centerAlertDialog.setConfirmListener(del -> {
+                if (isCreator) {  // 自己创建  暂时注释
+                    if (isBindSa && isSAEnvironment() || (UserUtils.isLogin() && mHomeBean.getId() > 0)) {
+                        BooleanRequest booleanRequest = new BooleanRequest(del);
+                        mPresenter.delHomeCompany(homeId, booleanRequest.toString());
+                    } else {
+                        removeLocal(true);
+                    }
+                } else {
+                    mPresenter.exitHomeCompany(homeId, userId);
+                }
+            });
+        }
+        if (centerAlertDialog != null && !centerAlertDialog.isShowing()) {
+            Bundle args = new Bundle();
+            args.putString("title", tipTitle);
+            args.putString("tip", tipContent);
+            args.putString("cancelStr", UiUtil.getString(R.string.cancel));
+            args.putBoolean("showLoading", true);
+            args.putBoolean("showDelFolder", showCloud);
+            centerAlertDialog.setArguments(args);
+            centerAlertDialog.show(this);
+        }
     }
 
     @OnClick(R.id.llTips)
@@ -430,7 +538,7 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
                     name = homeCompanyBean.getName();
                     tvName.setText(homeCompanyBean.getName());
                     tvRoom.setText(homeCompanyBean.getRoomAreaCount() + "");
-                    tvQuit.setText(getResources().getString(R.string.mine_remove));
+                    tvQuit.setText(area_type == 2 ? UiUtil.getString(R.string.mine_dissolve_company) : getResources().getString(R.string.mine_remove_home));
                     llHome.setVisibility(View.VISIBLE);
                     tvQuit.setVisibility(View.VISIBLE);
                 });
@@ -450,11 +558,13 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
                 isExitFamily = true;
                 if (count > 0) {
                     if (CollectionUtil.isEmpty(homeList)) {//删除最后一个，创建一个家庭
-                        if (mHomeBean.getId() > 0 && !mHomeBean.isIs_bind_sa()) {//虚拟SA
-                            AddHCRequest addHCRequest = new AddHCRequest(getResources().getString(R.string.mine_home), new ArrayList<>());
+//                        if (mHomeBean.getId() > 0 && !mHomeBean.isIs_bind_sa()) {//虚拟SA
+                        if (UserUtils.isLogin()) {//登录情况下
+                            AddHCRequest addHCRequest = new AddHCRequest(getResources().getString(R.string.mine_home), Constant.HOME_MODE, new ArrayList<>());
                             mPresenter.addScHome(addHCRequest);
                         } else {
                             HomeCompanyBean homeCompanyBean = new HomeCompanyBean(1, getResources().getString(R.string.mine_home));
+                            homeCompanyBean.setArea_type(Constant.HOME_MODE);
                             createFamily(homeCompanyBean);
                         }
                     } else {
@@ -483,6 +593,9 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
         UiUtil.starThread(() -> {
             dbManager.insertHomeCompany(homeCompanyBean, null, false);
             UiUtil.runInMainThread(() -> {
+                if (needChTempHome) {
+                    mTempHomeBean = homeCompanyBean;
+                }
                 switchToActivity(MainActivity.class);
                 finish();
             });
@@ -513,9 +626,114 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     }
 
     /**
+     * 显示公司邀请对话框
+     */
+    private void showCompanyQrCodeDialog() {
+        if (mCompanyQrCodeDialog == null) {
+            mCompanyQrCodeDialog = CompanyQrCodeDialog.newInstance();
+        }
+        mCompanyQrCodeDialog.show(HCDetailActivity.this);
+        mCompanyQrCodeDialog.setListener(new CompanyQrCodeDialog.OnCompanyQrListener() {
+            @Override
+            public void onSelectDepartmentDialog() {
+                if (CollectionUtil.isNotEmpty(mDepartmentList)) {
+                    showSelectDepartmentDialog(mDepartmentList);
+                } else {
+                    mPresenter.getDepartmentList();
+                }
+            }
+
+            @Override
+            public void onSelectRoleDialog() {
+                showSelectRoleDialog();
+            }
+
+            @Override
+            public void onGenerateQrCode() {
+                generateInviteQrCode();
+            }
+
+            @Override
+            public void onDismiss() {
+                for (ListBottomBean bean : mSelectedRoleList) {
+                    bean.setSelected(false);
+                }
+                for (LocationBean bean : mDepartmentList) {
+                    bean.setCheck(false);
+                }
+                mLocationBean = null;
+                mSelectedRoleList.clear();
+            }
+        });
+    }
+
+    /**
+     * 生成二维码
+     */
+    private void generateInviteQrCode() {
+        List<Integer> ids = new ArrayList<>();
+        List<Integer> department_ids = new ArrayList<>();
+        for (ListBottomBean bottomBean : mSelectedRoleList) {
+            ids.add(bottomBean.getId());
+        }
+        department_ids.add(mLocationBean.getId());
+        InvitationCodePost invitationCodePost = new InvitationCodePost();
+        invitationCodePost.setArea_id(mHomeBean.getArea_id());
+        invitationCodePost.setRole_ids(ids);
+        invitationCodePost.setDepartment_ids(department_ids);
+        String body = new Gson().toJson(invitationCodePost);
+        mPresenter.generateCode(mHomeBean.getUser_id(), body);
+        mCompanyQrCodeDialog.dismiss();
+    }
+
+    /**
+     * 选择角色对话框
+     */
+    private void showSelectRoleDialog() {
+        if (CollectionUtil.isEmpty(roleData)) return;
+        if (CollectionUtil.isNotEmpty(mSelectedRoleList)) {
+            for (ListBottomBean selectRoleBean : mSelectedRoleList) {
+                for (ListBottomBean roleBean : roleData) {
+                    if (selectRoleBean.getId() == roleBean.getId()) {
+                        roleBean.setSelected(true);
+                    }
+                }
+            }
+        }
+        SelectRoleDialog dialog = SelectRoleDialog.newInstance(roleData);
+        dialog.show(HCDetailActivity.this);
+        dialog.setClickTodoListener(data -> {
+            if (CollectionUtil.isNotEmpty(data)) {
+                mSelectedRoleList.clear();
+                mSelectedRoleList.addAll(data);
+                checkEnable();
+                StringBuilder builder = new StringBuilder();
+                for (ListBottomBean bean : data) {
+                    builder.append(bean.getName()).append("、");
+                }
+                String roles = builder.toString();
+                roles = roles.substring(0, roles.length() - 1);
+                mCompanyQrCodeDialog.setRoles(roles);
+            }
+        });
+    }
+
+    public void checkEnable() {
+        if (mSelectedRoleList != null && mSelectedRoleList.size() > 0 && mLocationBean != null) {
+            mCompanyQrCodeDialog.setCreateQrCodeEnable(true);
+        } else {
+            mCompanyQrCodeDialog.setCreateQrCodeEnable(false);
+        }
+    }
+
+    /**
      * 角色列表弹窗
      */
     private void showRoleDialog() {
+        if (area_type == 2) {
+            showCompanyQrCodeDialog();
+            return;
+        }
         if (mListBottomDialog == null) {
             String title = UiUtil.getString(R.string.mine_invite_code);
             String tip = UiUtil.getString(R.string.mine_invite_code_tip);
@@ -523,6 +741,7 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
             mListBottomDialog = ListBottomDialog.newInstance(title, tip, strTodo, true, roleData);
             mListBottomDialog.setClickTodoListener(data -> {
                 List<Integer> ids = new ArrayList<>();
+
                 for (ListBottomBean bottomBean : data) {
                     ids.add(bottomBean.getId());
                 }
@@ -540,6 +759,43 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
         }
     }
 
+    @Override
+    public void getDepartmentListSuccess(DepartmentListBean roomListBean) {
+        mDepartmentList.clear();
+        mDepartmentList.addAll(roomListBean.getDepartments());
+        showSelectDepartmentDialog(mDepartmentList);
+    }
+
+    @Override
+    public void getDepartmentListFail(int errorCode, String msg) {
+
+    }
+
+    /**
+     * 选择部门对话框
+     *
+     * @param departments
+     */
+    private void showSelectDepartmentDialog(List<LocationBean> departments) {
+        if (CollectionUtil.isNotEmpty(departments)) {
+            if (mLocationBean != null) {
+                for (LocationBean department : departments) {
+                    if (department.getId() == mLocationBean.getId()) {
+                        department.setCheck(true);
+                        break;
+                    }
+                }
+            }
+            SingleSelectDepartmentDialog selectDepartmentDialog = SingleSelectDepartmentDialog.getInstance(departments);
+            selectDepartmentDialog.setDepartmentListener(locationBean -> {
+                mLocationBean = locationBean;
+                mCompanyQrCodeDialog.setDepartment(locationBean.getName());
+                checkEnable();
+            });
+            selectDepartmentDialog.show(HCDetailActivity.this);
+        }
+    }
+
     /**
      * 获取数据
      *
@@ -552,7 +808,7 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
             showInvalid(false);
             name = homeCompanyBean.getName();
             tvName.setText(homeCompanyBean.getName());
-            tvRoom.setText(homeCompanyBean.getLocation_count() + "");
+            tvRoom.setText(area_type == 2 ? homeCompanyBean.getDepartment_count() + "" : homeCompanyBean.getLocation_count() + "");
             updateName(homeCompanyBean.getName(), true, null);
             if (isBindSa || CurrentHome.getId() > 0) {//yjj,ios就这样
                 mPresenter.getMembers();
@@ -575,7 +831,11 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
         if (membersBean != null) {
             isCreator = membersBean.isIs_owner();
             tvQuit.setVisibility(View.VISIBLE);
-            tvQuit.setText(isCreator ? getResources().getString(R.string.mine_remove) : getResources().getString(R.string.mine_quit_family));
+            if (area_type == 2) {
+                tvQuit.setText(isCreator ? getResources().getString(R.string.mine_dissolve_company) : getResources().getString(R.string.mine_quit_company));
+            } else {
+                tvQuit.setText(isCreator ? getResources().getString(R.string.mine_remove_home) : getResources().getString(R.string.mine_quit_family));
+            }
             rlVerificationCode.setVisibility(isCreator ? View.VISIBLE : View.GONE);
             if (CollectionUtil.isNotEmpty(membersBean.getUsers())) {
                 memberAdapter.setNewData(membersBean.getUsers());
@@ -592,6 +852,7 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     public void updateNameSuccess() {
         ToastUtil.show(getResources().getString(R.string.mine_update_success));
         tvName.setText(updateName);
+        mHomeBean.setName(updateName);
         updateName(updateName, true, null);
     }
 
@@ -604,6 +865,9 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
             PermissionBean.PermissionsBean permissionsBean = permissionBean.getPermissions();
             rlCode.setVisibility(permissionsBean.isGet_area_invite_code() ? View.VISIBLE : View.GONE);
             updateNamePermission = permissionsBean.isUpdate_area_name();
+            if (area_type == 2) {//公司修改名字权限
+                updateNamePermission = permissionsBean.isUpdate_area_company_name();
+            }
         }
     }
 
@@ -617,12 +881,87 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
         removeLocal(false);
     }
 
+    /**
+     * 删除成功
+     *
+     * @param removeHCBean
+     */
     @Override
-    public void delHomeCompanySuccess() {
-        isExitFamily = true;
-        ToastUtil.show(getResources().getString(R.string.mine_have_removed));
+    public void delHomeCompanySuccess(RemoveHCBean removeHCBean) {
         closeDialog();
-        removeLocal(false);
+        int removeStatus = 1;
+        if (removeHCBean != null) {
+            removeStatus = removeHCBean.getRemove_status();
+        }
+        switch (removeStatus) {
+            case 1:  // 正在移除
+                showRemovingDialog();
+                break;
+
+            case 2:  // 移除出错
+                ToastUtil.show(UiUtil.getString(R.string.mine_remove_error));
+                break;
+
+            case 3:  // 移除成功
+                isExitFamily = true;
+                ToastUtil.show(getResources().getString(R.string.mine_have_removed));
+                removeLocal(false);
+                break;
+        }
+
+    }
+
+    /**
+     * 正在移除家庭提示
+     */
+    private void showRemovingDialog() {
+        RemovedTipsDialog removedTipsDialog = new RemovedTipsDialog(UiUtil.getString(R.string.mine_removing_tips));
+        Bundle bundle = new Bundle();
+        bundle.putString("confirmStr", UiUtil.getString(R.string.confirm));
+        removedTipsDialog.setArguments(bundle);
+        removedTipsDialog.setKnowListener(new RemovedTipsDialog.OnKnowListener() {
+            @Override
+            public void onKnow() {
+                dealRemoving();
+            }
+        });
+        removedTipsDialog.show(this);
+    }
+
+    private void dealRemoving() {
+        if (mCurrentHomeLocalId == mLocalId) {
+            UiUtil.starThread(new Runnable() {
+                @Override
+                public void run() {
+                    List<HomeCompanyBean> hcList = dbManager.queryHomeCompanyList();
+                    // 如果本地家庭列表是空或者只有当前一个家庭，则创建一个本地家庭
+                    if (CollectionUtil.isEmpty(hcList) || hcList.size() < 2) {
+                        needChTempHome = true;
+                        if (UserUtils.isLogin()) { // 如果登录
+                            AddHCRequest addHCRequest = new AddHCRequest(getResources().getString(R.string.mine_home), Constant.HOME_MODE, new ArrayList<>());
+                            mPresenter.addScHome(addHCRequest);
+                        } else {
+                            HomeCompanyBean homeCompanyBean = new HomeCompanyBean(1, getResources().getString(R.string.mine_home));
+                            homeCompanyBean.setArea_type(Constant.HOME_MODE);
+                            createFamily(homeCompanyBean);
+                        }
+                    } else {
+                        HomeCompanyBean hc = hcList.get(0);
+                        for (HomeCompanyBean homeCompanyBean : hcList) {
+                            if (homeCompanyBean.getLocalId() != mCurrentHomeLocalId && HomeUtil.isBssidEqual(homeCompanyBean)) {
+                                hc = homeCompanyBean;
+                                break;
+                            }
+                        }
+                        mTempHomeBean = hc.getLocalId() != mCurrentHomeLocalId ? hc : hcList.get(1);
+                        switchToActivity(MainActivity.class);
+                        finish();
+                    }
+                }
+            });
+        } else {
+            finish();
+        }
     }
 
     /**
@@ -687,6 +1026,7 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
             UiUtil.runInMainThread(() -> {
                 if (count > 0) {
                     tvName.setText(content);
+                    mHomeBean.setName(content);
                     if (!refresh)
                         ToastUtil.show(UiUtil.getString(R.string.mine_save_success));
                 } else {
@@ -710,13 +1050,13 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     @Override
     public void getFail(int errorCode, String msg) {
         if (kind == 2) {
-            showRoleDialog();
+            ToastUtil.show(msg);
         } else if (kind == 3) {
-            if (errorCode != 5012)
+            if (errorCode != 5012 || errorCode == 5027)
                 ToastUtil.show(msg);
             closeDialog();
         } else {
-            if (errorCode != 5012)
+            if (errorCode != 5012 || errorCode == 5027)
                 ToastUtil.show(msg);
         }
     }
@@ -729,17 +1069,20 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
      */
     @Override
     public void getDetailFail(int errorCode, String msg) {
-        if (errorCode == 5012) {
+        if (errorCode == 5012 || errorCode == 5027) {
             if (UserUtils.isLogin()) { // 用户登录SC情况
                 NameValuePair nameValuePair = new NameValuePair("area_id", String.valueOf(CurrentHome.getId()));
                 List<NameValuePair> requestData = new ArrayList<>();
                 requestData.add(nameValuePair);
                 mPresenter.getSAToken(CurrentHome.getCloud_user_id(), requestData);  // sc的用户id, sc上的家庭id
             } else {
-                removeLocalFamily();
+                showInvalidToken();
             }
         } else if (errorCode == 3002 || errorCode == 5003) {//状态码3002，提示被管理员移除家庭
             removeLocalFamily();
+        } else if (errorCode == 100001) {
+            SpUtil.put(CurrentHome.getSa_user_token(), "");
+            mPresenter.getDetail(CurrentHome.getId());
         }
     }
 
@@ -764,6 +1107,21 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     }
 
     /**
+     * 凭证失效
+     */
+    private void showInvalidToken() {
+        invalid = true;
+        showInvalid(true);
+        llTips.setVisibility(View.VISIBLE);
+        ivGo.setVisibility(View.VISIBLE);
+        String quitText = area_type == Constant.COMPANY_MODE ? UiUtil.getString(R.string.mine_remove_quit_family) : UiUtil.getString(R.string.mine_remove_quit_family);
+        tvQuit.setText(quitText);
+        tvQuit.setVisibility(View.VISIBLE);
+        tvTips.setText(getResources().getString(R.string.home_invalid_token));
+        EventBus.getDefault().post(new DeviceDataEvent(null));
+    }
+
+    /**
      * 通过sc找回sa的用户凭证是失败
      *
      * @param errorCode
@@ -772,13 +1130,7 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     @Override
     public void getSATokenFail(int errorCode, String msg) {
         if (errorCode == 2011 || errorCode == 2010) {    //凭证获取失败，状态码2011，无权限
-            invalid = true;
-            showInvalid(true);
-            llTips.setVisibility(View.VISIBLE);
-            ivGo.setVisibility(View.VISIBLE);
-            tvQuit.setVisibility(View.GONE);
-            tvTips.setText(getResources().getString(R.string.home_invalid_token));
-            EventBus.getDefault().post(new DeviceDataEvent(null));
+            showInvalidToken();
         } else if (errorCode == 3002) {  //状态码3002，提示被管理员移除家庭
             removeLocalFamily();
         } else {
@@ -790,6 +1142,7 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     public void addScHomeSuccess(IdBean data) {
         HomeCompanyBean homeCompanyBean = new HomeCompanyBean(getResources().getString(R.string.mine_home));
         homeCompanyBean.setId(data.getId());
+        homeCompanyBean.setArea_type(Constant.HOME_MODE);
         homeCompanyBean.setCloud_user_id(UserUtils.getCloudUserId());
         if (data != null && data.getCloud_sa_user_info() != null) {
             int saUserId = data.getCloud_sa_user_info().getId();
@@ -817,6 +1170,36 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
     }
 
     /**
+     * 扩展列表成功
+     *
+     * @param list
+     */
+    @Override
+    public void getExtensionsSuccess(List<String> list) {
+        boolean hasCloudDisk = false;
+        if (CollectionUtil.isNotEmpty(list)) {
+            for (String name : list) {
+                if (name.equalsIgnoreCase(Constant.WANGPAN)) {
+                    hasCloudDisk = true;
+                    break;
+                }
+            }
+        }
+        showRemoveDialog(hasCloudDisk);
+    }
+
+    /**
+     * 扩展列表失败
+     *
+     * @param errorCode
+     * @param msg
+     */
+    @Override
+    public void getExtensionsFail(int errorCode, String msg) {
+        ToastUtil.show(msg);
+    }
+
+    /**
      * 显示satoken失效
      *
      * @param show
@@ -830,7 +1213,7 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
      * 移除本地家庭
      */
     private void removeLocalFamily() {
-        RemovedTipsDialog removedTipsDialog = new RemovedTipsDialog(CurrentHome.getName());
+        RemovedTipsDialog removedTipsDialog = new RemovedTipsDialog(String.format(UiUtil.getString(R.string.common_remove_home), CurrentHome.getName()));
         removedTipsDialog.setKnowListener(() -> finish());
         removedTipsDialog.show(this);
         dbManager.removeFamily(CurrentHome.getLocalId());
@@ -872,18 +1255,29 @@ public class HCDetailActivity extends MVPBaseActivity<HCDetailContract.View, HCD
 
     @Override
     public void finish() {
+        HomeUtil.isInLAN = isInLANSub;
         if (isExitFamily) {  // 退出/删除
-            if (mCurrentHomeLocalId == mLocalId) {// 如果该家庭是外面选中的家庭且做了删除或退出操作，外面选中的家庭置空
+            if (mCurrentHomeLocalId == mLocalId) { // 如果该家庭是外面选中的家庭且做了删除或退出操作，外面选中的家庭置空
                 CurrentHome = null;
+                HomeUtil.isInLAN = false;
                 HomeFragment.homeLocalId = 0;
             }
-            EventBus.getDefault().post(new RefreshHome());  // 通知首页刷新数据
+            EventBus.getDefault().post(new RefreshHomeEvent());  // 通知首页刷新数据
         } else {
             CurrentHome = mTempHomeBean;
-            SpUtil.put(SpConstant.SA_TOKEN, mTempHomeBean.getSa_user_token());
-            HttpConfig.addHeader(CurrentHome.getSa_user_token());
-            HttpConfig.addAreaIdHeader(HttpConfig.AREA_ID, String.valueOf(HomeUtil.getHomeId()));
-            SpUtil.put(SpConstant.IS_BIND_SA, CurrentHome.isIs_bind_sa());
+            if (CurrentHome != null) {
+                EventBus.getDefault().post(new RefreshHomeList(CurrentHome.getName()));
+                if (!TextUtils.isEmpty(CurrentHome.getSa_lan_address())) {
+                    LogUtil.e("sa的地址：" + CurrentHome.getSa_lan_address());
+                    HttpUrlConfig.baseSAUrl = CurrentHome.getSa_lan_address();
+                    HttpUrlConfig.apiSAUrl = HttpUrlConfig.baseSAUrl + HttpUrlConfig.API;
+                }
+                SpUtil.put(SpConstant.SA_TOKEN, mTempHomeBean.getSa_user_token());
+                HttpConfig.addHeader(CurrentHome.getSa_user_token());
+                HttpConfig.addAreaIdHeader(HttpConfig.AREA_ID, String.valueOf(HomeUtil.getHomeId()));
+                SpUtil.put(SpConstant.IS_BIND_SA, CurrentHome.isIs_bind_sa());
+                SpUtil.put(SpConstant.AREA_ID, String.valueOf(CurrentHome.getId()));
+            }
             if (CurrentHome != null && CurrentHome.getLocalId() == mLocalId && !CurrentHome.isIs_bind_sa() && !UserUtils.isLogin() && !TextUtils.isEmpty(updateName)) {
                 CurrentHome.setName(updateName);
             }

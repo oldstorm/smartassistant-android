@@ -7,12 +7,16 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.app.main.framework.baseutil.LibLoader;
+import com.app.main.framework.baseutil.LogUtil;
+import com.app.main.framework.baseutil.NetworkUtil;
 import com.app.main.framework.baseutil.SpConstant;
 import com.app.main.framework.baseutil.SpUtil;
 import com.app.main.framework.baseutil.UiUtil;
@@ -20,11 +24,15 @@ import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.MVPBaseActivity;
 import com.app.main.framework.gsonutils.GsonConverter;
 import com.app.main.framework.httputil.NameValuePair;
+import com.app.main.framework.httputil.TempChannelUtil;
 import com.app.main.framework.httputil.comfig.HttpConfig;
 import com.app.main.framework.httputil.cookie.PersistentCookieStore;
+import com.chad.library.adapter.base.BaseQuickAdapter;
+import com.google.gson.Gson;
 import com.yctc.zhiting.R;
 import com.yctc.zhiting.activity.contract.AuthorizeContract;
 import com.yctc.zhiting.activity.presenter.AuthorizePresenter;
+import com.yctc.zhiting.adapter.AuthHCAdapter;
 import com.yctc.zhiting.adapter.ScopesAdapter;
 import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.config.HttpUrlConfig;
@@ -37,14 +45,12 @@ import com.yctc.zhiting.entity.ScopeTokenBean;
 import com.yctc.zhiting.entity.ScopesBean;
 import com.yctc.zhiting.entity.mine.HomeCompanyBean;
 import com.yctc.zhiting.entity.mine.UserInfoBean;
-import com.yctc.zhiting.event.DeviceDataEvent;
 import com.yctc.zhiting.request.ScopeTokenRequest;
 import com.yctc.zhiting.utils.CollectionUtil;
 import com.yctc.zhiting.utils.HomeUtil;
 import com.yctc.zhiting.utils.IntentConstant;
 import com.yctc.zhiting.utils.UserUtils;
 
-import org.greenrobot.eventbus.EventBus;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -69,10 +75,14 @@ public class AuthorizeActivity extends MVPBaseActivity<AuthorizeContract.View, A
     RecyclerView rvScopes;
     @BindView(R.id.tvTips)
     TextView tvTips;
-    @BindView(R.id.tvHome)
-    TextView tvHome;
     @BindView(R.id.tvConfirm)
     TextView tvConfirm;
+    @BindView(R.id.rvHC)
+    RecyclerView rvHC;
+    @BindView(R.id.llConfirm)
+    LinearLayout llConfirm;
+    @BindView(R.id.rbConfirm)
+    ProgressBar rbConfirm;
 
     /**
      * 第三方应用需要的权限
@@ -92,11 +102,16 @@ public class AuthorizeActivity extends MVPBaseActivity<AuthorizeContract.View, A
     private String[] permissions; // 同意授权的信息
 
     private List<HomeCompanyBean> mHomeList;  // 家庭列表
-    private HomeSelectDialog mHomeSelectDialog; // 家庭列表选择弹窗
     private HomeCompanyBean nowHome;
 
     private CenterAlertDialog mCenterAlertDialog;  // 请找回凭证提示弹窗
     private HomeCompanyBean mTempHomeBean;
+
+    private AuthHCAdapter mAuthHCAdapter; // 家庭列表
+    private int index = 0;  // 绑了SA的数据索引
+    private List<HomeCompanyBean> selectedData = new ArrayList<>();  // 绑了SA的数据
+    private List<AuthBackBean> authDataList = new ArrayList<>();
+    private boolean allLoadAuth;
 
     @Override
     protected int getLayoutId() {
@@ -110,7 +125,7 @@ public class AuthorizeActivity extends MVPBaseActivity<AuthorizeContract.View, A
         appName = intent.getStringExtra(IntentConstant.APP_NAME);
         tvJoin.setText(UiUtil.getString(R.string.main_welcome_join) + appName);
         mHomeList = (List<HomeCompanyBean>) intent.getSerializableExtra(IntentConstant.BEAN_LIST);
-        initSelectDialog();
+//        initSelectDialog();
 
     }
 
@@ -118,16 +133,41 @@ public class AuthorizeActivity extends MVPBaseActivity<AuthorizeContract.View, A
     protected void initUI() {
         super.initUI();
         SpUtil.init(this);
-        setConfirmEnabled(false);
         initCenterAlertDialog();
+        setConfirmEnabled(false, false);
         rvScopes.setLayoutManager(new LinearLayoutManager(this));
         scopesAdapter = new ScopesAdapter();
         rvScopes.setAdapter(scopesAdapter);
+        initRvHC();
     }
 
-    private void setConfirmEnabled(boolean enabled){
-        tvConfirm.setEnabled(enabled);
-        tvConfirm.setAlpha(enabled ? 1f : 0.5f);
+    /**
+     * 初始化家庭列表
+     */
+    private void initRvHC() {
+        mAuthHCAdapter = new AuthHCAdapter();
+        rvHC.setLayoutManager(new LinearLayoutManager(this));
+        rvHC.setAdapter(mAuthHCAdapter);
+        mAuthHCAdapter.setOnItemChildClickListener(new BaseQuickAdapter.OnItemChildClickListener() {
+            @Override
+            public void onItemChildClick(BaseQuickAdapter adapter, View view, int position) {
+                int viewId = view.getId();
+                HomeCompanyBean homeCompanyBean = mAuthHCAdapter.getItem(position);
+                if (viewId == R.id.tvRetry) {
+                    if (allLoadAuth) {
+                        getScopeToken(homeCompanyBean);
+                    }
+                }
+            }
+        });
+    }
+
+    private void setConfirmEnabled(boolean enabled, boolean showLoading) {
+        if (showLoading) {
+            rbConfirm.setVisibility(enabled ? View.GONE : View.VISIBLE);
+        }
+        llConfirm.setEnabled(enabled);
+        llConfirm.setAlpha(enabled ? 1f : 0.5f);
     }
 
     @Override
@@ -137,23 +177,15 @@ public class AuthorizeActivity extends MVPBaseActivity<AuthorizeContract.View, A
         dbManager = DBManager.getInstance(mContext.get());
         mainThreadHandler = new Handler(Looper.getMainLooper());
         nowHome = Constant.CurrentHome;
-        tvHome.setText(nowHome.getName());
         String homeBeanJson = GsonConverter.getGson().toJson(CurrentHome);
         mTempHomeBean = GsonConverter.getGson().fromJson(homeBeanJson, HomeCompanyBean.class);
+        if (!TextUtils.isEmpty(nowHome.getSa_lan_address())) {
+            HttpUrlConfig.baseSAUrl = nowHome.getSa_lan_address();
+            HttpUrlConfig.apiSAUrl = HttpUrlConfig.baseSAUrl + HttpUrlConfig.API;
+        }
         getUserInfo();
+        getHCData();
         permissions = needPermissions.split(",");
-        // 同意授权的信息数据
-//        List<ScopesBean.ScopeBean> data = new ArrayList<>();
-//        if (permissions.length > 0) {
-//            for (int i = 0; i < permissions.length; i++) {
-//                if (permissions[i].equals(Constant.USER)) {
-//                    data.add(new ScopesBean.ScopeBean(Constant.USER, getResources().getString(R.string.main_get_login_status)));
-//                } else if (permissions[i].equals(Constant.AREA)) {
-//                    data.add(new ScopesBean.ScopeBean(Constant.AREA, getResources().getString(R.string.main_get_family_info)));
-//                }
-//            }
-//        }
-//        scopesAdapter.setNewData(data);
     }
 
     @Override
@@ -161,43 +193,11 @@ public class AuthorizeActivity extends MVPBaseActivity<AuthorizeContract.View, A
         return false;
     }
 
-    /**
-     * 家庭列表选择弹窗
-     */
-    private void initSelectDialog(){
-        mHomeSelectDialog = new HomeSelectDialog(mHomeList);
-        mHomeSelectDialog.setClickItemListener(new HomeSelectDialog.OnClickItemListener() {
-            @Override
-            public void onItem(HomeCompanyBean homeCompanyBean) {
-                setConfirmEnabled(false);
-                scopesAdapter.setNewData(null);
-                if (!homeCompanyBean.isIs_bind_sa()){
-                    ToastUtil.show(UiUtil.getString(R.string.family_without_intelligent_center));
-                    return;
-                }
-                tvHome.setText(homeCompanyBean.getName());
-                nowHome = homeCompanyBean;
-                CurrentHome = nowHome;
-                HttpConfig.clearHeader();
-                HttpConfig.addHeader(nowHome.getSa_user_token());
-                HttpConfig.addAreaIdHeader(HttpConfig.AREA_ID, String.valueOf(nowHome.getId()));
-                SpUtil.put(SpConstant.SA_TOKEN, nowHome.getSa_user_token());
-                SpUtil.put(SpConstant.IS_BIND_SA, nowHome.isIs_bind_sa());
-
-                HttpConfig.addAreaIdHeader(HttpConfig.AREA_ID, String.valueOf(nowHome.getArea_id()));
-                HttpConfig.addAreaIdHeader(HttpConfig.TOKEN_KEY, nowHome.getSa_user_token());
-                if (HomeUtil.isSAEnvironment(nowHome) || UserUtils.isLogin()) {  // 在sa环境或登录的情况下
-                    mPresenter.getScopeList();
-                }
-                mHomeSelectDialog.dismiss();
-            }
-        });
-    }
 
     /**
      * 提示找回凭证弹窗
      */
-    private void initCenterAlertDialog(){
+    private void initCenterAlertDialog() {
         mCenterAlertDialog = CenterAlertDialog.newInstance(UiUtil.getString(R.string.common_tips), UiUtil.getString(R.string.invalid_token_please_find_back),
                 UiUtil.getString(R.string.common_cancel), UiUtil.getString(R.string.how_to_find));
         mCenterAlertDialog.setConfirmListener(new CenterAlertDialog.OnConfirmListener() {
@@ -227,40 +227,25 @@ public class AuthorizeActivity extends MVPBaseActivity<AuthorizeContract.View, A
     /**
      * 确认
      */
-    @OnClick(R.id.tvConfirm)
+    @OnClick(R.id.llConfirm)
     void onClickConfirm() {
-        if (!nowHome.isIs_bind_sa()) {
-            ToastUtil.show(UiUtil.getString(R.string.main_home_is_not_bind_with_sa));
-        } else {
-            if (!HomeUtil.isSAEnvironment(nowHome) && !UserUtils.isLogin()){
-                ToastUtil.show(getResources().getString(R.string.main_auth_failed));;
-                return;
-            }
-            List<String> scopes = new ArrayList<>();
-            for (String permission : permissions) {
-                scopes.add(permission);
-            }
-            ScopeTokenRequest scopeTokenRequest = new ScopeTokenRequest(scopes);
-            // 获取token接口
-            mPresenter.getScopeToken(scopeTokenRequest.toString());
-        }
-    }
-
-    /**
-     * 选择家庭
-     */
-    @OnClick(R.id.tvHome)
-    void onClickHome(){
-        if (mHomeSelectDialog!=null && !mHomeSelectDialog.isShowing()){
-            mHomeSelectDialog.show(this);
-        }
+        Intent intent = new Intent();
+        nowHome.setSc_lan_address(HttpUrlConfig.baseSCUrl);
+        nowHome.setSAEnvironment(HomeUtil.isBssidEqual(nowHome));
+        intent.setAction("zt.com.yctc.zhiting.sign");
+        String authInfo = new Gson().toJson(authDataList);
+        String userJson = SpUtil.get(Constant.CLOUD_USER);
+        intent.putExtra("backInfo", authInfo);
+        intent.putExtra("userInfo", userJson);
+        sendBroadcast(intent);
+        LibLoader.finishAllActivity();
     }
 
     /**
      * 取消
      */
     @OnClick(R.id.tvCancel)
-    void onClickCancel(){
+    void onClickCancel() {
         finish();
     }
 
@@ -272,25 +257,20 @@ public class AuthorizeActivity extends MVPBaseActivity<AuthorizeContract.View, A
     @Override
     public void getScopesSuccess(ScopesBean scopesBean) {
         if (scopesBean != null && CollectionUtil.isNotEmpty(scopesBean.getScopes())) {
-            List<ScopesBean.ScopeBean> data = new ArrayList<>();
-            if (!TextUtils.isEmpty(needPermissions)) {
-                for (ScopesBean.ScopeBean scopeBean : scopesBean.getScopes()) {
-                    for (String permission : permissions) {
-                        if (scopeBean.getName().equals(permission)) {
-                            data.add(scopeBean);
-                        }
-                    }
-                }
-
+            List<String> scopes = new ArrayList<>();
+            for (ScopesBean.ScopeBean scopeBean : scopesBean.getScopes()) {
+                scopes.add(scopeBean.getName());
             }
-            scopesAdapter.setNewData(data);
-            setConfirmEnabled(true);
+            ScopeTokenRequest scopeTokenRequest = new ScopeTokenRequest(scopes);
+            // 获取token接口
+            mPresenter.getScopeToken(scopeTokenRequest.toString());
         }
     }
 
     @Override
     public void getScopesFail(int errorCode, String msg) {
-        ToastUtil.show(msg);
+//        ToastUtil.show(msg);
+        findSAToken(errorCode, msg);
     }
 
     /**
@@ -303,45 +283,71 @@ public class AuthorizeActivity extends MVPBaseActivity<AuthorizeContract.View, A
         if (scopeTokenBean != null) {
             ScopeTokenBean.STBean stBean = scopeTokenBean.getScope_token();
             if (stBean != null) {
-                Intent intent = new Intent();
                 nowHome.setSc_lan_address(HttpUrlConfig.baseSCUrl);
-                nowHome.setSAEnvironment(HomeUtil.isSAEnvironment(nowHome));
+                nowHome.setSAEnvironment(HomeUtil.isBssidEqual(nowHome));
                 AuthBackBean authBackBean = new AuthBackBean(nowHome.getUser_id(), userName, nowHome, stBean);
                 if (UserUtils.isLogin()) {
+                    authBackBean.setCloudUserId(UserUtils.getCloudUserId());
+                    authBackBean.setCountryCode(SpUtil.get(SpConstant.AREA_CODE));
+                    authBackBean.setPhone(SpUtil.get(SpConstant.PHONE_NUM));
                     authBackBean.setCookies(PersistentCookieStore.getInstance().get(HttpUrl.parse(HttpUrlConfig.getLogin())));
                 } else {
                     authBackBean.setCookies(new ArrayList<>());
                 }
-                intent.setAction("zt.com.yctc.zhiting.sign");
-                intent.putExtra("backInfo", authBackBean.toString());
-                sendBroadcast(intent);
-                LibLoader.finishAllActivity();
+                authDataList.add(authBackBean);
+                setHCStatus(1);
             } else {
-                ToastUtil.show(UiUtil.getString(R.string.main_login_fail));
+                setHCStatus(2);
             }
         } else {
-            ToastUtil.show(UiUtil.getString(R.string.main_login_fail));
+            setHCStatus(2);
         }
+        dealNextHome();
     }
 
     @Override
     public void getScopeTokenFail(int errorCode, String msg) {
-        if (errorCode == 5012 && nowHome.getId()>0){
-            if (UserUtils.isLogin()){
+        findSAToken(errorCode, msg);
+    }
+
+    /**
+     * 找回凭证
+     *
+     * @param errorCode
+     * @param msg
+     */
+    private void findSAToken(int errorCode, String msg) {
+        if ((errorCode == 5012 || errorCode == 5027) && nowHome.getId() > 0) {
+            if (UserUtils.isLogin()) {
                 NameValuePair nameValuePair = new NameValuePair("area_id", String.valueOf(nowHome.getId()));
                 List<NameValuePair> requestData = new ArrayList<>();
                 requestData.add(nameValuePair);
                 mPresenter.getSAToken(nowHome.getCloud_user_id(), requestData);  // sc的用户id, sc上的家庭id
-            }else {
-                ToastUtil.show(UiUtil.getString(R.string.exit_family_please_select_again));
+            } else {
+                setHCStatus(2);
+                if (allLoadAuth) {
+                    authFail();
+                } else {
+                    dealNextHome();
+                }
             }
-        }else {
-            ToastUtil.show(msg);
+        } else {
+            setHCStatus(2);
+            if (allLoadAuth) {
+                authFail();
+            } else {
+                dealNextHome();
+            }
         }
+    }
+
+    private void authFail() {
+        ToastUtil.show(UiUtil.getString(R.string.mine_authorize_fail));
     }
 
     /**
      * 找回凭证成功
+     *
      * @param findSATokenBean
      */
     @Override
@@ -359,19 +365,40 @@ public class AuthorizeActivity extends MVPBaseActivity<AuthorizeContract.View, A
 
     /**
      * 找回凭证失败
+     *
      * @param errorCode
      * @param msg
      */
     @Override
     public void getSATokenFail(int errorCode, String msg) {
-        if (errorCode == 2011 || errorCode == 2010) {    //凭证获取失败，状态码2011，无权限
-            if (mCenterAlertDialog!=null && !mCenterAlertDialog.isShowing()){
-                mCenterAlertDialog.show(this);
-            }
-        } else if (errorCode == 3002) {  //状态码3002，提示被管理员移除家庭
-            ToastUtil.show(UiUtil.getString(R.string.exit_family_please_select_again));
+        setHCStatus(2);
+        if (allLoadAuth) {
+            authFail();
         } else {
-            ToastUtil.show(msg);
+            dealNextHome();
+        }
+    }
+
+    private void setHCStatus(int status) {
+        selectedData.get(index).setAuthStatus(status);
+        mAuthHCAdapter.notifyItemChanged(index);
+    }
+
+    /**
+     * 处理下一个家庭
+     */
+    private void dealNextHome() {
+        if (!allLoadAuth)
+        if (index == selectedData.size() - 1) {
+            allLoadAuth = true;
+            if (CollectionUtil.isNotEmpty(authDataList)) {
+                setConfirmEnabled(true, false);
+            } else {
+                ToastUtil.show(UiUtil.getString(R.string.mine_authorize_fail));
+            }
+        } else {
+            index++;
+            getScopeToken(selectedData.get(index));
         }
     }
 
@@ -388,18 +415,62 @@ public class AuthorizeActivity extends MVPBaseActivity<AuthorizeContract.View, A
                     String name = nickName.substring(0, 1) + "*****" + userInfoBean.getNickname().substring(nickName.length());
                     tvName.setText(name);
                     tvTips.setText(String.format(UiUtil.getString(R.string.main_agree), name));
-                    if (!nowHome.isIs_bind_sa()){
-                        ToastUtil.show(UiUtil.getString(R.string.family_without_intelligent_center));
-                        return;
+                });
+            }
+        });
+    }
+
+    /**
+     * 家庭列表数据
+     */
+    private void getHCData() {
+        UiUtil.starThread(new Runnable() {
+            @Override
+            public void run() {
+                List<HomeCompanyBean> hcList = dbManager.queryHomeCompanyList();
+
+                for (HomeCompanyBean homeCompanyBean : hcList) {
+                    if (UserUtils.isLogin()) { // 如果登录了
+                        if (homeCompanyBean.isIs_bind_sa()) { // 有实体SA
+                            selectedData.add(homeCompanyBean);
+                        }
+                    } else { // 没登录
+                        if (homeCompanyBean.isIs_bind_sa() && HomeUtil.isBssidEqual(homeCompanyBean)) { // 有实体SA且在SA环境下
+                            selectedData.add(homeCompanyBean);
+                        }
                     }
-                    if (!TextUtils.isEmpty(Constant.CurrentHome.getSa_user_token())) { // 有satoken
-                        if (HomeUtil.isSAEnvironment() || UserUtils.isLogin()) {  // 在sa环境或登录的情况下
-                            HttpConfig.addHeader(nowHome.getSa_user_token());
-                            mPresenter.getScopeList();
+                }
+                UiUtil.runInMainThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mAuthHCAdapter.setNewData(selectedData);
+
+                        if (CollectionUtil.isNotEmpty(selectedData)) {
+                            getScopeToken(selectedData.get(0));
                         }
                     }
                 });
             }
         });
+    }
+
+    private void getScopeToken(HomeCompanyBean homeCompanyBean) {
+        nowHome = homeCompanyBean;
+        String saLanAddress = nowHome.getSa_lan_address();
+        HttpUrlConfig.baseSAUrl = TextUtils.isEmpty(saLanAddress) ? "" : saLanAddress;
+        TempChannelUtil.baseSAUrl = saLanAddress;
+        LogUtil.e("SA地址===========" + TempChannelUtil.baseSAUrl);
+        CurrentHome = nowHome;
+        if (!TextUtils.isEmpty(nowHome.getSa_lan_address())) {
+            HttpUrlConfig.baseSAUrl = nowHome.getSa_lan_address();
+            HttpUrlConfig.apiSAUrl = HttpUrlConfig.baseSAUrl + HttpUrlConfig.API;
+        }
+        HttpConfig.clearHeader();
+        SpUtil.put(SpConstant.SA_TOKEN, nowHome.getSa_user_token());
+        SpUtil.put(SpConstant.IS_BIND_SA, nowHome.isIs_bind_sa());
+
+        HttpConfig.addAreaIdHeader(HttpConfig.AREA_ID, String.valueOf(nowHome.getArea_id()));
+        HttpConfig.addAreaIdHeader(HttpConfig.TOKEN_KEY, nowHome.getSa_user_token());
+        mPresenter.getScopeList();
     }
 }

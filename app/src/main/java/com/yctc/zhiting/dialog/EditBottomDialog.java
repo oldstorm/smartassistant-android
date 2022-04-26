@@ -30,7 +30,8 @@ public class EditBottomDialog extends CommonBaseDialog {
     /**
      * 0 修改昵称
      * 1 添加/修改房间区域
-     * 2 修改家庭/公司名称
+     * 2 修改家庭名称
+     * 3 修改公司名称
      */
     private int from;
 
@@ -102,6 +103,10 @@ public class EditBottomDialog extends CommonBaseDialog {
 
             case 2:
                 etContent.setFilters(new InputFilter[]{new InputFilter.LengthFilter(30)});
+                break;
+
+            case 3:
+                etContent.setFilters(new InputFilter[]{new InputFilter.LengthFilter(50)});
                 break;
         }
         etContent.setText(content);

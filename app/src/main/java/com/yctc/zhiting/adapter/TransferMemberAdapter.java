@@ -1,7 +1,9 @@
 package com.yctc.zhiting.adapter;
 
+import android.text.TextUtils;
 import android.widget.ImageView;
 
+import com.app.main.framework.imageutil.GlideUtil;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.yctc.zhiting.R;
@@ -28,6 +30,8 @@ public class TransferMemberAdapter extends BaseQuickAdapter<UserBean, BaseViewHo
         }
         helper.setText(R.id.tvName, item.getNickname())
                 .setText(R.id.tvRole, stringBuffer.toString());
+        ImageView cvAvatar = helper.getView(R.id.cvAvatar);
+        GlideUtil.load(item.getAvatar_url()).userHead().into(cvAvatar);
         ImageView ivArrow = helper.getView(R.id.ivArrow);
         ivArrow.setSelected(item.isSelected());
     }

@@ -1,5 +1,8 @@
 package com.yctc.zhiting.activity;
 
+import static com.yctc.zhiting.config.Constant.CurrentHome;
+import static com.yctc.zhiting.config.Constant.wifiInfo;
+
 import android.Manifest;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.ScanCallback;
@@ -24,6 +27,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.app.main.framework.baseutil.AndroidUtil;
 import com.app.main.framework.baseutil.LogUtil;
 import com.app.main.framework.baseutil.SpUtil;
 import com.app.main.framework.baseutil.UiUtil;
@@ -31,36 +35,47 @@ import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.MVPBaseActivity;
 import com.app.main.framework.fileutil.BaseFileUtil;
 import com.app.main.framework.gsonutils.GsonConverter;
+import com.app.main.framework.httputil.DownloadFailListener;
 import com.app.main.framework.httputil.HTTPCaller;
 import com.app.main.framework.httputil.Header;
+import com.app.main.framework.httputil.NameValuePair;
 import com.app.main.framework.httputil.RequestDataCallback;
 import com.app.main.framework.httputil.comfig.HttpConfig;
-import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.yctc.zhiting.R;
 import com.yctc.zhiting.activity.contract.AddDeviceContract;
 import com.yctc.zhiting.activity.presenter.AddDevicePresenter;
 import com.yctc.zhiting.adapter.AddDeviceAdapter;
 import com.yctc.zhiting.adapter.AddDeviceInCategoryAdapter;
 import com.yctc.zhiting.adapter.DeviceCategoryAdapter;
+import com.yctc.zhiting.adapter.DeviceFirstCategoryAdapter;
+import com.yctc.zhiting.adapter.DeviceSecondCategoryAdapter;
 import com.yctc.zhiting.config.Constant;
 import com.yctc.zhiting.config.HttpUrlConfig;
 import com.yctc.zhiting.config.HttpUrlParams;
 import com.yctc.zhiting.dialog.CenterAlertDialog;
+import com.yctc.zhiting.entity.home.DeviceMultipleBean;
+import com.yctc.zhiting.entity.ws_request.WSAuthParamsBean;
+import com.yctc.zhiting.entity.ws_response.EventResponseBean;
+import com.yctc.zhiting.entity.ws_response.FindDeviceResultBean;
 import com.yctc.zhiting.entity.GetDeviceInfoBean;
 import com.yctc.zhiting.entity.ScanDeviceByUDPBean;
+import com.yctc.zhiting.entity.ws_response.WSBaseResponseBean;
 import com.yctc.zhiting.entity.home.DeviceBean;
 import com.yctc.zhiting.entity.home.DeviceTypeBean;
 import com.yctc.zhiting.entity.home.DeviceTypeDeviceBean;
 import com.yctc.zhiting.entity.home.DeviceTypeListBean;
-import com.yctc.zhiting.entity.home.FindDeviceBean;
-import com.yctc.zhiting.entity.home.ScanResultBean;
 import com.yctc.zhiting.entity.mine.CheckBindSaBean;
 import com.yctc.zhiting.entity.mine.PluginsBean;
 import com.yctc.zhiting.entity.scene.PluginDetailBean;
+import com.yctc.zhiting.entity.ws_request.WSRequest;
+import com.yctc.zhiting.entity.ws_request.WSConstant;
 import com.yctc.zhiting.utils.AESUtil;
 import com.yctc.zhiting.utils.BluetoothUtil;
+import com.yctc.zhiting.utils.ByteConstant;
 import com.yctc.zhiting.utils.CollectionUtil;
+import com.yctc.zhiting.utils.GpsUtil;
 import com.yctc.zhiting.utils.HomeUtil;
 import com.yctc.zhiting.utils.IntentConstant;
 import com.yctc.zhiting.utils.Md5Util;
@@ -121,6 +136,8 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
     View viewLine1;
     @BindView(R.id.line2)
     View viewLine2;
+    @BindView(R.id.rvDeviceSecondCategory)
+    RecyclerView rvDeviceSecondCategory;
 
     private static final int REQUEST_PERMISSION = 0x01;
     private boolean again;
@@ -131,20 +148,30 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
     private CountDownTimer mCountDownTimer;
 
     private long homeId;
-    private long mFindDeviceId;//发现设备id
     private IWebSocketListener mIWebSocketListener;
 
     private BluetoothScanCallback mBluetoothScanCallback;  // 扫描蓝牙回调
     private boolean needLoadBluetooth = false; // 是否需要加载蓝牙
     private Set<String> blueDeviceAdded; // 存储已存储的蓝牙设备
     private Set<String> updAddressSet; // 存储已获取upd设备
-    private HashMap<String, String> passwordMap; // 保存的密码
     private ConcurrentHashMap<String, ScanDeviceByUDPBean> scanMap = new ConcurrentHashMap<>();  // 存储udp扫描的设备信息
     private UDPSocket udpSocket; // 发现sa udpsocket
     private DeviceTypeDeviceBean mDeviceTypeDeviceBean;  // 点击的那个设备
     private final String BLUETOOTH_PLUGIN_ID = "zhiting";  // 蓝牙设备固定的pluginId
 
     private CenterAlertDialog alertDialog;
+
+    private String mType; // 设备类型
+    private long sendId = 0;
+
+    private DeviceFirstCategoryAdapter mDeviceFirstCategoryAdapter;  // 一级分类
+    private DeviceSecondCategoryAdapter mDeviceSecondCategoryAdapter; // 二级分类
+
+    private ConcurrentHashMap<String, WSRequest> requestHashMap = new ConcurrentHashMap<>();
+
+    private CenterAlertDialog gpsTipDialog; // 位置信息提示框
+    private final int GPS_REQUEST_CODE = 1001;
+    private DeviceBean mDeviceBean;
 
     @Override
     protected int getLayoutId() {
@@ -154,24 +181,25 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
     @Override
     protected void initUI() {
         super.initUI();
+        SpUtil.init(this);
         initDeviceRv();
         initRvDeviceCategory();
         initRvDeviceInCategory();
+        initRvDeviceSecondCategory();
         initRadarScanView();
         initCountDownTimer();
         initAlertDialog();
         blueDeviceAdded = new HashSet<>();
         updAddressSet = new HashSet<>();
-        passwordMap = new HashMap<>();
         mBluetoothScanCallback = new BluetoothScanCallback();
-        if (Constant.CurrentHome != null && Constant.CurrentHome.isIs_bind_sa()) {//绑定有SA
-            initWebSocket();
-        } else {
-//            mPresenter.checkBindSa();
+        initWebSocket();
+        if (UserUtils.isLogin() || HomeUtil.isSAEnvironment()) {
+            mPresenter.getDeviceFirstType();
         }
-        mPresenter.getDeviceType();
-        initUDPScan();
-        initBlueToothScan();
+        if (!CurrentHome.isIs_bind_sa()) {
+            initUDPScan();
+        }
+//        initBlueToothScan();
     }
 
     /**
@@ -204,12 +232,7 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
                     }
                 });
         udpSocket.startUDPSocket();
-        // 发送hello包数据，固定
-        byte[] sendHelloData = {(byte) 0x21, (byte) 0x31, (byte) 0x00, (byte) 0x20, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
-                (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
-                (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
-        System.out.println("最后发送hello包数据：" + Arrays.toString(sendHelloData));
-        udpSocket.sendMessage(sendHelloData, Constant.FIND_DEVICE_URL);
+        udpSocket.sendMessage(ByteConstant.SEND_HELLO_DATA, Constant.FIND_DEVICE_URL);
     }
 
     /**
@@ -237,18 +260,18 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
                     String tokenFromServer = AESUtil.decryptAES(dealData, decryptKeyDta, ivEncryptedData, AESUtil.PKCS7, true);
                     if (!TextUtils.isEmpty(tokenFromServer)) {
                         sdb.setToken(tokenFromServer);
-                        long id = System.currentTimeMillis();
-                        sdb.setId(id);
-                        String deviceStr = "{\"method\":\"get_prop.info\",\"params\":[],\"id\":" + id + "}";  // 获取设备信息体
+                        sdb.setId(sendId);
+                        String deviceStr = "{\"method\":\"get_prop.info\",\"params\":[],\"id\":" + sendId + "}";  // 获取设备信息体
+                        sendId++;
                         byte[] bodyData = AESUtil.encryptAES(deviceStr.getBytes(), tokenFromServer, AESUtil.PKCS7); // 获取设备信息体转字节加密
                         int len = bodyData.length + 32;  // 包长
                         byte[] lenData = ByteUtil.intToByte2(len);  // 包长用占两位字节
-                        byte[] headData = {(byte) 0x21, (byte) 0x31}; // 包头固定
-                        byte[] preData = {(byte) 0xFF, (byte) 0xFF}; // 预留固定
-                        byte[] serData = {(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00}; // 序列号固定
+                        byte[] headData = ByteConstant.GET_DEV_INFO_HEAD_Data; // 包头固定
+                        byte[] preData = ByteConstant.GET_DEV_INFO_PRE_Data; // 预留固定
+                        byte[] serData = ByteConstant.SER_DATA; // 序列号固定
                         byte[] tokenData = sdb.getPassword().getBytes();  // 之前获取设备信息时生成的16位随机密码
                         byte[] getDeviceInfoData = ByteUtil.byteMergerAll(headData, lenData, preData, deviceIdData, serData, tokenData, bodyData); //  拼接获取设备信息包
-                        System.out.println(address + "获取设备信息发送数据：" + Arrays.toString(getDeviceInfoData));
+                        LogUtil.e(address + "获取设备信息发送数据：" + Arrays.toString(getDeviceInfoData));
                         udpSocket.sendMessage(getDeviceInfoData, address);
                     }
                 } else { // 获取过token信息
@@ -256,10 +279,10 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
                     byte[] decryptDeviceData = Md5Util.getMD5(ByteUtil.md5Str2Byte(token));
                     byte[] ivDeviceData = ByteUtil.byteMergerAll(decryptDeviceData, ByteUtil.md5Str2Byte(token));
                     byte[] ivEncryptedDeviceData = Md5Util.getMD5(ivDeviceData);
-                    System.out.println("设备信息字节：" + Arrays.toString(dealData));
-                    System.out.println("=========处理数据长度：" + dealData.length + "      " + length);
+                    LogUtil.e("设备信息字节：" + Arrays.toString(dealData));
+                    LogUtil.e("=========处理数据长度：" + dealData.length + "      " + length);
                     String infoJson = AESUtil.decryptAES(dealData, decryptDeviceData, ivEncryptedDeviceData, AESUtil.PKCS7, false);
-                    System.out.println("设备信息：" + infoJson);
+                    LogUtil.e("设备信息：" + infoJson);
                     GetDeviceInfoBean getDeviceInfoBean = new Gson().fromJson(infoJson, GetDeviceInfoBean.class);
 
                     if (deviceInfoBean == null && getDeviceInfoBean != null && sdb.getId() == getDeviceInfoBean.getId()) {
@@ -270,7 +293,7 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
                         if (gdifb != null) {
                             deviceBean.setPort(gdifb.getPort());
                             String model = gdifb.getModel();
-                            if (!TextUtils.isEmpty(model) && model.equals(Constant.SMART_ASSISTANT)) { // 如果时sa设备
+                            if (!TextUtils.isEmpty(model) && model.startsWith(Constant.MH_SA)) { // 如果时sa设备
                                 deviceBean.setType(Constant.DeviceType.TYPE_SA);
                                 deviceBean.setModel(gdifb.getModel());
                                 deviceBean.setName(gdifb.getSa_id());
@@ -283,7 +306,7 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
                 }
             } else {  // 获取到hello数据包信息
                 ScanDeviceByUDPBean scanDeviceByUDPBean = new ScanDeviceByUDPBean(address, port, deviceId);
-                String password = StringUtil.getUUid().substring(0,16);
+                String password = StringUtil.getUUid().substring(0, 16);
                 scanDeviceByUDPBean.setPassword(password);
                 scanMap.put(deviceId, scanDeviceByUDPBean);
                 getDeviceToken(address, data, password);
@@ -329,10 +352,10 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
     private void getDeviceToken(String address, byte[] data, String password) {
         if (!updAddressSet.contains(address)) {
             updAddressSet.add(address);
-            byte[] tokenHeadData = {(byte) 0x21, (byte) 0x31, (byte) 0x00, (byte) 0x20, (byte) 0xFF, (byte) 0xFE}; // 包头，包长，预留字节固定
+            byte[] tokenHeadData = ByteConstant.TOKEN_HEAD_DATA; // 包头，包长，预留字节固定
             byte[] deviceIdData = Arrays.copyOfRange(data, 6, 12);  // 设备id
             byte[] passwordData = password.getBytes();  // 密码
-            byte[] serData = {(byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x00}; // 序列号 固定
+            byte[] serData = ByteConstant.SER_DATA; // 序列号 固定
             byte[] tokenData = ByteUtil.byteMergerAll(tokenHeadData, deviceIdData, serData, passwordData);  // 拼接获取token数据包
             udpSocket.sendMessage(tokenData, address);
         }
@@ -346,18 +369,18 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
             if (BluetoothUtil.isEnabled()) {
                 checkLocationPermission();
             } else {
-                CenterAlertDialog alertDialog = CenterAlertDialog.newInstance(getResources().getString(R.string.home_blue_tooth_disabled), getResources().getString(R.string.home_guide_user_to_open_bluetooth),
-                        getResources().getString(R.string.home_cancel), getResources().getString(R.string.home_setting), false);
-                alertDialog.setConfirmListener(new CenterAlertDialog.OnConfirmListener() {
-                    @Override
-                    public void onConfirm(boolean del) {
-//                        Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                        Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        needLoadBluetooth = true;
-                        startActivity(intent);
-                        alertDialog.dismiss();
-                    }
+                String title = getResources().getString(R.string.home_blue_tooth_disabled);
+                String tip = getResources().getString(R.string.home_guide_user_to_open_bluetooth);
+                CenterAlertDialog alertDialog = CenterAlertDialog.newInstance(
+                        title, tip, UiUtil.getString(R.string.home_cancel),
+                        UiUtil.getString(R.string.home_setting), false);
+
+                alertDialog.setConfirmListener(del -> {
+                    Intent intent = new Intent(Settings.ACTION_BLUETOOTH_SETTINGS);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    needLoadBluetooth = true;
+                    startActivity(intent);
+                    alertDialog.dismiss();
                 });
                 alertDialog.show(this);
             }
@@ -427,26 +450,36 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
      * WebSocket初始化、添加监听
      */
     private void initWebSocket() {
-        mIWebSocketListener = new IWebSocketListener() {
-            @Override
-            public void onMessage(WebSocket webSocket, String text) {
-                if (!TextUtils.isEmpty(text)) {
-                    ScanResultBean scanBean = GsonConverter.getGson().fromJson(text, ScanResultBean.class);
-                    if (scanBean != null && scanBean.getResult() != null && scanBean.getResult().getDevice() != null) {
-                        DeviceBean bean = scanBean.getResult().getDevice();
-                        mScanLists.add(bean);
-                        addDeviceAdapter.notifyDataSetChanged();
-                        setHasDeviceStatus();
+        if (Constant.CurrentHome != null && Constant.CurrentHome.isIs_bind_sa()) {//绑定有SA
+            mIWebSocketListener = new IWebSocketListener() {
+                @Override
+                public void onMessage(WebSocket webSocket, String text) {
+                    if (!TextUtils.isEmpty(text)) {
+                        LogUtil.e("发现设备消息："+text);
+                        WSBaseResponseBean<FindDeviceResultBean> responseBean = GsonConverter.getGson().fromJson(text, new TypeToken<WSBaseResponseBean<FindDeviceResultBean>>() {
+                        }.getType());
+                        long responseId = responseBean.getId();
+                        if (responseBean != null && requestHashMap.containsKey(String.valueOf(responseId)) && responseBean.isSuccess()) {
+                            FindDeviceResultBean resultBean = responseBean.getData();
+                            if (resultBean != null) {
+                                DeviceBean deviceBean = resultBean.getDevice();
+                                if (deviceBean != null) {
+                                    mScanLists.add(deviceBean);
+                                    addDeviceAdapter.notifyDataSetChanged();
+                                    setHasDeviceStatus();
+                                }
+                            }
+                        }
                     }
                 }
-            }
 
-            @Override
-            public void onFailure(WebSocket webSocket, Throwable t, @Nullable Response response) {
-            }
-        };
-        WSocketManager.getInstance().addWebSocketListener(mIWebSocketListener);
-        startScanDevice();
+                @Override
+                public void onFailure(WebSocket webSocket, Throwable t, @Nullable Response response) {
+                }
+            };
+            WSocketManager.getInstance().addWebSocketListener(mIWebSocketListener);
+            startScanDevice();
+        }
     }
 
     /**
@@ -469,14 +502,15 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
      * 开始发现设备
      */
     private void startScanDevice() {
+        Constant.mSendId=Constant.mSendId+1;
         tvStatus.setText(UiUtil.getString(R.string.mine_home_scanning));
-        FindDeviceBean findDeviceBean = new FindDeviceBean();
-        findDeviceBean.setDomain("plugin");
-        findDeviceBean.setService("discover");
-        findDeviceBean.setId(mFindDeviceId);
-        String findDeviceJson = GsonConverter.getGson().toJson(findDeviceBean);
+        WSRequest wsRequest = new WSRequest();
+        wsRequest.setId(Constant.mSendId);
+        wsRequest.setService(WSConstant.DISCOVER);
+        String findDeviceJson = GsonConverter.getGson().toJson(wsRequest);
+        LogUtil.e("发现设备发送数据：" + findDeviceJson);
+        requestHashMap.put(String.valueOf(Constant.mSendId), wsRequest);
         UiUtil.postDelayed(() -> WSocketManager.getInstance().sendMessage(findDeviceJson), 1000);
-        mFindDeviceId++;
     }
 
     /**
@@ -494,12 +528,19 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
         });
     }
 
-
     @Override
     protected void initData() {
         super.initData();
         homeId = getIntent().getLongExtra(IntentConstant.ID, -1);
         LogUtil.e("homeId1=" + homeId);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (GpsUtil.isEnabled(this) && requestCode == GPS_REQUEST_CODE) {
+            addHome();
+        }
     }
 
     /**
@@ -512,12 +553,14 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
         addDeviceAdapter.setOnItemChildClickListener((adapter, view, position) -> {
             DeviceBean bean = mScanLists.get(position);
             if (bean.getType() != null && bean.getType().equalsIgnoreCase(Constant.DeviceType.TYPE_SA)) {
-                if (bean.isBind()) {//已经被绑定过，扫码加入家庭(SA)
-                    //switchToActivity(ScanActivity.class);
-                    switchToActivity(CaptureNewActivity.class);
-                } else {//添加SA
-                    addDevice(bean);
+                mDeviceBean = bean;
+                if (AndroidUtil.isGE9() && !GpsUtil.isEnabled(this) && wifiInfo != null) {
+                    showGpsTipDialog();
+                } else {
+                    bean.setArea_type(Constant.CurrentHome.getArea_type());
+                    addHome();
                 }
+
             } else {//添加设备(灯和开关)
                 if (HomeUtil.isSAEnvironment() || UserUtils.isLogin()) {
                     if (bean.getBluetoothDevice() == null) { // 非蓝牙设备
@@ -528,8 +571,8 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
                         mDeviceTypeDeviceBean = new DeviceTypeDeviceBean(name, name, "", "", provisioning, BLUETOOTH_PLUGIN_ID);
                         mPresenter.getPluginDetail(BLUETOOTH_PLUGIN_ID);
                     }
-                }else {
-                    if (alertDialog!=null && !alertDialog.isShowing()){
+                } else {
+                    if (alertDialog != null && !alertDialog.isShowing()) {
                         alertDialog.show(this);
                     }
                 }
@@ -538,25 +581,84 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
     }
 
     /**
+     * 扫码加入家庭/添加SA
+     */
+    private void addHome() {
+        if (mDeviceBean != null) {
+            if (mDeviceBean.isBind()) {//已经被绑定过，扫码加入家庭(SA)
+                switchToActivity(CaptureNewActivity.class);
+            } else {//添加SA
+                mDeviceBean.setArea_type(Constant.CurrentHome.getArea_type());
+                addDevice(mDeviceBean);
+            }
+        }
+    }
+
+    public void showGpsTipDialog() {
+        if (gpsTipDialog == null) {
+            String title = UiUtil.getString(R.string.common_tips);
+            String tip = UiUtil.getString(R.string.main_need_open_location);
+            String cancelStr = UiUtil.getString(R.string.cancel);
+            String confirmStr = UiUtil.getString(R.string.confirm);
+            gpsTipDialog = CenterAlertDialog.newInstance(title, tip, cancelStr, confirmStr);
+            gpsTipDialog.setConfirmListener(del -> {
+                Intent gpsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                startActivityForResult(gpsIntent, GPS_REQUEST_CODE);
+                gpsTipDialog.dismiss();
+            });
+
+            gpsTipDialog.setCancelListener(new CenterAlertDialog.OnCancelListener() {
+                @Override
+                public void onCancel() {
+                    switchToActivity(CaptureNewActivity.class);
+                }
+            });
+        }
+        if (!gpsTipDialog.isShowing()) {
+            gpsTipDialog.show(this);
+        }
+    }
+
+    /**
      * 设备分类
      */
     private void initRvDeviceCategory() {
         mDeviceCategoryAdapter = new DeviceCategoryAdapter();
+        mDeviceFirstCategoryAdapter = new DeviceFirstCategoryAdapter();
         rvDeviceCategory.setLayoutManager(new LinearLayoutManager(this));
-        rvDeviceCategory.setAdapter(mDeviceCategoryAdapter);
+        rvDeviceCategory.setAdapter(mDeviceFirstCategoryAdapter);
 
-        mDeviceCategoryAdapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
-                DeviceTypeBean deviceTypeBean = mDeviceCategoryAdapter.getItem(position);
-                for (int i = 0; i < mDeviceCategoryAdapter.getData().size(); i++) {
-                    mDeviceCategoryAdapter.getData().get(i).setSelected(false);
-                }
-                deviceTypeBean.setSelected(true);
-                setSelData(deviceTypeBean);
-                mDeviceCategoryAdapter.notifyDataSetChanged();
+        mDeviceCategoryAdapter.setOnItemClickListener((adapter, view, position) -> {
+            DeviceTypeBean deviceTypeBean = mDeviceCategoryAdapter.getItem(position);
+            for (int i = 0; i < mDeviceCategoryAdapter.getData().size(); i++) {
+                mDeviceCategoryAdapter.getData().get(i).setSelected(false);
             }
+            deviceTypeBean.setSelected(true);
+            setSelData(deviceTypeBean);
+            mType = deviceTypeBean.getType();
+            mDeviceCategoryAdapter.notifyDataSetChanged();
         });
+        mDeviceFirstCategoryAdapter.setOnItemClickListener((adapter, view, position) -> {
+            for (DeviceTypeBean deviceTypeBean : mDeviceFirstCategoryAdapter.getData()) {
+                deviceTypeBean.setSelected(false);
+            }
+            DeviceTypeBean deviceTypeBean = mDeviceFirstCategoryAdapter.getItem(position);
+            deviceTypeBean.setSelected(true);
+            mDeviceFirstCategoryAdapter.notifyDataSetChanged();
+            getSecondType(deviceTypeBean.getType());
+        });
+    }
+
+    /**
+     * 二级分类
+     *
+     * @param type
+     */
+    private void getSecondType(String type) {
+        NameValuePair nameValuePair = new NameValuePair("type", type);
+        List<NameValuePair> typePairs = new ArrayList<>();
+        typePairs.add(nameValuePair);
+        mPresenter.getDeviceSecondType(typePairs);
     }
 
     /**
@@ -573,19 +675,41 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
         SpacesItemDecoration spacesItemDecoration = new SpacesItemDecoration(spaceValue);
         rvDeviceInCategory.addItemDecoration(spacesItemDecoration);
         rvDeviceInCategory.setAdapter(mAddDeviceInCategoryAdapter);
-        mAddDeviceInCategoryAdapter.setOnItemClickListener(new BaseQuickAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
-                if (HomeUtil.isSAEnvironment() || UserUtils.isLogin()) {
-                    DeviceTypeDeviceBean deviceTypeDeviceBean = mAddDeviceInCategoryAdapter.getItem(position);
-                    mDeviceTypeDeviceBean = deviceTypeDeviceBean;
-                    if (!TextUtils.isEmpty(deviceTypeDeviceBean.getPlugin_id())) {
-                        mPresenter.getPluginDetail(deviceTypeDeviceBean.getPlugin_id());
-                    }
-                }else {
-                    if (alertDialog!=null && !alertDialog.isShowing()){
-                        alertDialog.show(ScanDevice2Activity.this);
-                    }
+        mAddDeviceInCategoryAdapter.setOnItemClickListener((adapter, view, position) -> {
+            if (HomeUtil.isSAEnvironment() || UserUtils.isLogin()) {
+                DeviceTypeDeviceBean deviceTypeDeviceBean = mAddDeviceInCategoryAdapter.getItem(position);
+                mDeviceTypeDeviceBean = deviceTypeDeviceBean;
+                writeStorageTask();
+//                if (!TextUtils.isEmpty(deviceTypeDeviceBean.getPlugin_id())) {
+//                    showLoadingDialogInAct();
+//                    mPresenter.getPluginDetail(deviceTypeDeviceBean.getPlugin_id());
+//                }
+            } else {
+                if (alertDialog != null && !alertDialog.isShowing()) {
+                    alertDialog.show(ScanDevice2Activity.this);
+                }
+            }
+        });
+    }
+
+    /**
+     * 二级分类
+     */
+    private void initRvDeviceSecondCategory() {
+        mDeviceSecondCategoryAdapter = new DeviceSecondCategoryAdapter();
+        rvDeviceSecondCategory.setLayoutManager(new LinearLayoutManager(this));
+        rvDeviceSecondCategory.setAdapter(mDeviceSecondCategoryAdapter);
+        mDeviceSecondCategoryAdapter.setClickDeviceListener((type, item) -> {
+            mType = type;
+            if (HomeUtil.isSAEnvironment() || UserUtils.isLogin()) {
+                mDeviceTypeDeviceBean = item;
+                if (!TextUtils.isEmpty(mDeviceTypeDeviceBean.getPlugin_id())) {
+                    showLoadingDialogInAct();
+                    mPresenter.getPluginDetail(mDeviceTypeDeviceBean.getPlugin_id());
+                }
+            } else {
+                if (alertDialog != null && !alertDialog.isShowing()) {
+                    alertDialog.show(ScanDevice2Activity.this);
                 }
             }
         });
@@ -598,8 +722,20 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
         Bundle bundle = new Bundle();
         bundle.putLong(IntentConstant.ID, homeId);
         bundle.putSerializable(IntentConstant.BEAN, bean);
-        String pluginId = bean.getPluginId();
-        switchToActivity(pluginId != null && pluginId.equals(Constant.HOMEKIT) ? SetHomeKitActivity.class : DeviceConnectActivity.class, bundle);
+        List<WSAuthParamsBean> wsAuthParams = bean.getAuth_params();
+        boolean isAuth_required = bean.isAuth_required();
+        boolean hasHomekit = false;
+        if (isAuth_required && CollectionUtil.isNotEmpty(wsAuthParams)) {
+            for (WSAuthParamsBean wsAuthParamsBean : wsAuthParams) {
+                String type = wsAuthParamsBean.getType();
+                if (!TextUtils.isEmpty(type) && type.equals(Constant.HOMEKIT)) {
+                    hasHomekit = true;
+                    break;
+                }
+            }
+        }
+        // type为homekit需调整设置homekit界面
+        switchToActivity(hasHomekit ? SetHomeKitActivity.class : DeviceConnectActivity.class, bundle);
     }
 
     /**
@@ -632,7 +768,6 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
             checkLocationPermission();
             needLoadBluetooth = false;
         }
-
     }
 
     /**
@@ -652,15 +787,15 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
                 mCountDownTimer.onFinish();
                 mCountDownTimer.cancel();
             }
-            WSocketManager.getInstance().removeWebSocketListener(mIWebSocketListener);
             if (udpSocket != null) {
                 udpSocket.stopUDPSocket();
             }
             BluetoothUtil.stopScanBluetooth(mBluetoothScanCallback);
         }
+        requestHashMap.clear();
+        WSocketManager.getInstance().removeWebSocketListener(mIWebSocketListener);
         LogUtil.e("mCountDownTimer=onPause=");
     }
-
 
     @Override
     public void checkBindSaSuccess(CheckBindSaBean data) {
@@ -686,6 +821,7 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
                 mDeviceCategoryAdapter.setNewData(types);
                 DeviceTypeBean deviceTypeBean = types.get(0);
                 deviceTypeBean.setSelected(true);
+                mType = deviceTypeBean.getType();
                 setSelData(deviceTypeBean);
                 viewLine1.setVisibility(View.VISIBLE);
                 viewLine2.setVisibility(View.VISIBLE);
@@ -725,63 +861,57 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
         if (pluginDetailBean != null) {
             PluginsBean pluginsBean = pluginDetailBean.getPlugin();
             String pluginId = pluginsBean.getId();
-            String pluginFilePath = "";
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-                pluginFilePath = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath()+"/plugins/" + pluginId;
-            }else {
-                pluginFilePath = Constant.PLUGIN_PATH + pluginId;
-            }
+            String  pluginFilePath = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + "/plugins/" + pluginId;
             if (pluginsBean != null) {
                 String downloadUrl = pluginsBean.getDownload_url();
                 String cachePluginJson = SpUtil.get(pluginId);
                 PluginsBean cachePlugin = GsonConverter.getGson().fromJson(cachePluginJson, PluginsBean.class);
                 String cacheVersion = "";
-                if (cachePlugin!=null){
+                if (cachePlugin != null) {
                     cacheVersion = cachePlugin.getVersion();
                 }
                 String version = pluginsBean.getVersion();
-                if (mDeviceTypeDeviceBean!=null && BaseFileUtil.isFileExist(pluginFilePath) &&
+                if (mDeviceTypeDeviceBean != null && BaseFileUtil.isFileExist(pluginFilePath) &&
                         !TextUtils.isEmpty(cacheVersion) && !TextUtils.isEmpty(version) && cacheVersion.equals(version)) {  // 如果缓存存在且版本相同
-                    String urlPath = "file://"+pluginFilePath+"/"+mDeviceTypeDeviceBean.getProvisioning();
+                    String urlPath = "file://" + pluginFilePath + "/" + mDeviceTypeDeviceBean.getProvisioning();
                     toConfigNetwork(urlPath);
                 } else {
                     if (!TextUtils.isEmpty(downloadUrl)) {
                         String suffix = downloadUrl.substring(downloadUrl.lastIndexOf(".") + 1);
                         BaseFileUtil.deleteFolderFile(pluginFilePath, true);
-                        String fileZipPath = pluginFilePath+"."+suffix;
+                        String fileZipPath = pluginFilePath + "." + suffix;
                         File file = new File(fileZipPath);
                         BaseFileUtil.deleteFile(file);
                         List<Header> headers = new ArrayList<>();
                         headers.add(new Header("Accept-Encoding", "identity"));
                         headers.add(new Header(HttpConfig.TOKEN_KEY, HomeUtil.getSaToken()));
-                        String path = "";
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-                            path = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath()+"/plugins/";
-                        }else {
-                            path = Constant.PLUGIN_PATH;
-                        }
+                        String path = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath() + "/plugins/";
                         String finalPath = path;
                         String finalPluginFilePath = pluginFilePath;
                         HTTPCaller.getInstance().downloadFile(downloadUrl, path, pluginId, headers.toArray(new Header[headers.size()]), UiUtil.getString(R.string.home_download_plugin_package_fail),
                                 new ProgressUIListener() {
-                                @Override
-                                public void onUIProgressChanged(long numBytes, long totalBytes, float percent, float speed) {
-                                    LogUtil.e("进度：" + percent);
-                                    if (percent == 1) {
-                                        LogUtil.e("下载完成");
-                                        try {
-                                            ZipUtils.decompressFile(new File(fileZipPath), finalPath, true);
-                                            String pluginsBeanToJson = GsonConverter.getGson().toJson(pluginsBean);
-                                            SpUtil.put(pluginId, pluginsBeanToJson);
-                                            String urlPath = "file://"+ finalPluginFilePath +"/"+mDeviceTypeDeviceBean.getProvisioning();
-                                            toConfigNetwork(urlPath);
-                                        } catch (IOException e) {
-                                            e.printStackTrace();
+                                    @Override
+                                    public void onUIProgressChanged(long numBytes, long totalBytes, float percent, float speed) {
+                                        LogUtil.e("进度：" + percent);
+                                        if (percent == 1) {
+                                            LogUtil.e("下载完成");
+                                            try {
+                                                ZipUtils.decompressFile(new File(fileZipPath), finalPath, true);
+                                                String pluginsBeanToJson = GsonConverter.getGson().toJson(pluginsBean);
+                                                SpUtil.put(pluginId, pluginsBeanToJson);
+                                                String urlPath = "file://" + finalPluginFilePath + "/" + mDeviceTypeDeviceBean.getProvisioning();
+                                                toConfigNetwork(urlPath);
+                                            } catch (IOException e) {
+                                                e.printStackTrace();
+                                            }
                                         }
-
                                     }
-                            }
-                        });
+                                }, new DownloadFailListener() {
+                                    @Override
+                                    public void downloadFailed() {
+                                        dismissLoadingDialogInAct();
+                                    }
+                                });
                     }
                 }
             }
@@ -790,11 +920,14 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
 
     /**
      * 去配网界面
+     *
      * @param urlPath
      */
-    private void toConfigNetwork(String urlPath){
+    private void toConfigNetwork(String urlPath) {
+        dismissLoadingDialogInAct();
         Bundle bundle = new Bundle();
         bundle.putString(IntentConstant.PLUGIN_PATH, urlPath);
+        bundle.putString(IntentConstant.TYPE, mType);
         bundle.putSerializable(IntentConstant.BEAN, mDeviceTypeDeviceBean);
         switchToActivity(ConfigNetworkWebActivity.class, bundle);
     }
@@ -807,6 +940,61 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
      */
     @Override
     public void getPluginDetailFail(int errorCode, String msg) {
+        dismissLoadingDialogInAct();
+        ToastUtil.show(msg);
+    }
+
+    /**
+     * 一级分类成功
+     *
+     * @param deviceTypeListBean
+     */
+    @Override
+    public void getDeviceFirstTypeSuccess(DeviceTypeListBean deviceTypeListBean) {
+        if (deviceTypeListBean != null) {
+            List<DeviceTypeBean> firstCategoryData = deviceTypeListBean.getTypes();
+            if (CollectionUtil.isNotEmpty(firstCategoryData)) {
+                DeviceTypeBean deviceTypeBean = firstCategoryData.get(0);
+                deviceTypeBean.setSelected(true);
+                mType = deviceTypeBean.getType();
+                getSecondType(mType);
+            }
+            mDeviceFirstCategoryAdapter.setNewData(firstCategoryData);
+        }
+    }
+
+    /**
+     * 一级分类失败
+     *
+     * @param errorCode
+     * @param msg
+     */
+    @Override
+    public void getDeviceFirstTypFail(int errorCode, String msg) {
+        ToastUtil.show(msg);
+    }
+
+    /**
+     * 二级分类成功
+     *
+     * @param deviceTypeListBean
+     */
+    @Override
+    public void getDeviceSecondTypeSuccess(DeviceTypeListBean deviceTypeListBean) {
+        if (deviceTypeListBean != null) {
+            List<DeviceTypeBean> secondCategoryData = deviceTypeListBean.getTypes();
+            mDeviceSecondCategoryAdapter.setNewData(secondCategoryData);
+        }
+    }
+
+    /**
+     * 二级分类失败
+     *
+     * @param errorCode
+     * @param msg
+     */
+    @Override
+    public void getDeviceSecondTypeFail(int errorCode, String msg) {
         ToastUtil.show(msg);
     }
 
@@ -894,9 +1082,12 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
                         return;
                     }
                     if (!TextUtils.isEmpty(BluetoothUtil.BLUFI_PREFIX)) {
-                        if (!name.startsWith(BluetoothUtil.BLUFI_PREFIX) || blueDeviceAdded.contains(name)) {
+                        if (!name.startsWith(BluetoothUtil.BLUFI_PREFIX)) {
                             return;
                         }
+                    }
+                    if (blueDeviceAdded.contains(name)) {
+                        return;
                     }
                     blueDeviceAdded.add(bluetoothDevice.getName());
                     DeviceBean deviceBean = new DeviceBean();
@@ -909,5 +1100,4 @@ public class ScanDevice2Activity extends MVPBaseActivity<AddDeviceContract.View,
             }
         }
     }
-
 }

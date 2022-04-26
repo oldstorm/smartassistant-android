@@ -2,6 +2,7 @@ package com.yctc.zhiting.activity;
 
 import android.content.Intent;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
@@ -9,6 +10,7 @@ import androidx.annotation.Nullable;
 import com.app.main.framework.baseutil.UiUtil;
 import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.MVPBaseActivity;
+import com.app.main.framework.imageutil.GlideUtil;
 import com.google.gson.Gson;
 import com.yctc.zhiting.R;
 import com.yctc.zhiting.activity.contract.MemberDetailContract;
@@ -43,6 +45,8 @@ public class MemberDetailActivity extends MVPBaseActivity<MemberDetailContract.V
     TextView tvRole;
     @BindView(R.id.tvDel)
     TextView tvDel;
+    @BindView(R.id.ciAvatar)
+    ImageView ciAvatar;
 
     private int id;
     private boolean isCreator = true;// 是不是创建者
@@ -144,7 +148,7 @@ public class MemberDetailActivity extends MVPBaseActivity<MemberDetailContract.V
         }else {
             kind = 3;
             if (hasDelMember) {
-                centerAlertDialog = CenterAlertDialog.newInstance(getResources().getString(R.string.mine_member_del_confirm), null, true);
+                centerAlertDialog = CenterAlertDialog.newInstance(getResources().getString(R.string.mine_member_del_confirm), UiUtil.getString(R.string.cancel),  UiUtil.getString(R.string.confirm),true);
                 centerAlertDialog.setConfirmListener((del) -> {
                     mPresenter.delMember(id);
                 });
@@ -174,7 +178,10 @@ public class MemberDetailActivity extends MVPBaseActivity<MemberDetailContract.V
                     }
                 }
             }
-
+            GlideUtil.load(memberDetailBean.getAvatar_url()).userHead().into(ciAvatar);
+            if (memberDetailBean.isIs_owner()) {
+                tvRole.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, 0, 0);
+            }
             if (memberDetailBean.isIs_self()){ // 自己
                 if (memberDetailBean.isIs_owner()){ // 拥有者
                     tvDel.setVisibility(View.VISIBLE);

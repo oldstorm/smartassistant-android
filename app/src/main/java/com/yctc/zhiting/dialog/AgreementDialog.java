@@ -5,50 +5,50 @@ import android.content.Context;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
 import com.app.main.framework.baseutil.UiUtil;
+import com.app.main.framework.baseutil.toast.ToastUtil;
+import com.app.main.framework.dialog.CommonBaseDialog;
 import com.app.main.framework.httputil.Util;
 import com.yctc.zhiting.R;
 
-public class AgreementDialog extends Dialog implements View.OnClickListener {
+public class AgreementDialog extends CommonBaseDialog implements View.OnClickListener {
 
     private TextView tvAgreement;
     private TextView tvPolicy;
     private TextView tvDisagree;
     private TextView tvAgree;
+    private TextView tvRead;
+    private ImageView ivSelected;
 
-    public AgreementDialog(@NonNull Context context) {
-        super(context);
+
+    @Override
+    protected void initArgs(Bundle arguments) {
+
     }
 
     @Override
-    public void onAttachedToWindow() {
-        super.onAttachedToWindow();
-        Window window = getWindow();
-        window.setLayout((int) (UiUtil.getScreenWidth()/1.25), UiUtil.getScreenWidth());
-        window.setGravity(Gravity.CENTER);
-        window.setBackgroundDrawableResource(R.drawable.shape_white_c10);
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.dialog_agreement);
+    protected void initView(View view) {
         setCancelable(false);
-        tvAgreement = findViewById(R.id.tvAgreement);
-        tvPolicy = findViewById(R.id.tvPolicy);
-        tvDisagree = findViewById(R.id.tvDisagree);
-        tvAgree = findViewById(R.id.tvAgree);
+        tvAgreement = view.findViewById(R.id.tvAgreement);
+        tvPolicy = view.findViewById(R.id.tvPolicy);
+        tvDisagree = view.findViewById(R.id.tvDisagree);
+        tvAgree = view.findViewById(R.id.tvAgree);
+        tvRead = view.findViewById(R.id.tvRead);
+        ivSelected = view.findViewById(R.id.ivSelected);
         tvAgreement.setOnClickListener(this::onClick);
         tvPolicy.setOnClickListener(this::onClick);
         tvDisagree.setOnClickListener(this::onClick);
         tvAgree.setOnClickListener(this::onClick);
+        ivSelected.setOnClickListener(this::onClick);
+        tvRead.setOnClickListener(this::onClick);
     }
-
 
     @Override
     public void onClick(View v) {
@@ -66,9 +66,15 @@ public class AgreementDialog extends Dialog implements View.OnClickListener {
                 onOperateListener.onDisagree();
             }
         }else if (viewId == R.id.tvAgree){  // 同意
+            if (!ivSelected.isSelected()) {
+                ToastUtil.show(UiUtil.getString(R.string.login_please_check_user_agreement));
+                return;
+            }
             if(onOperateListener!=null){
                 onOperateListener.onAgree();
             }
+        }else if (viewId == R.id.ivSelected || viewId == R.id.tvRead) { // 已阅读
+            ivSelected.setSelected(!ivSelected.isSelected());
         }
     }
 
@@ -82,10 +88,31 @@ public class AgreementDialog extends Dialog implements View.OnClickListener {
         this.onOperateListener = onOperateListener;
     }
 
+    @Override
+    protected int getLayoutResource() {
+        return R.layout.dialog_agreement;
+    }
+
+    @Override
+    protected int obtainWidth() {
+        return dp2px(300);
+    }
+
+    @Override
+    protected int obtainHeight() {
+        return ViewGroup.LayoutParams.WRAP_CONTENT;
+    }
+
+    @Override
+    protected int obtainGravity() {
+        return Gravity.CENTER;
+    }
+
     public interface OnOperateListener{
         void onAgreement();
         void onPolicy();
         void onDisagree();
         void onAgree();
     }
+
 }

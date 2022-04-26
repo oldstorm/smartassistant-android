@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="@dimen/dp_175"
+    android:layout_height="wrap_content"
+    android:background="@drawable/shape_3f4663_radius10">
+
+    <TextView
+        android:id="@+id/tvHomeManage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/home_setup_hint1"
+        android:textSize="@dimen/size_14sp"
+        android:textColor="@color/white"
+        android:drawablePadding="9dp"
+        android:padding="@dimen/dp_16"
+        app:drawableStartCompat="@drawable/icon_home_home" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@color/color_94A5BE"
+        android:layerType="software"/>
+
+
+    <TextView
+        android:id="@+id/tvHomeSort"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/home_setup_hint2"
+        android:textSize="@dimen/size_14sp"
+        android:textColor="@color/white"
+        android:drawablePadding="9dp"
+        android:padding="@dimen/dp_16"
+        app:drawableStartCompat="@drawable/icon_home_sort" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@color/color_94A5BE"/>
+
+    <TextView
+        android:id="@+id/tvHomeVisible"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/home_setup_hint3_1"
+        android:textSize="@dimen/size_14sp"
+        android:textColor="@color/color_white_94a5be"
+        android:drawablePadding="9dp"
+        android:padding="@dimen/dp_16"
+        app:drawableStartCompat="@drawable/selector_home_pop_text" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@color/color_94A5BE"/>
+
+    <TextView
+        android:id="@+id/tvHomeDrivesSet"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/home_setup_hint4"
+        android:textSize="@dimen/size_14sp"
+        android:textColor="@color/white"
+        android:drawablePadding="9dp"
+        android:padding="@dimen/dp_16"
+        app:drawableStartCompat="@drawable/icon_home_manager" />
+
+</LinearLayout>

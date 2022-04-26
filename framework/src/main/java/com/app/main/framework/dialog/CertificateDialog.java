@@ -1,5 +1,6 @@
 package com.app.main.framework.dialog;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -17,6 +18,7 @@ public class CertificateDialog extends CommonBaseDialog{
     private TextView tvConfirm;
     private String title; // 标题
 
+
     public static CertificateDialog newInstance(String title) {
         Bundle args = new Bundle();
         args.putString("title", title);
@@ -24,6 +26,7 @@ public class CertificateDialog extends CommonBaseDialog{
         fragment.setArguments(args);
         return fragment;
     }
+
 
     @Override
     protected int getLayoutResource() {
@@ -52,6 +55,7 @@ public class CertificateDialog extends CommonBaseDialog{
 
     @Override
     protected void initView(View view) {
+        setCancelable(false);
         tvTitle = view.findViewById(R.id.tvTitle);
         tvCancel = view.findViewById(R.id.tvCancel);
         tvConfirm = view.findViewById(R.id.tvConfirm);
@@ -59,7 +63,9 @@ public class CertificateDialog extends CommonBaseDialog{
         tvCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dismiss();
+                if (confirmListener!=null){
+                    confirmListener.onCancel();
+                }
             }
         });
         tvConfirm.setOnClickListener(new View.OnClickListener() {
@@ -68,7 +74,6 @@ public class CertificateDialog extends CommonBaseDialog{
                 if (confirmListener!=null){
                     confirmListener.onConfirm();
                 }
-                dismiss();
             }
         });
     }
@@ -85,5 +90,6 @@ public class CertificateDialog extends CommonBaseDialog{
 
     public interface OnConfirmListener{
         void onConfirm();
+        void onCancel();
     }
 }

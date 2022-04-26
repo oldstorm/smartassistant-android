@@ -46,4 +46,33 @@ public class SettingPresenter extends BasePresenterImpl<SettingContract.View> im
             }
         });
     }
+
+    /**
+     * 修改成员
+     * @param id
+     * @param body
+     */
+    @Override
+    public void updateMember(int id, String body) {
+        mView.showLoadingView();
+        model.updateMember(id, body, new RequestDataCallback<Object>() {
+            @Override
+            public void onSuccess(Object obj) {
+                super.onSuccess(obj);
+                if (mView != null) {
+                    mView.hideLoadingView();
+                    mView.updateMemberSuccess();
+                }
+            }
+
+            @Override
+            public void onFailed(int errorCode, String errorMessage) {
+                super.onFailed(errorCode, errorMessage);
+                if (mView != null) {
+                    mView.hideLoadingView();
+                    mView.updateMemberFail(errorCode, errorMessage);
+                }
+            }
+        });
+    }
 }

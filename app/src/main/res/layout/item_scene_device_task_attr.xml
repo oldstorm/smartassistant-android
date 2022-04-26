@@ -35,6 +35,12 @@
             android:textStyle="bold"
             android:textColor="@color/color_94A5BE"
             android:textSize="@dimen/textSize14" />
+        <View
+            android:id="@+id/viewColor"
+            android:layout_width="@dimen/dp_35"
+            android:layout_height="@dimen/dp_20"
+            android:background="@color/color_FF0000"
+            android:visibility="gone"/>
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

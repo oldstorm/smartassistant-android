@@ -76,6 +76,10 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
     private WeakReference<Context> mContext;
     private boolean needRefreshHC; // 是否需要刷新家庭详情
 
+    private long cloudId; // 云端家庭id
+
+    private boolean isReset;  // 是否编辑过item位置
+
     @Override
     protected int getLayoutId() {
         return R.layout.activity_room_area;
@@ -88,8 +92,9 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
         setTitleCenter(getResources().getString(R.string.mine_room_area_manage));
 
         id = getIntent().getLongExtra(IntentConstant.ID, -1);
+        cloudId = getIntent().getLongExtra(IntentConstant.CLOUD_ID, -1);
         isBindSa = getIntent().getBooleanExtra(IntentConstant.IS_BIND_SA, false);
-        isBindSa = isBindSa || id > 0;
+        isBindSa = isBindSa || cloudId > 0;
         userId = getIntent().getIntExtra(IntentConstant.USER_ID, -1);
         mContext = new WeakReference<>(this);
         dbManager = DBManager.getInstance(mContext.get());
@@ -110,8 +115,14 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
                 toRoomDetail(roomAreaBean);
             }
         });
-
-        itemTouchHelper = new ItemTouchHelper(new MyItemTouchHelper(roomAreaAdapter, false));
+        MyItemTouchHelper myItemTouchHelper = new MyItemTouchHelper(roomAreaAdapter, false);
+        myItemTouchHelper.setMovedListener(new MyItemTouchHelper.MovedListener() {
+            @Override
+            public void onMoved() {
+                isReset = true;
+            }
+        });
+        itemTouchHelper = new ItemTouchHelper(myItemTouchHelper);
         refreshLayout.setOnRefreshListener(refreshLayout -> refresh(false));
         refresh(true);
     }
@@ -119,7 +130,7 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable @org.jetbrains.annotations.Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK && requestCode == ROOM_DETAIL_ACT_REQUEST_CODE){
+        if (resultCode == RESULT_OK && requestCode == ROOM_DETAIL_ACT_REQUEST_CODE) {
             needRefreshHC = true;
             refresh(true);
         }
@@ -190,6 +201,7 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
                         dbManager.insertLocation(locationBean);
 
                         UiUtil.runInMainThread(() -> {
+                            needRefreshHC = true;
                             loadData();
                             editBottomDialog.dismiss();
                         });
@@ -240,9 +252,14 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
     /**
      * 重置编辑文本
      */
-    private void resetEdit() {
+    private void resetEdit(boolean showToast) {
+        if (showToast) {
+            ToastUtil.show(UiUtil.getString(R.string.mine_edit_success));
+        }
+        isReset = false;
         getRightTitleText().setText(!isEdit ? getResources().getString(R.string.common_edit) : getResources().getString(R.string.common_finish));
         getRightTitleText().setSelected(isEdit);
+        llAdd.setVisibility(isEdit ? View.GONE : View.VISIBLE);
         itemTouchHelper.attachToRecyclerView(isEdit ? rvRA : null);
         refreshLayout.setEnableRefresh(!isEdit);
         roomAreaAdapter.setEdit(isEdit);
@@ -254,7 +271,8 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
     public void resetPos() {
         UiUtil.starThread(() -> {
             dbManager.updateLocationList(id, roomAreaAdapter.getData());
-            UiUtil.runInMainThread(() -> resetEdit());
+
+            UiUtil.runInMainThread(() -> resetEdit(true));
         });
     }
 
@@ -293,16 +311,16 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
 
     @Override
     public void orderRoomSuccess() {
-        ToastUtil.show(UiUtil.getString(R.string.common_sort_success));
-        resetEdit();
+        ToastUtil.show(UiUtil.getString(R.string.mine_edit_success));
+        resetEdit(false);
     }
 
     @Override
     public void onBackPressed() {
-        if (needRefreshHC){
+        if (needRefreshHC) {
             setResult(RESULT_OK);
             finish();
-        }else {
+        } else {
             super.onBackPressed();
         }
     }
@@ -320,19 +338,23 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
         getRightTitleText().setOnClickListener(v -> {
             isEdit = !isEdit;
             if (isEdit) {
-                resetEdit();
+                resetEdit(false);
             } else {
-                List<Integer> locationId = new ArrayList<>();
-                for (int i = 0; i < roomAreaAdapter.getData().size(); i++) {
-                    roomAreaAdapter.getData().get(i).setSort(i);
-                    roomAreaAdapter.notifyDataSetChanged();
-                    locationId.add(roomAreaAdapter.getData().get(i).getId());
-                }
-                if (isBindSa) {  // 已绑sa，服务器
-                    String body = "{\"locations_id\":" + locationId.toString() + "}";
-                    mPresenter.orderRoom(body);
-                } else {  // 否则，本地
-                    resetPos();
+                if (isReset) {
+                    List<Integer> locationId = new ArrayList<>();
+                    for (int i = 0; i < roomAreaAdapter.getData().size(); i++) {
+                        roomAreaAdapter.getData().get(i).setSort(i);
+                        roomAreaAdapter.notifyDataSetChanged();
+                        locationId.add(roomAreaAdapter.getData().get(i).getId());
+                    }
+                    if (isBindSa) {  // 已绑sa，服务器
+                        String body = "{\"locations_id\":" + locationId.toString() + "}";
+                        mPresenter.orderRoom(body);
+                    } else {  // 否则，本地
+                        resetPos();
+                    }
+                } else {
+                    resetEdit(false);
                 }
             }
         });
@@ -367,5 +389,10 @@ public class RoomAreaActivity extends MVPBaseActivity<RoomAreaContract.View, Roo
     public void requestFail(int errorCode, String msg) {
         ToastUtil.show(msg);
         refreshLayout.finishRefresh();
+    }
+
+    @Override
+    public void orderFail(int errorCode, String msg) {
+        ToastUtil.show(UiUtil.getString(R.string.mine_edit_fail));
     }
 }

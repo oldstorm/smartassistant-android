@@ -1,9 +1,11 @@
 package com.yctc.zhiting.entity.scene;
 
+import java.io.Serializable;
+
 /**
  * 执行任务列表 和  触发条件
  */
-public class SceneItemBean {
+public class SceneItemBean implements Serializable {
     /**
      * type : 1
      * logo_url : http://sa.zhitingtech.com/static/test-sa/plugins/light/html/static/img/lamp.da1b67cc.png

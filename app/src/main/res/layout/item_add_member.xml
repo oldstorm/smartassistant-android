@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/white">
+    <com.yctc.zhiting.widget.CircleImageView
+        android:id="@+id/cvAvatar"
+        android:layout_width="@dimen/dp_45"
+        android:layout_height="@dimen/dp_45"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_marginLeft="@dimen/dp_16"
+        android:layout_marginTop="@dimen/dp_10"
+        android:src="@drawable/icon_default_avatar" />
+
+    <LinearLayout
+        android:id="@+id/llName"
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="@+id/cvAvatar"
+        app:layout_constraintLeft_toRightOf="@+id/cvAvatar"
+        app:layout_constraintRight_toLeftOf="@+id/ivSelected"
+        android:layout_marginTop="@dimen/dp_4"
+        android:layout_marginLeft="@dimen/dp_15"
+        android:layout_marginRight="@dimen/dp_10"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+        <TextView
+            android:id="@+id/tvName"
+            android:layout_width="wrap_content"
+            android:maxWidth="@dimen/dp_250"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:text="小丽suo"
+            android:textSize="@dimen/textSize14"
+            android:textColor="@color/color_3f4663"/>
+        <ImageView
+            android:id="@+id/ivMedal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="@dimen/dp_9"
+            android:src="@drawable/icon_medal"
+            android:visibility="gone"/>
+    </LinearLayout>
+
+
+    <TextView
+        android:id="@+id/tvRole"
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/llName"
+        app:layout_constraintLeft_toRightOf="@+id/cvAvatar"
+        app:layout_constraintRight_toLeftOf="@+id/ivSelected"
+        android:layout_marginLeft="@dimen/dp_15"
+        android:layout_marginRight="@dimen/dp_10"
+        android:text="管理员"
+        android:textSize="@dimen/textSize12"
+        android:textColor="@color/color_94A5BE"/>
+    <ImageView
+        android:id="@+id/ivSelected"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="@+id/cvAvatar"
+        app:layout_constraintBottom_toBottomOf="@+id/cvAvatar"
+        android:layout_marginRight="@dimen/dp_15"
+        app:layout_constraintRight_toRightOf="parent"
+        android:src="@drawable/selector_add_square" />
+
+    <View
+        android:id="@+id/viewLine"
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="0.5dp"
+        android:background="@color/color_EEEEEE"
+        app:layout_constraintTop_toBottomOf="@+id/cvAvatar"
+        app:layout_constraintLeft_toRightOf="@+id/cvAvatar"
+        android:layout_marginLeft="@dimen/dp_15"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginTop="@dimen/dp_14" />
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical"
+    tools:context=".activity.AccountCancellationActivity">
+
+    <View
+        android:id="@+id/viewLine"
+        android:layout_width="match_parent"
+        android:layout_height="0.5dp"
+        android:background="@color/eeeeee"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/nsv"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_0"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/tvApply"
+        app:layout_constraintTop_toBottomOf="@+id/viewLine">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvAccount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/dp_14"
+                android:layout_marginTop="@dimen/dp_21"
+                android:layout_marginRight="@dimen/dp_14"
+                android:text="@string/mine_account_apply_cancellation"
+                android:textColor="@color/color_3f4663"
+                android:textSize="@dimen/textSize18"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/dp_14"
+                android:layout_marginTop="@dimen/dp_30"
+                android:layout_marginRight="@dimen/dp_14"
+                android:text="@string/mine_after_cancellation"
+                android:textColor="@color/color_3f4663"
+                android:textSize="@dimen/textSize14"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvDel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/dp_14"
+                android:layout_marginTop="@dimen/dp_13"
+                android:layout_marginRight="@dimen/dp_14"
+                android:text="@string/mine_del_following_home"
+                android:textColor="@color/color_3f4663"
+                android:textSize="@dimen/textSize14"
+                android:visibility="gone" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvDel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:paddingTop="@dimen/dp_5" />
+
+            <TextView
+                android:id="@+id/tvQuit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/dp_14"
+                android:layout_marginTop="@dimen/dp_13"
+                android:layout_marginRight="@dimen/dp_14"
+                android:text="@string/mine_quit_following_home"
+                android:textColor="@color/color_3f4663"
+                android:textSize="@dimen/textSize14"
+                android:visibility="gone" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvQuit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:paddingTop="@dimen/dp_5" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/dp_14"
+                android:layout_marginTop="@dimen/dp_33"
+                android:layout_marginRight="@dimen/dp_14"
+                android:text="@string/mine_forever_cancellation"
+                android:textColor="@color/color_3f4663"
+                android:textSize="@dimen/textSize14"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/dp_14"
+                android:layout_marginTop="@dimen/dp_12"
+                android:layout_marginRight="@dimen/dp_14"
+                android:text="@string/mine_account_once_cancelled"
+                android:textColor="@color/color_3f4663"
+                android:textSize="@dimen/textSize14" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/dp_14"
+                android:layout_marginTop="@dimen/dp_40"
+                android:layout_marginRight="@dimen/dp_14"
+                android:text="@string/mine_all_product_data_cannot_found"
+                android:textColor="@color/color_3f4663"
+                android:textSize="@dimen/textSize14"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/dp_14"
+                android:layout_marginTop="@dimen/dp_12"
+                android:layout_marginRight="@dimen/dp_14"
+                android:text="@string/mine_after_account_cancelled"
+                android:textColor="@color/color_3f4663"
+                android:textSize="@dimen/textSize14" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="@dimen/dp_14"
+                android:layout_marginTop="@dimen/dp_40"
+                android:layout_marginRight="@dimen/dp_14"
+                android:text="@string/mine_zhiting_account"
+                android:textColor="@color/color_3f4663"
+                android:textSize="@dimen/textSize14"
+                android:textStyle="bold" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvProduct"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:paddingBottom="@dimen/dp_15" />
+        </LinearLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <TextView
+        android:id="@+id/tvApply"
+        android:layout_width="@dimen/dp_0"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/dp_15"
+        android:background="@drawable/shape_2da3f6_c4"
+        android:gravity="center"
+        android:padding="@dimen/dp_19"
+        android:text="@string/mine_apply_cancel"
+        android:textColor="@color/white"
+        android:textSize="@dimen/textSize14"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    背景的样式 selector_track.xml 选中与未选中
+-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_checked="true">
+        <shape>
+            <solid android:color="@color/color_2da3f6"/>
+            <size android:height="@dimen/dp_18"/>
+            <corners android:radius="@dimen/dp_16"/>
+        </shape>
+    </item>
+    <item>
+        <shape>
+            <solid android:color="#DFDFDF"/>
+            <size android:height="@dimen/dp_18"/>
+            <corners android:radius="@dimen/dp_16"/>
+        </shape>
+    </item>
+</selector>
+
+

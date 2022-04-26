@@ -26,6 +26,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="@dimen/dp_15"
+                android:layout_marginTop="@dimen/dp_10"
                 android:layout_marginRight="@dimen/dp_15"
                 android:background="@drawable/shape_26f6ae1e_c10"
                 android:visibility="gone"
@@ -35,7 +36,7 @@
                     android:id="@+id/tvTips"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="@dimen/dp_15"
+                    android:layout_marginLeft="@dimen/dp_5"
                     android:layout_marginRight="@dimen/dp_15"
                     android:layout_weight="1"
                     android:drawableLeft="@drawable/icon_home_small_fail"
@@ -105,6 +106,7 @@
                     style="@style/rl_key_value">
 
                     <TextView
+                        android:id="@+id/tvNameNote"
                         style="@style/user_info_title"
                         android:layout_centerVertical="true"
                         android:text="@string/mine_name"
@@ -113,8 +115,9 @@
                     <TextView
                         android:id="@+id/tvName"
                         style="@style/mine_tv_value"
-                        android:ellipsize="end"
-                        android:maxLines="1" />
+                        android:layout_marginLeft="@dimen/dp_10"
+                        android:layout_toRightOf="@id/tvNameNote"
+                        android:gravity="right" />
 
                 </RelativeLayout>
 
@@ -141,6 +144,7 @@
                     style="@style/rl_key_value">
 
                     <TextView
+                        android:id="@+id/tvRoomNote"
                         style="@style/user_info_title"
                         android:layout_centerVertical="true"
                         android:text="@string/mine_room_area"

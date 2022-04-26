@@ -163,7 +163,7 @@ public class SceneDeviceStatusControlActivity extends MVPBaseActivity<SceneDevic
                 conditionBean.setDeviceName(deviceName);
                 conditionBean.setDeviceType(deviceType);
                 conditionBean.setLogoUrl(logoUrl);
-                CreateScenePost.SceneConditionsBean.ConditionItemBean conditionItemBean = new CreateScenePost.SceneConditionsBean.ConditionItemBean(Constant.EQUAL, Constant.SWITCH, switchOperate, Constant.POWER);
+                CreateScenePost.SceneConditionsBean.ConditionItemBean conditionItemBean = new CreateScenePost.SceneConditionsBean.ConditionItemBean(Constant.EQUAL, Constant.SWITCH, switchOperate, Constant.ON_OFF);
                 if (sceneId>0){
                     conditionBean.setScene_id(sceneId);
                 }
@@ -244,6 +244,8 @@ public class SceneDeviceStatusControlActivity extends MVPBaseActivity<SceneDevic
             }
         });
     }
+
+
 
     /**
      * 去到创建场景

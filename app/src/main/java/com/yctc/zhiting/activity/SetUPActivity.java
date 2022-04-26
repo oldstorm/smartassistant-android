@@ -3,7 +3,9 @@ package com.yctc.zhiting.activity;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
 
@@ -31,6 +33,34 @@ public class SetUPActivity extends MVPBaseActivity<SetUPContract.View, SetUPPres
     @BindView(R.id.etPassword)
     EditText etPassword;
 
+    @Override
+    protected void initUI() {
+        super.initUI();
+        etUsername.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (s.length() > 0) {
+                    for (int i = 0; i < s.length(); i++) {
+                        char c = s.charAt(i);
+                        if (c >= 0x4e00 && c <= 0x9fff) {
+                            s.delete(i, i + 1);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
     @OnClick({R.id.tvSave, R.id.llClose})
     public void onClick(View view) {
         if (view.getId() == R.id.tvSave) {
@@ -39,20 +69,15 @@ public class SetUPActivity extends MVPBaseActivity<SetUPContract.View, SetUPPres
             hideKeyboard(etPassword);
             if (TextUtils.isEmpty(username)){
                 ToastUtil.show(getResources().getString(R.string.mine_input_username));
-                etUsername.requestFocus();
-                showKeyboard(etUsername);
+//                etUsername.requestFocus();
+//                showKeyboard(etUsername);
                 return;
             }
-            if (username.length()<6){
-                ToastUtil.show(getResources().getString(R.string.mine_username_length_must_be_greater_than_6));
-                etUsername.requestFocus();
-                showKeyboard(etUsername);
-                return;
-            }
+
             if (StringUtil.isChinese(username)){
                 ToastUtil.show(getResources().getString(R.string.mine_username_chinese_cannot_be_entered));
-                etUsername.requestFocus();
-                showKeyboard(etUsername);
+//                etUsername.requestFocus();
+//                showKeyboard(etUsername);
                 return;
             }
             if (TextUtils.isEmpty(password)){
@@ -64,15 +89,15 @@ public class SetUPActivity extends MVPBaseActivity<SetUPContract.View, SetUPPres
 
             if (password.length()<6){
                 ToastUtil.show(getResources().getString(R.string.mine_password_length_must_be_greater_than_6));
-                etPassword.requestFocus();
-                showKeyboard(etPassword);
+//                etPassword.requestFocus();
+//                showKeyboard(etPassword);
                 return;
             }
 
             if (StringUtil.isChinese(password)){
                 ToastUtil.show(getResources().getString(R.string.mine_password_chinese_cannot_be_entered));
-                etPassword.requestFocus();
-                showKeyboard(etPassword);
+//                etPassword.requestFocus();
+//                showKeyboard(etPassword);
                 return;
             }
             UpdateUserPost updateUserPost = new UpdateUserPost();

@@ -53,10 +53,11 @@ public class BaseFileUtil {
 
     /**
      * 判断文件是否存在
+     *
      * @param filePath
      * @return
      */
-    public static boolean isFileExist(String filePath){
+    public static boolean isFileExist(String filePath) {
         File file = new File(filePath);
         return file.exists();
     }
@@ -324,6 +325,7 @@ public class BaseFileUtil {
                 File file = new File(filePath);
                 if (file.isDirectory()) {// 处理目录
                     File[] files = file.listFiles();
+                    if (files!=null)
                     for (int i = 0; i < files.length; i++) {
                         deleteFolderFile(files[i].getAbsolutePath(), true);
                     }
@@ -332,12 +334,13 @@ public class BaseFileUtil {
                     if (!file.isDirectory()) {// 如果是文件，删除
                         file.delete();
                     } else {// 目录
-                        if (file.listFiles().length == 0) {// 目录下没有文件或者目录，删除
+                        if (file.listFiles() != null && file.listFiles().length == 0) {// 目录下没有文件或者目录，删除
                             file.delete();
                         }
                     }
                 }
             } catch (Exception e) {
+                e.printStackTrace();
                 LogUtil.e("文件或文件夹删除异常");
             }
         }
@@ -682,16 +685,16 @@ public class BaseFileUtil {
             else if (isDownloadsDocument(uri)) {
                 try {
                     final String id = DocumentsContract.getDocumentId(uri);
-                    if (id.startsWith("raw")){
+                    if (id.startsWith("raw")) {
                         String[] path = id.split(":");
                         return path[1];
-                    }else {
+                    } else {
                         final Uri contentUri = ContentUris.withAppendedId(
                                 Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
 
                         return getDataColumn(context, contentUri, null, null);
                     }
-                }catch (NumberFormatException e){
+                } catch (NumberFormatException e) {
                     e.printStackTrace();
                     return null;
                 }
@@ -782,5 +785,9 @@ public class BaseFileUtil {
      */
     public static boolean isMediaDocument(Uri uri) {
         return "com.android.providers.media.documents".equals(uri.getAuthority());
+    }
+
+    public static double B2MB (double size) {
+        return size / (1024*1024);
     }
 }

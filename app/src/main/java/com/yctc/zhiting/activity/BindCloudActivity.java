@@ -1,5 +1,8 @@
 package com.yctc.zhiting.activity;
 
+import static com.yctc.zhiting.config.Constant.CurrentHome;
+
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.text.TextUtils;
@@ -11,24 +14,42 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.app.main.framework.baseutil.SpConstant;
+import com.app.main.framework.baseutil.SpUtil;
 import com.app.main.framework.baseutil.UiUtil;
 import com.app.main.framework.baseutil.toast.ToastUtil;
 import com.app.main.framework.baseview.MVPBaseActivity;
+import com.app.main.framework.gsonutils.GsonConverter;
 import com.app.main.framework.httputil.NameValuePair;
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.yctc.zhiting.R;
 import com.yctc.zhiting.activity.contract.BindCloudContract;
 import com.yctc.zhiting.activity.presenter.BindCloudPresenter;
 import com.yctc.zhiting.config.Constant;
+import com.yctc.zhiting.entity.AreaCodeBean;
 import com.yctc.zhiting.entity.mine.CaptchaBean;
+import com.yctc.zhiting.entity.mine.LoginBean;
 import com.yctc.zhiting.entity.mine.MemberDetailBean;
 import com.yctc.zhiting.entity.mine.RegisterPost;
+import com.yctc.zhiting.event.FinishLoginEvent;
+import com.yctc.zhiting.event.LogoutEvent;
+import com.yctc.zhiting.event.MineUserInfoEvent;
+import com.yctc.zhiting.event.UpdateProfessionStatusEvent;
+import com.yctc.zhiting.popup_window.AreaCodePopupWindow;
 import com.yctc.zhiting.utils.AgreementPolicyListener;
+import com.yctc.zhiting.utils.AllRequestUtil;
+import com.yctc.zhiting.utils.AreaCodeConstant;
 import com.yctc.zhiting.utils.IntentConstant;
 import com.yctc.zhiting.utils.StringUtil;
+import com.yctc.zhiting.utils.UserUtils;
+import com.yctc.zhiting.websocket.WSocketManager;
+
+import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +63,8 @@ import butterknife.OnTextChanged;
  */
 public class BindCloudActivity extends MVPBaseActivity<BindCloudContract.View, BindCloudPresenter> implements BindCloudContract.View {
 
+    @BindView(R.id.tvArea)
+    TextView tvArea;
     @BindView(R.id.etPhone)
     EditText etPhone;
     @BindView(R.id.etPassword)
@@ -68,10 +91,10 @@ public class BindCloudActivity extends MVPBaseActivity<BindCloudContract.View, B
     ImageView ivSel;
 
     private boolean showPwd;
-    private CountDownTimer countDownTimer;
-
     private String captcha_id = "";
-
+    private String countryCode = "86"; // 地区代码
+    private CountDownTimer countDownTimer; // 验证码计时
+    private AreaCodePopupWindow mAreaCodePopupWindow; // 区号选择弹窗
 
     @Override
     protected int getLayoutId() {
@@ -81,6 +104,7 @@ public class BindCloudActivity extends MVPBaseActivity<BindCloudContract.View, B
     @Override
     protected void initUI() {
         super.initUI();
+        initAreaCodePopupWindow();
         llBind.setEnabled(false);
         setBindEnabledStatus();
         tvAgreementPolicy.setMovementMethod(LinkMovementMethod.getInstance());
@@ -109,6 +133,21 @@ public class BindCloudActivity extends MVPBaseActivity<BindCloudContract.View, B
                 }));
     }
 
+    /**
+     * 区号选择弹窗
+     */
+    private void initAreaCodePopupWindow() {
+        List<AreaCodeBean> areaCodeData = new Gson().fromJson(AreaCodeConstant.AREA_CODE, new TypeToken<List<AreaCodeBean>>() {
+        }.getType());
+        mAreaCodePopupWindow = new AreaCodePopupWindow(this, areaCodeData);
+        mAreaCodePopupWindow.setSelectedAreaCodeListener(areaCodeBean -> {
+            countryCode = areaCodeBean.getCode();
+            tvArea.setText("+" + areaCodeBean.getCode());
+            mAreaCodePopupWindow.dismiss();
+        });
+        mAreaCodePopupWindow.setOnDismissListener(() -> tvArea.setSelected(false));
+    }
+
     @Override
     protected void initData() {
         super.initData();
@@ -120,7 +159,7 @@ public class BindCloudActivity extends MVPBaseActivity<BindCloudContract.View, B
             @Override
             public void onTick(long millisUntilFinished) {
                 tvCode.setEnabled(false);
-                tvCode.setText(String.format(getResources().getString(R.string.login_get_it_again_in_sixty_seconds), String.valueOf(millisUntilFinished / 1000)));
+                tvCode.setText(String.format(UiUtil.getString(R.string.login_get_it_again_in_sixty_seconds), String.valueOf(millisUntilFinished / 1000)));
             }
 
             @Override
@@ -145,8 +184,10 @@ public class BindCloudActivity extends MVPBaseActivity<BindCloudContract.View, B
      */
     @OnTextChanged(R.id.etPhone)
     void onPhoneChanged() {
-        etPhone.setTextSize(TypedValue.COMPLEX_UNIT_SP, !TextUtils.isEmpty(etPhone.getText().toString().trim()) ? 24 : 14);
-        viewLinePhone.setBackgroundResource(!TextUtils.isEmpty(etPhone.getText().toString().trim()) ? R.color.color_3f4663 : R.color.color_CCCCCC);
+        boolean phoneEmpty = TextUtils.isEmpty(etPhone.getText().toString().trim());
+        etPhone.setTextSize(TypedValue.COMPLEX_UNIT_SP, phoneEmpty ? 14 : 22);
+        etPhone.setTypeface(phoneEmpty ? Typeface.DEFAULT : Typeface.DEFAULT_BOLD);
+        viewLinePhone.setBackgroundResource(!phoneEmpty ? R.color.color_3f4663 : R.color.color_CCCCCC);
         setBindEnabled();
     }
 
@@ -155,9 +196,11 @@ public class BindCloudActivity extends MVPBaseActivity<BindCloudContract.View, B
      */
     @OnTextChanged(R.id.etPassword)
     void onChanged() {
-        etPassword.setTextSize(TypedValue.COMPLEX_UNIT_SP, !TextUtils.isEmpty(etPassword.getText().toString().trim()) ? 24 : 14);
-        ivVisible.setVisibility(TextUtils.isEmpty(etPassword.getText().toString().trim()) ? View.GONE : View.VISIBLE);
-        viewLinePassword.setBackgroundResource(!TextUtils.isEmpty(etPassword.getText().toString().trim()) ? R.color.color_3f4663 : R.color.color_CCCCCC);
+        boolean passwdEmpty = TextUtils.isEmpty(etPassword.getText().toString().trim());
+        etPassword.setTextSize(TypedValue.COMPLEX_UNIT_SP, passwdEmpty ? 14 : 22);
+        ivVisible.setVisibility(passwdEmpty ? View.GONE : View.VISIBLE);
+        etPassword.setTypeface(passwdEmpty ? Typeface.DEFAULT : Typeface.DEFAULT_BOLD);
+        viewLinePassword.setBackgroundResource(!passwdEmpty ? R.color.color_3f4663 : R.color.color_CCCCCC);
         setBindEnabled();
     }
 
@@ -166,8 +209,10 @@ public class BindCloudActivity extends MVPBaseActivity<BindCloudContract.View, B
      */
     @OnTextChanged(R.id.etCode)
     void onCodeChanged() {
-        etCode.setTextSize(TypedValue.COMPLEX_UNIT_SP, !TextUtils.isEmpty(etCode.getText().toString().trim()) ? 24 : 14);
-        viewLineCode.setBackgroundResource(!TextUtils.isEmpty(etCode.getText().toString().trim()) ? R.color.color_3f4663 : R.color.color_CCCCCC);
+        boolean codeEmpty = TextUtils.isEmpty(etCode.getText().toString().trim());
+        etCode.setTextSize(TypedValue.COMPLEX_UNIT_SP, codeEmpty ? 14 : 22);
+        etCode.setTypeface(codeEmpty ? Typeface.DEFAULT : Typeface.DEFAULT_BOLD);
+        viewLineCode.setBackgroundResource(!codeEmpty ? R.color.color_3f4663 : R.color.color_CCCCCC);
         setBindEnabled();
     }
 
@@ -193,12 +238,20 @@ public class BindCloudActivity extends MVPBaseActivity<BindCloudContract.View, B
         llBind.setAlpha(llBind.isEnabled() ? 1 : 0.5f);
     }
 
-    @OnClick({R.id.ivVisible, R.id.llBind, R.id.tvLogin, R.id.tvCode, R.id.ivSel})
+    @OnClick({R.id.tvArea, R.id.ivVisible, R.id.llBind, R.id.tvLogin, R.id.tvCode, R.id.ivSel})
     void onClick(View view) {
         switch (view.getId()) {
+
+            case R.id.tvArea:  // 区号选择
+                if (mAreaCodePopupWindow != null && !mAreaCodePopupWindow.isShowing()) {
+                    tvArea.setSelected(true);
+                    mAreaCodePopupWindow.showAsDropDown(viewLinePhone, -15, 0);
+                }
+                break;
+
             case R.id.ivVisible:  // 密码是否可见
                 showPwd = !showPwd;
-                ivVisible.setImageResource(showPwd ? R.drawable.icon_password_visible : R.drawable.icon_password_invisible);
+                ivVisible.setImageResource(showPwd ? R.drawable.icon_password_invisible : R.drawable.icon_password_visible);
                 if (showPwd) {
                     etPassword.setTransformationMethod(HideReturnsTransformationMethod.getInstance());
                 } else {
@@ -207,13 +260,13 @@ public class BindCloudActivity extends MVPBaseActivity<BindCloudContract.View, B
                 etPassword.setSelection(etPassword.getText().length());
                 break;
 
-            case R.id.llBind:  // 绑定
+            case R.id.llBind:// 绑定
                 if (checkPhone() && checkPwd() && checkCode() && checkAgree()) {
                     String phone = etPhone.getText().toString().trim();
                     String password = etPassword.getText().toString().trim();
                     String code = etCode.getText().toString().trim();
-                    RegisterPost registerPost = new RegisterPost(Constant.CN_CODE, phone, password, code, captcha_id);
-                    mPresenter.register(new Gson().toJson(registerPost));
+                    RegisterPost registerPost = new RegisterPost(countryCode, phone, password, code, captcha_id);
+                    mPresenter.register(GsonConverter.getGson().toJson(registerPost));
                     setProgressBarVisible(true);
                     llBind.setEnabled(false);
                     setBindEnabledStatus();
@@ -227,9 +280,9 @@ public class BindCloudActivity extends MVPBaseActivity<BindCloudContract.View, B
             case R.id.tvCode: // 验证码
                 if (checkPhone()) {
                     List<NameValuePair> requestData = new ArrayList<>();
-                    requestData.add(new NameValuePair("type", "register"));
-                    requestData.add(new NameValuePair("target", etPhone.getText().toString().trim()));
-                    requestData.add(new NameValuePair("country_code", Constant.CN_CODE));
+                    requestData.add(new NameValuePair(Constant.TYPE, Constant.REGISTER));
+                    requestData.add(new NameValuePair(Constant.TARGET, etPhone.getText().toString().trim()));
+                    requestData.add(new NameValuePair(Constant.COUNTRY_CODE, countryCode));
                     mPresenter.getCaptcha(requestData);
                 }
                 break;
@@ -329,19 +382,45 @@ public class BindCloudActivity extends MVPBaseActivity<BindCloudContract.View, B
      */
     @Override
     public void getCaptchaFail(int errorCode, String msg) {
+        countDownTimer.cancel();
         ToastUtil.show(msg);
     }
 
     /**
      * 注册成功
      *
-     * @param memberDetailBean
+     * @param register
      */
     @Override
-    public void registerSuccess(MemberDetailBean memberDetailBean) {
+    public void registerSuccess(LoginBean register) {
         ToastUtil.show(getResources().getString(R.string.login_register_successfully));
         setProgressBarVisible(false);
-        finish();
+
+        startConnectSocket();
+        EventBus.getDefault().post(new FinishLoginEvent());
+        SpUtil.put(SpConstant.PHONE_NUM, etPhone.getText().toString());
+        SpUtil.put(SpConstant.AREA_CODE, countryCode);
+        MemberDetailBean memberDetailBean = register.getUser_info();
+        if (memberDetailBean != null) {
+            UserUtils.saveUser(memberDetailBean);
+            EventBus.getDefault().post(new MineUserInfoEvent(false));
+            EventBus.getDefault().post(new UpdateProfessionStatusEvent());
+            AllRequestUtil.getCloudArea();
+            finish();
+        }
+    }
+
+    /**
+     * 开始连接socket
+     */
+    private void startConnectSocket() {
+        if (!WSocketManager.isConnecting && CurrentHome != null && CurrentHome.isIs_bind_sa()) {
+            WSocketManager.getInstance().start();
+            UiUtil.postDelayed(() -> {
+                if (!WSocketManager.isConnecting)
+                    WSocketManager.getInstance().start();
+            }, 2000);
+        }
     }
 
     /**

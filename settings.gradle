@@ -3,3 +3,5 @@ include ':app'
 include ':provisioning'
 rootProject.name = "zhiting-android"
 include ':zxing'
+include ':ucrop'
+include ':calendarview'

@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.Application;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -25,13 +26,16 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
+import androidx.core.content.PermissionChecker;
 
 import com.app.main.framework.R;
 import com.app.main.framework.baseutil.toast.ToastUtil;
 
 import java.io.File;
+import java.lang.reflect.Method;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -46,7 +50,7 @@ import java.util.Locale;
 public class AndroidUtil {
 
     private static final String TAG = "AndroidUtil";
-    private static final String NET_WIFI = "WIFI";
+    public static final String NET_WIFI = "WIFI";
     private static final String NET_4G = "4G";
     private static final String NET_3G = "3G";
     private static final String NET_2G = "2G";
@@ -85,7 +89,7 @@ public class AndroidUtil {
         ClipData mClipData = ClipData.newPlainText("Label", text);
         // 将ClipData内容放到系统剪贴板里。
         cm.setPrimaryClip(mClipData);
-        ToastUtil.showBottom(R.string.copy_success);
+        ToastUtil.showCenter(R.string.copy_success);
     }
 
     /**
@@ -328,8 +332,8 @@ public class AndroidUtil {
         return isInBackground;
     }
 
-    public static String getRunningActivityName(){
-        ActivityManager activityManager=(ActivityManager) UiUtil.getContext().getSystemService(Context.ACTIVITY_SERVICE);
+    public static String getRunningActivityName() {
+        ActivityManager activityManager = (ActivityManager) UiUtil.getContext().getSystemService(Context.ACTIVITY_SERVICE);
         return activityManager.getRunningTasks(1).get(0).topActivity.getClassName();
     }
 
@@ -363,8 +367,8 @@ public class AndroidUtil {
 
     public static void showKeyBoard(Context context, View view) {
         InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
-        if (imm != null){
-            imm.showSoftInput(view,InputMethodManager.SHOW_IMPLICIT);
+        if (imm != null) {
+            imm.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT);
             view.findFocus();
             view.requestFocus();
         }
@@ -404,31 +408,183 @@ public class AndroidUtil {
                 inputManager.showSoftInput(edit, 0);
                 edit.setSelection(edit.getText().length());
             }
-        },200);
+        }, 200);
 
     }
 
-    public static void installApk(Activity activity,String appid,String path){
+    public static void installApk(Activity activity, String path) {
         try {
             Intent intent = new Intent();
             File file = new File(path);
-            //7.0手机适配
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 intent.setAction(Intent.ACTION_INSTALL_PACKAGE);
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                String authority = appid + ".provider";
-                Uri fileUri = FileProvider.getUriForFile(UiUtil.getContext(), authority, file);
+                if (checkIsHuaWeiRom() || checkIsSamSungRom())
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                //String authority = "com.yctc.zhiting.provider";
+                String authority = activity.getApplication().getPackageName()+".provider";
+                Uri fileUri = FileProvider.getUriForFile(LibLoader.getApplication(), authority, file);
                 intent.setDataAndType(fileUri, "application/vnd.android.package-archive");
             } else {
                 intent.setAction(Intent.ACTION_VIEW);
-                intent.setDataAndType(Uri.fromFile(file),"application/vnd.android.package-archive");
+                intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive");
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             }
-            LogUtil.i("installApk");
-            activity.startActivityForResult(intent,0x007);
-        }catch (Exception e){
+            activity.startActivityForResult(intent, 0x007);
+        } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * 判断是否华为
+     */
+    public static boolean checkIsHuaWeiRom() {
+        return Build.MANUFACTURER.contains("HUAWEI");
+    }
+
+    /**
+     * 判断是否是三星
+     *
+     * @return
+     */
+    public static boolean checkIsSamSungRom() {
+        return Build.MANUFACTURER.contains("samsung");
+    }
+
+    public static final int PERMISSION_REQUEST_CODE = 100;
+    private static final String[] permissionManifest = {
+            Manifest.permission.FOREGROUND_SERVICE,
+            Manifest.permission.REQUEST_INSTALL_PACKAGES};
+
+    /**
+     * 判断是否有安装的权限
+     */
+    @SuppressLint("WrongConstant")
+    public static boolean hasInstallPermission() {
+        //小于23，不需要权限
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true;
+        for (int i = 0; i < permissionManifest.length; i++) {
+            String permission = permissionManifest[i];
+            if (PermissionChecker.checkSelfPermission(LibLoader.getApplication(), permission) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 申请安装的权限
+     *
+     * @param activity
+     * @return
+     */
+    public static void applyInstallPermission(@NonNull Activity activity) {
+        ActivityCompat.requestPermissions(activity, permissionManifest, PERMISSION_REQUEST_CODE);
+    }
+
+    /**
+     * 比较版本号
+     *
+     * @param presetVersion 当前版本号
+     * @param minVersion    最低版本号
+     * @return
+     */
+    public static int compareVersion(String presetVersion, String minVersion) {
+        if (TextUtils.isEmpty(presetVersion) || TextUtils.isEmpty(minVersion)) return 0;
+        int presentLen = presetVersion.length();
+        int minLen = minVersion.length();
+        int i = 0, j = 0;
+        while (i < presentLen || j < minLen) {
+            int x = 0;
+            for (; i < presentLen && presetVersion.charAt(i) != '.'; ++i) {
+                x = x * 10 + presetVersion.charAt(i) - '0';
+            }
+            ++i;  // 跳过点号
+            int y = 0;
+            for (; j < minLen && minVersion.charAt(j) != '.'; ++j) {
+                y = y * 10 + minVersion.charAt(j) - '0';
+            }
+            ++j; // 跳过点号
+            if (x != y) {
+                return x > y ? 1 : -1;
+            }
+        }
+        return 0;
+    }
+
+    public static int checkUpdateInfo(boolean isForce, String currentVersion, String minVersion, String maxVersion) {
+        int updateType = UpdateType.NONE;
+        if (isForce) {
+            boolean isUpgrade = AndroidUtil.compareVersion(currentVersion, minVersion) < 0;
+            if (isUpgrade) {
+                updateType = UpdateType.FORCE;
+            } else {
+                isUpgrade = AndroidUtil.compareVersion(currentVersion, maxVersion) < 0;
+                if (isUpgrade) {
+                    updateType = UpdateType.ORDINARY;
+                }
+            }
+        } else {
+            boolean isUpgrade = AndroidUtil.compareVersion(currentVersion, maxVersion) < 0;
+            if (isUpgrade) {
+                updateType = UpdateType.ORDINARY;
+            }
+        }
+        return updateType;
+    }
+
+    /**
+     * 更新类型
+     */
+    public interface UpdateType {
+        // 不需操作
+        int NONE = 0;
+        // 普通更新
+        int ORDINARY = 1;
+        // 强制更新
+        int FORCE = 2;
+    }
+
+    /**
+     * 当前系统是否大于等于9
+     *
+     * @return
+     */
+    public static boolean isGE9() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.P;
+    }
+
+    /**
+     * 当前是否是鸿蒙系统
+     * 根据是否能调用Harmony JAVA API判断
+     */
+    public static boolean isHarmonyOs() {
+        try {
+            Class cls = Class.forName("ohos.utils.system.SystemCapability");
+            return cls != null;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /**
+     * 鸿蒙系统版本号
+     *
+     * @return
+     */
+    public static String getHarmonyOSVersion() {
+        if (checkIsHuaWeiRom() && isHarmonyOs()) {
+            try {
+                Class cls = Class.forName("android.os.SystemProperties");
+                Method method = cls.getMethod("get", String.class);
+                String version = (String) method.invoke(cls, "ro.huawei.build.display.id");
+                return version;
+            } catch (Exception e) {
+                return "-1";
+            }
+        } else {
+            return "-1";
         }
     }
 }
